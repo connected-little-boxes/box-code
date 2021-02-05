@@ -29,7 +29,6 @@ void resetListenerConfiguration(sensorListenerConfiguration *item)
 	item->sensorName[0] = 0;
 	item->listenerName[0] = 0;
 	item->destination[0] = 0;
-	item->readingIntervalSecs = 0;
 	item->sendOptionMask = 0;
 }
 
@@ -37,16 +36,33 @@ void printListenerConfiguration(sensorListenerConfiguration *item)
 {
 	if (item->listenerName[0] != 0)
 	{
-		Serial.printf("Listener:%s Sensor:%s Dest:%s Send mask:%d Reading interval:%d\n",
-					  item->listenerName,
+		sensor * s = findSensorByName(item->sensorName);
+
+		if(s==NULL){
+			Serial.printf("Sensor %s in listener not found\n", item->sensorName);
+			return;
+		}
+
+		struct sensorEventBinder * binder = findSensorEventBinderByMask(s, item->sendOptionMask);
+
+		if(item->destination[0]==0)
+		{
+			Serial.printf("Process:%s Command:%s Sensor:%s Trigger:%s\n",
+					  item->commandProcess,
+					  item->commandName, 
 					  item->sensorName,
-					  item->destination,
-					  item->sendOptionMask,
-					  item->readingIntervalSecs);
-	}
-	else
-	{
-		Serial.println("Empty listener");
+					  binder->listenerName
+					  );
+		}
+		else
+		{
+			Serial.printf("Process:%s Command:%s Sensor:%s Trigger:%s Destination:%s\n",
+					  item->commandProcess,
+					  item->commandName,
+					  item->sensorName,
+					  binder->listenerName,
+					  item->destination);
+		}
 	}
 }
 
@@ -489,15 +505,13 @@ int CreateSensorListener(
 	Command *targetCommand,
 	sensorEventBinder *targetListener,
 	char *destination,
-	int readingIntervalSecs,
 	unsigned char *commandParameterBuffer)
 {
-	Serial.printf("Creating listener:%s assigned to sensor:%s destination:%s send on change:%d reading interval:%d\n",
+	Serial.printf("Creating listener:%s assigned to sensor:%s destination:%s send on change:%d\n",
 				  targetListener->listenerName,
 				  targetSensor->sensorName,
 				  destination,
-				  targetListener->optionMask,
-				  readingIntervalSecs);
+				  targetListener->optionMask);
 
 	// Make sure we have a target for this listener
 
@@ -551,7 +565,6 @@ int CreateSensorListener(
 		strcpy(dest->listenerName, targetListener->listenerName);
 		strcpy(dest->sensorName, targetSensor->sensorName);
 		strcpy(dest->destination, destination);
-		dest->readingIntervalSecs = readingIntervalSecs;
 		dest->sendOptionMask = targetListener->optionMask;
 
 		// copy the command options into the new listener config slot
@@ -609,13 +622,9 @@ int decodeCommand(process *process, Command *command,
 
 	const char *sensorName = root["sensor"];
 
-	Serial.printf("Got %d command items\n", command->noOfItems);
-
 	for (int i = 0; i < command->noOfItems; i++)
 	{
 		CommandItem *item = command->items[i];
-
-		Serial.printf("    Processing %s ", item->name);
 
 		const char *option = root[item->name];
 
@@ -629,19 +638,15 @@ int decodeCommand(process *process, Command *command,
 				continue;
 			}
 			
-			Serial.printf("  item not present\n");
-
 			// no option with this name - do we have a default for it?
 			
 			if (item->setDefaultValue(parameterBuffer + item->commandSettingOffset))
 			{
-				Serial.printf("  Command %s item set to default\n", item->name);
 				// set OK - move on to the next one
 				continue;
 			}
 			else
 			{
-				Serial.printf("  **Missing command item with no default:%s\n", item->name);
 				return JSON_MESSAGE_COMMAND_ITEM_NOT_FOUND;
 			}
 		}
@@ -654,7 +659,6 @@ int decodeCommand(process *process, Command *command,
 			// need to convert the input value into a string
 			// as our value parser uses strings as inputs
 			int iv = root[item->name];
-			Serial.printf("  Command %s item int %d\n", item->name, iv);
 			snprintf(buffer, 120, "%d", iv);
 			inputSource = buffer;
 		}
@@ -666,7 +670,6 @@ int decodeCommand(process *process, Command *command,
 				// need to convert the input value into a string
 				// as our value parser uses strings as inputs
 				float fv = root[item->name];
-				Serial.printf("  Command %s item float %f\n", item->name, fv);
 				snprintf(buffer, 120, "%f", fv);
 				inputSource = buffer;
 			}
@@ -675,11 +678,9 @@ int decodeCommand(process *process, Command *command,
 				if (root[item->name].is<char *>())
 				{
 					inputSource = root[item->name];
-					Serial.printf("  Command %s item string %s\n", item->name, inputSource);
 				}
 				else
 				{
-					Serial.println("  Unrecognised command type");
 					return JSON_MESSAGE_COMMAND_ITEM_INVALID;
 				}
 			}
@@ -716,8 +717,6 @@ int decodeCommand(process *process, Command *command,
 	{
 		if (!validateString(destination, destSource, DESTINATION_NAME_LENGTH))
 		{
-			Serial.printf("  destination string %s too long\n", destSource);
-
 			return JSON_MESSAGE_DESTINATION_STRING_TOO_LONG;
 		}
 	}
@@ -726,13 +725,10 @@ int decodeCommand(process *process, Command *command,
 
 	if (sensorName != NULL)
 	{
-		Serial.printf("We got a sensor %s\n", sensorName);
-
 		const char *trigger = root["trigger"];
 
 		if (trigger == NULL)
 		{
-			Serial.printf("  No trigger value\n");
 			return JSON_MESSAGE_SENSOR_MISSING_TRIGGER;
 		}
 
@@ -740,7 +736,6 @@ int decodeCommand(process *process, Command *command,
 
 		if (s == NULL)
 		{
-			Serial.printf(" Sensor %s not found\n", sensorName);
 			return JSON_MESSAGE_SENSOR_ITEM_NOT_FOUND;
 		}
 
@@ -748,19 +743,10 @@ int decodeCommand(process *process, Command *command,
 
 		if (binder == NULL)
 		{
-			Serial.printf(" Listener %s not found\n", trigger);
 			return JSON_MESSAGE_NO_MATCHING_SENSOR_FOR_LISTENER;
 		}
 
-		int readingInterval = DEFAULT_READING_INTERVAL_SECS;
-
-		if (root["readinginterval"].is<int>())
-		{
-			Serial.println("Got a reading interval?!");
-			readingInterval = root["readinginterval"];
-		}
-
-		return CreateSensorListener(s, process, command, binder, destination, readingInterval, commandParameterBuffer);
+		return CreateSensorListener(s, process, command, binder, destination, commandParameterBuffer);
 	}
 
 	return command->performCommand(destination, parameterBuffer);

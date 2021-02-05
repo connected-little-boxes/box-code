@@ -352,6 +352,7 @@ void iterateThroughSensorListeners(struct sensor *sensor, void (*func)(struct se
 		pos = pos->nextMessageListener;
 	}
 }
+
  
 void fireSensorListenersOnMaskBit(struct sensor *sensor, int mask)
 {
@@ -372,4 +373,17 @@ void fireSensorListenersOnMaskBit(struct sensor *sensor, int mask)
 		}
 		pos = pos->nextMessageListener;
 	}
+}
+
+struct sensorEventBinder * findSensorEventBinderByMask(struct sensor * s, int mask)
+{
+	for(int i=0; i<s->noOfSensorListenerFunctions;i++)
+	{
+		struct sensorEventBinder * pos = &s->sensorListenerFunctions[i];
+		if((pos->optionMask&mask) != 0)
+		{
+			return pos;
+		}
+	}
+	return NULL;
 }

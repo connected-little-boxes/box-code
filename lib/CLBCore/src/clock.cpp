@@ -481,10 +481,6 @@ void checkClock(struct clockReading *reading)
 	// 	pos = pos->nextMessageListener;
 	// }
 
-
-
-
-
 }
 
 struct sensorEventBinder ClockSensorListenerFunctions[] = {

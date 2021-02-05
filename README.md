@@ -97,4 +97,8 @@ Set the default values by entering them in the file defaults.hsec which is in th
 #define DEFAULT_MQTT_USER "Your MQTT user"
 #define DEFAULT_MQTT_PWD "Your MQTT password"
 ```
-These default values will be stored in the eeprom of the device. If you would prefer not to have the defaults set in this way and you are happy to enter them manually you can remove the option **-DDEFAULTS_ON** from the **platformio.ini** file. if you use the default setting the WiFi and MQTT processes are turned off, so you will need to enable these.
+These default values will be stored in the eeprom of the device. If you would prefer not to have the defaults set in this way and you are happy to enter them manually you can remove the option **-DDEFAULTS_ON** from the **platformio.ini** file. if you use the default setting the WiFi and MQTT processes are turned off, so you will need to enable these via the terminal interface.
+```
+wifiactive=yes
+mqttactive=yes
+```

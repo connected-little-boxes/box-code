@@ -308,11 +308,8 @@ void iterateThroughProcessCommands(void (*func)(Command *c))
 
 Command * FindCommandInProcess(process * procPtr, const char *commandName)
 {
-	Serial.printf("   Finding command %s in %s\n", commandName, procPtr->processName);
-
 	for (int i = 0; i < procPtr->commands->noOfCommands; i++)
 	{
-		Serial.printf("Command: %s\n", procPtr->commands->commands[i]->name);
 		if (strcasecmp(procPtr->commands->commands[i]->name, commandName) == 0)
 		{
 			return procPtr->commands->commands[i];

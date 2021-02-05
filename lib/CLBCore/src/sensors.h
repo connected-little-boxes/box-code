@@ -29,10 +29,6 @@ struct sensorListenerConfiguration{
 	unsigned char optionBuffer [OPTION_STORAGE_SIZE];
 	int sendOptionMask;                             // mask of bits that determine when a sensor will deliver to the listener
 	                                                // the bits are different for each sensor
-	int readingIntervalSecs;                        // interval between reading transmissions 
-	                                               // if sendOnChange is set the device will not send readings
-												   // if changes are detected within this interval. 0 means that 
-												   // all changes will be sent.
 };
 
 struct sensorListener{
@@ -96,3 +92,4 @@ void addMessageListenerToSensor(struct sensor *sensor, struct sensorListener * l
 void iterateThroughSensorListeners(struct sensor * sensor, void (*func) (struct sensorListner * listener));
 void fireSensorListenersOnMaskBit(struct sensor *sensor, int mask);
 struct sensorEventBinder *findSensorListenerByName(struct sensor *s, const char *name);
+struct sensorEventBinder * findSensorEventBinderByMask(struct sensor * s, int mask);

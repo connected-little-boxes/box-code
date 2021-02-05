@@ -868,13 +868,21 @@ struct CommandItem greenCommandItem = {
 	validateFloat0to1,
 	noDefaultAvailable};
 
+boolean setDefaultPixelSpeed(void *dest)
+{
+	int *destInt = (int *)dest;
+	*destInt = 20;
+	return true;
+}
+
+
 struct CommandItem speedCommandItem = {
 	"pixelSpeed",
 	"change speed in 50ths of a second",
 	SPEED_PIXEL_COMMAND_OFFSET,
 	integerCommand,
 	validateInt,
-	noDefaultAvailable};
+	setDefaultPixelSpeed};
 
 struct CommandItem pixelCommandName = {
 	"pixelCommand",
