@@ -1,0 +1,21 @@
+{
+    "cmake.configureOnOpen": true,
+    "files.associations": {
+        "random": "cpp",
+        "limits": "cpp",
+        "*.tcc": "cpp",
+        "fstream": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "functional": "cpp",
+        "tuple": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "atomic": "cpp",
+        "deque": "cpp",
+        "list": "cpp",
+        "vector": "cpp",
+        "sstream": "cpp",
+        "*.hsec": "cpp"
+    }
+}
