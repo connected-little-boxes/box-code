@@ -83,11 +83,13 @@ dump and settings can be followed by a filter string to match setting names
 If you enter a JSON string this will be interpreted as a remote command.
 
 ```
+You can assign a value to any of the settings:
+
 
 ## Setting Connection Defaults
 You can set connection defaults for WiFi and MQTT connections. These will be stored in the device the first time that runs. 
 
-Set the default values by entering them in the file defaults.hsec which is in the lib\clb\src folder. There is a sample file there called defaults.hsec.sample which you can use to get started. Fill in your details and  rename the file to defaults.hsec before building the solution.
+Set the default values by entering them in the file defaults.hsec which is in the **lib\clb\src** folder. There is a sample file there called **defaults.hsec.sample** which you can use to get started. Fill in your details and  rename the file to defaults.hsec before building the solution.
 ```
 #define DEFAULT_WIFI1_SSID "Your SSID"
 #define DEFAULT_WIFI1_PWD "Your password"
@@ -95,11 +97,4 @@ Set the default values by entering them in the file defaults.hsec which is in th
 #define DEFAULT_MQTT_USER "Your MQTT user"
 #define DEFAULT_MQTT_PWD "Your MQTT password"
 ```
-These default values will be stored in the eeprom of the device. If you would prefer not to have the defaults set in this way and you are happy to enter them manually you can remove the option -DDEFAULTS_ON from the platformio.ini file.
-## Code organisation
-
-
-
-
-
-
+These default values will be stored in the eeprom of the device. If you would prefer not to have the defaults set in this way and you are happy to enter them manually you can remove the option **-DDEFAULTS_ON** from the **platformio.ini** file. if you use the default setting the WiFi and MQTT processes are turned off, so you will need to enable these.
