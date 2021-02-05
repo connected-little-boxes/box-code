@@ -1,46 +1,19 @@
 
-This directory is intended for project specific (private) libraries.
-PlatformIO will compile them to static libraries and link into executable file.
+The libraries for each component in this this project are stored directly in this folder. 
 
-The source code of each library should be placed in a an own separate directory
-("lib/your_library_name/[here are source files]").
+This is to allow dependencies between the components to work correctly.  
 
-For example, see a structure of the following two libraries `Foo` and `Bar`:
+There are .c and .h files for each component. A component defines either a sensor or a process. 
 
-|--lib
-|  |
-|  |--Bar
-|  |  |--docs
-|  |  |--examples
-|  |  |--src
-|  |     |- Bar.c
-|  |     |- Bar.h
-|  |  |- library.json (optional, custom build options, etc) https://docs.platformio.org/page/librarymanager/config.html
-|  |
-|  |--Foo
-|  |  |- Foo.c
-|  |  |- Foo.h
-|  |
-|  |- README --> THIS FILE
-|
-|- platformio.ini
-|--src
-   |- main.c
+The end of each .c file contains the definition of a sensor or process structure value which is used in the device.
 
-and a contents of `src/main.c`:
-```
-#include <Foo.h>
-#include <Bar.h>
+Each component contains functions which are called when the device is running. They should all complete quickly  
+as the entire device is single threaded. 
 
-int main (void)
-{
-  ...
-}
+The system contains lists of active sensors and processors. A given sensor or process can be removed from a 
+device by not adding it into the list. 
 
-```
+Each component contains a structure defining the setting values for that component and management items 
+for each of the settings. These are used by the settings manager in the settings.c source file to create a 
+block of setting data which is stored in EEPROM inside the device. 
 
-PlatformIO Library Dependency Finder will find automatically dependent
-libraries scanning project source files.
-
-More information about PlatformIO Library Dependency Finder
-- https://docs.platformio.org/page/librarymanager/ldf.html

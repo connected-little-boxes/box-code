@@ -141,13 +141,10 @@ void beginWiFiScanning()
 		return;
 	}
 
-	Serial.println("Beginning WiFi Scan");
-
 	WiFiTimerStart = millis();
 
 	if (firstRun)
 	{
-		TRACELN("WiFi first run");
 		WiFi.mode(WIFI_OFF);
 		delay(100);
 		WiFi.mode(WIFI_STA);

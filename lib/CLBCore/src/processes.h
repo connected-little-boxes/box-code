@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include "sensors.h"
 #include "settings.h"
-#include "commands.h"
+#include "controller.h"
 
 #define BOOT_PROCESS 1
 #define ACTIVE_PROCESS 2
@@ -55,7 +55,7 @@ struct process *findProcessSettingCollectionByName(const char *name);
 void initialiseAllProcesses();
 void startProcess(process *proc);
 struct process *startProcessByName(char *name);
-void startProcesses( char *name, bool showStatus);
+void startProcesses();
 void updateProcesses();
 void dumpProcessStatus();
 void updateProcess(struct process *process);

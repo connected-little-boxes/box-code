@@ -92,7 +92,6 @@ void printMessage(char *messageText, const char *option)
         snprintf(PRINTERMessageBuffer, PRINTERMESSAGE_LENGTH, "%s\n", messageText);
     }
     Serial1.print(PRINTERMessageBuffer);
-    Serial.printf("Printing:%s\n", PRINTERMessageBuffer);
 }
 
 #define PRINTER_FLOAT_VALUE_OFFSET 0
@@ -266,12 +265,11 @@ void initPrinter()
 void startPrinter()
 {
     // all the hardware is set up in the init function. We just display the default message here
-    //
-    printMessage("Printer starting", NULL);
 
     if (printerSettings.printerEnabled)
     {
         printerProcess.status = PRINTER_OK;
+        printMessage("Printer starting", NULL);
     }
 }
 

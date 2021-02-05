@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 #include "settings.h"
-#include "commands.h"
+#include "controller.h"
 
 #define SENSOR_OK 0
 #define SENSOR_OFF 1

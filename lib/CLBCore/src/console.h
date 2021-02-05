@@ -6,7 +6,7 @@
 #include "sensors.h"
 #include "processes.h"
 #include "pirSensor.h"
-#include "commands.h"
+#include "controller.h"
 
 #define CONSOLE_COMMAND_SIZE 30
 #define SERIAL_BUFFER_SIZE 1500

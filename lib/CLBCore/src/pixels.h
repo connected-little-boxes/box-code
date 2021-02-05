@@ -2,7 +2,7 @@
 
 #include "utils.h"
 #include "settings.h"
-#include "commands.h"
+#include "controller.h"
 #include "processes.h"
 
 #define PIXEL_OK 100

@@ -3,7 +3,7 @@
 #include "sensors.h"
 #include "settings.h"
 #include "mqtt.h"
-#include "commands.h"
+#include "controller.h"
 #include "pixels.h"
 
 struct PirSensorSettings pirSensorSettings;

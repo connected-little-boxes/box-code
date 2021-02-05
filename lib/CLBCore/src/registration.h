@@ -6,7 +6,7 @@
 #include "sensors.h"
 #include "processes.h"
 #include "pirSensor.h"
-#include "commands.h"
+#include "controller.h"
 #include "mqtt.h"
 
 #define REGISTRATION_COMMAND_SIZE 30

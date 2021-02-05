@@ -2,7 +2,7 @@
 #include "pixels.h"
 #include "errors.h"
 #include "mqtt.h"
-#include "commands.h"
+#include "controller.h"
 #include "clock.h"
 
 // Some of the colours have been commented out because they don't render well
@@ -661,7 +661,7 @@ void setupWalkingColour(ColourValue colour)
 
 	clearVirtualPixels(lamps);
 
-	for (int i = 0; i < pixelSettings.noOfVirtualPixels; i++)
+	for (int i = 0; i < MAX_NO_OF_VIRTUAL_PIXELS; i++)
 	{
 		int pos = i * degreesPerPixel;
 		// Serial.printf("Pixel: %d position:%d", i, pos);

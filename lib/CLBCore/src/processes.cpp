@@ -154,9 +154,9 @@ void initialiseAllProcesses()
 	}
 }
 
-void startProcesses( char *name, bool showStatus)
+void startProcesses()
 {
-	Serial.printf("Starting %s processes\n", name);
+	Serial.printf("Starting processes\n");
 
 	struct process *procPtr = activeProcessList;
 
@@ -323,23 +323,16 @@ Command * FindCommandInProcess(process * procPtr, const char *commandName)
 
 Command *FindCommandByName(const char * processName, const char *name)
 {
-	Serial.printf("Searching for command %s in process %s\n", name, processName);
-
 	struct process *procPtr = findProcessByName(processName);
 
 	if(procPtr==NULL){
-		Serial.printf("Can't find the process:%s\n", processName);
 		return NULL;
 	}
 
-	Serial.printf("Found the process:%s\n", processName);
-
 	for (int i = 0; i < procPtr->commands->noOfCommands; i++)
 	{
-		Serial.printf("    Command: %s\n", procPtr->commands->commands[i]->name);
 		if (strcasecmp(procPtr->commands->commands[i]->name, name) == 0)
 		{
-			Serial.printf("   Found it!\n");
 			return procPtr->commands->commands[i];
 		}
 	}

@@ -1,0 +1,6 @@
+
+#define DEFAULT_WIFI1_SSID "Your SSID"
+#define DEFAULT_WIFI1_PWD "Your password"
+#define DEFAULT_MQTT_HOST "Your MQTT Host"
+#define DEFAULT_MQTT_USER "Your MQTT user"
+#define DEFAULT_MQTT_PWD "Your MQTT password"

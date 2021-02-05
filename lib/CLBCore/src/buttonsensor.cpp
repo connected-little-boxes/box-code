@@ -1,7 +1,7 @@
 #include "buttonSensor.h"
 #include "debug.h"
 #include "settings.h"
-#include "commands.h"
+#include "controller.h"
 #include "sensors.h"
 #include "mqtt.h"
 #include "pixels.h"

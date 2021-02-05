@@ -7,7 +7,7 @@
 #include "pirSensor.h"
 #include "buttonsensor.h"
 #include "inputswitch.h"
-#include "commands.h"
+#include "controller.h"
 #include "statusled.h"
 #include "messages.h"
 #include "console.h"
@@ -66,19 +66,6 @@ void displayControlMessage(int messageNumber,  MessageLevel severity,  char *mes
 
 unsigned long heapPrintTime = 0;
 
-#define HEAP_PRINT_GAP 500
-
-void printString(char * string)
-{
-	while(*string)
-	{
-		Serial1.print(*string);
-		Serial.print(*string);
-		Serial1.flush();
-		string++;
-	}
-}
-
 void startDevice()
 {
 	Serial.begin(115200);
@@ -89,13 +76,13 @@ void startDevice()
 
 	loadBootReasonMessage();
 
-	Serial.println(bootReasonMessage);
+	Serial.printf("Connected Little Boxes Device\n");
+	Serial.printf("www.connectedlittleboxes.com\n");
+	Serial.printf("Build date: %s %s\n", __DATE__, __TIME__);
+	Serial.printf("Reset reason: %s\n\n", bootReasonMessage);
 
-	Serial.printf("\n\nWelcome to Clever Little Boxes\n\n");
-	Serial.printf("\n\nBuild date: %s %s\n\n", __DATE__, __TIME__);
-
-	Serial.print("Initial Heap: ");
-	Serial.println(ESP.getFreeHeap());
+//	Serial.print("Initial Heap: ");
+//	Serial.println(ESP.getFreeHeap());
 	heapPrintTime = millis();
 
 	populateProcessList();
@@ -112,7 +99,7 @@ void startDevice()
 
 	buildActiveProcessListFromMask(BOOT_PROCESS);
 
-	startProcesses("Boot", true);
+	startProcesses();
 
 	bindMessageHandler(displayControlMessage);
 
@@ -132,10 +119,12 @@ void setup()
 
 uint32_t oldHeap = 0;
 
+#define HEAP_PRINT_INTERVAL 500
+
 void heapMonitor()
 {
 	unsigned long m = millis();
-	if ((m - heapPrintTime) > HEAP_PRINT_GAP)
+	if ((m - heapPrintTime) > HEAP_PRINT_INTERVAL)
 	{
 		uint32_t newHeap = ESP.getFreeHeap();
 		if (newHeap != oldHeap)

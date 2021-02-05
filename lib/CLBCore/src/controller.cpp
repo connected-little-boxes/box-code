@@ -1,4 +1,4 @@
-#include "commands.h"
+#include "controller.h"
 #include "processes.h"
 #include "console.h"
 #include "mqtt.h"
@@ -258,13 +258,9 @@ void startSensorListener(struct sensorListenerConfiguration *commandItem)
 		return;
 	}
 
-	Serial.printf("Starting listener:%s for sensor:%s\n", commandItem->listenerName, commandItem->sensorName);
-
 	sensorListener *newListener = makeSensorListenerFromConfiguration(commandItem);
 
 	// add it to the sensor
-
-	Serial.println("Adding the listener to the sensor");
 
 	struct sensor *targetSensor = findSensorByName(commandItem->sensorName);
 

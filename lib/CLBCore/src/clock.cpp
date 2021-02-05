@@ -303,7 +303,6 @@ void initialiseAlarm(clockAlarmDescriptor *alarmDesc, struct clockReading *readi
 
 	if (!alarmDetails->enabled)
 	{
-		Serial.println("    Alarm disabled");
 		return;
 	}
 
@@ -312,13 +311,11 @@ void initialiseAlarm(clockAlarmDescriptor *alarmDesc, struct clockReading *readi
 
 	if (!alarmDetails->fireOnTimeMatch)
 	{
-		Serial.println("   Alarm not firing on match");
 		// If the alarm time is less than the current time we fire the alarm anyway
 		// This is so that if we start the device after an alarm time we still get
 		// the alarm behaviour that we want
 		if (pastAlarmTime(alarmDesc->alarm, reading))
 		{
-			Serial.println("       Triggering alarm behaviour");
 			alarmDesc->alarm->triggered = true;
 			fireSensorListenersOnMaskBit(&clockSensor, alarmDesc->alarmMask);
 		}
@@ -356,7 +353,6 @@ void initialiseAlarms(struct clockReading *reading)
 {
 	for (unsigned int i = 0; i < sizeof(alarms) / sizeof(clockAlarmDescriptor); i = i + 1)
 	{
-		Serial.printf("Checking alarm:%d\n", i);
 		initialiseAlarm(&alarms[i], reading);
 	}
 }
@@ -365,7 +361,6 @@ void initialiseTimers(struct clockReading *reading)
 {
 	for (unsigned int i = 0; i < sizeof(timers) / sizeof(clockTimerDescriptor); i = i + 1)
 	{
-		Serial.printf("Checking timer:%d\n", i);
 		initialiseTimer(&timers[i], reading);
 	}
 }

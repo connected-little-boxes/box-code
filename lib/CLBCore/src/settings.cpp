@@ -8,7 +8,7 @@
 #include "utils.h"
 #include "sensors.h"
 #include "processes.h"
-#include "commands.h"
+#include "controller.h"
 #include "registration.h"
 
 struct Device_Settings settings;
@@ -578,7 +578,7 @@ void PrintSettingCollectionFiltered(SettingItemCollection *settingCollection)
 
 void PrintSystemDetails()
 {
-	Serial.printf("  Device:%s Version %d.%d\n", settings.deviceName, MAJOR_VERSION, MINOR_VERSION);
+	Serial.printf("   device:%s Version %d.%d\n", settings.deviceName, MAJOR_VERSION, MINOR_VERSION);
 }
 
 void PrintAllSettings()
@@ -818,11 +818,11 @@ boolean validStoredSettings()
 
 	unsigned char readChecksum = readByteFromEEPROM(loadAddr);
 
-	Serial.printf("  Settings occupy %d bytes of EEPROM\n", loadAddr - SETTINGS_EEPROM_OFFSET);
+	Serial.printf("   settings occupy %d bytes of EEPROM\n", loadAddr - SETTINGS_EEPROM_OFFSET);
 
 	if(calcChecksum != readChecksum)
 	{
-		Serial.printf("  Checksum fail: Calc checksum:%02x  read checksum:%02x\n", calcChecksum, readChecksum);
+		Serial.printf("   checksum fail: Calc checksum:%02x  read checksum:%02x\n", calcChecksum, readChecksum);
 		result = false;
 	}
 
@@ -834,7 +834,7 @@ boolean validStoredSettings()
 
 	if(check != CHECK_BYTE_O1)
 	{
-		Serial.printf("  Check byte 1 fail: Read:%02x expected:%02x\n", check, CHECK_BYTE_O1);
+		Serial.printf("   check byte 1 fail: Read:%02x expected:%02x\n", check, CHECK_BYTE_O1);
 		result = false;
 	}
 
@@ -844,7 +844,7 @@ boolean validStoredSettings()
 
 	if(check != CHECK_BYTE_O2)
 	{
-		Serial.printf("  Check byte 2 fail: Read:%02x expected:%02x\n", check, CHECK_BYTE_O1);
+		Serial.printf("   check byte 2 fail: Read:%02x expected:%02x\n", check, CHECK_BYTE_O1);
 		result = false;
 	}
 
@@ -1057,15 +1057,15 @@ void setupSettings()
 	{
 		loadSettings();
 		PrintSystemDetails();
-		Serial.println("  Settings loaded OK\n\n");
+		Serial.println("   settings loaded OK\n");
 	}
 	else
 	{
 		resetSettings();
 		saveSettings();
 		PrintSystemDetails();
-		Serial.println("  ***** Settings Reset\n\n");
+		Serial.println("   ***** settings reset\n");
 	}
 
-	PrintAllSettings();
+	//PrintAllSettings();
 }

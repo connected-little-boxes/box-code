@@ -1,7 +1,7 @@
 #include "sensors.h"
 #include "pixels.h"
 #include "settings.h"
-#include "commands.h"
+#include "controller.h"
 
 struct sensor *activeSensorList = NULL;
 struct sensor *allSensorList = NULL;
@@ -28,8 +28,6 @@ void addSensorToAllSensorsList(struct sensor *newSensor)
 
 void addMessageListenerToSensor(struct sensor *sensor, struct sensorListener *listener)
 {
-	Serial.printf("Adding message listener %s to:%s\n", listener->config->listenerName, sensor->sensorName);
-
 	listener->nextMessageListener = NULL;
 
 	if (sensor->listeners == NULL)

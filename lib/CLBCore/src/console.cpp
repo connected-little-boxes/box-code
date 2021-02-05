@@ -252,7 +252,7 @@ struct consoleCommand userCommands[] =
 	{"listeners", "list the command listeners", doDumpListeners},
 	{"clearlisteners", "clear the command listeners (also restarts the device)", doClearListeners},
 	{"restart", "restart the device", doRestart},
-	{"otaupdate", "update firmware over the air", doOTAUpdate},
+	{"otaupdate", "start an over-the-air firmware update", doOTAUpdate},
 	{"clear", "clear all seeings and restart the device", doClear}
 };
 
@@ -276,9 +276,12 @@ void doHelp(char * commandLine)
 		"- would set the name of the mqttdevicename to Rob.\n\n"
 		"To see a list of all the setting names use the command settings.\n"
 		"This displays all the settings, their values and names.\n"
-		"To see a dump of settings (which can be restored to the device later) use dump\n"
-		"dump and settings can be followed by a filter string to match setting names\n"
+		"To see a dump of settings (which can be restored to the device later) use dump.\n"
+		"The dump and settings can be followed by a filter string to match setting names\n\n"
+        "   dump pix\n\n"
+        "- would dump all the settings that contain the string pix\n\n"
 		"If you enter a JSON string this will be interpreted as a remote command.\n"
+		"See the remote command documentation for more details of this.\n"
 	);
 }
 
