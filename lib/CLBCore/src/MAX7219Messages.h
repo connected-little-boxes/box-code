@@ -12,7 +12,7 @@
 #define MAX7219_DEFAULT_FRAME_TIME_FRACTION 0.1
 #define MAX7219_DEFAULT_BRIGHTNESS_FRACTION 0.5
 
-#define MAX7219MESSAGE_COMMAND_LENGTH 10
+#define MAX7219MESSAGE_COMMAND_LENGTH 20
 
 struct Max7219MessagesSettings
 {
@@ -28,7 +28,7 @@ struct Max7219MessagesSettings
     int yDevices;
 };
 
-void displayMAX7219Message(char *messageText);
+void displayMAX7219Message(char *messageText, char * options);
 
 void max7219max7219MessagesOff();
 

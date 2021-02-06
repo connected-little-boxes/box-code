@@ -460,6 +460,7 @@ void checkClock(struct clockReading *reading)
 	static int lastClockSecond =-1;
 	static int lastClockMinute = -1;
 	static int lastClockHour = -1;
+	static int lastClockDay = -1;
 
 	if(lastClockSecond == reading->second){
 		return;
@@ -502,6 +503,17 @@ void checkClock(struct clockReading *reading)
 				lastClockHour = reading->hour;
 			}
 		}
+
+		if ((pos->config->sendOptionMask & CLOCK_DAY_TICK) != 0)
+		{
+			if(lastClockDay != reading->day){
+				TRACELN("Day Tick");
+				snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%02d:%02d:%02d",reading->day,reading->month,reading->year);
+				pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
+				lastClockDay = reading->day;
+			}
+		}
+
 		pos = pos->nextMessageListener;
 	}
 }
@@ -514,7 +526,8 @@ struct sensorEventBinder ClockSensorListenerFunctions[] = {
 	{"timer2", TIMER2_TRIGGER_BIT},
 	{"second", CLOCK_SECOND_TICK},
 	{"minute", CLOCK_MINUTE_TICK},
-	{"hour", CLOCK_HOUR_TICK}
+	{"hour",   CLOCK_HOUR_TICK},
+	{"day",    CLOCK_DAY_TICK}
 	};
 
 Timezone homeTimezone;

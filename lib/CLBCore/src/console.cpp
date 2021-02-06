@@ -90,7 +90,7 @@ void doDumpSettings(char * commandLine)
 }
 
 
-#define CONSOLE_MESSAGE_SIZE 300
+#define CONSOLE_MESSAGE_SIZE 500
 
 char consoleMessageBuffer[CONSOLE_MESSAGE_SIZE];
 

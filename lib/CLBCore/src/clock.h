@@ -25,6 +25,7 @@
 #define CLOCK_SECOND_TICK 32
 #define CLOCK_MINUTE_TICK 64
 #define CLOCK_HOUR_TICK 128
+#define CLOCK_DAY_TICK 256
 
 struct clockReading {
 	int hour;

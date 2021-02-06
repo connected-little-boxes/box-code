@@ -355,20 +355,8 @@ void max7217SetBrightness()
     mp->setIntensity((int)(max7219MessagesSettings.brightness * 15.0));
 }
 
-void displayMAX7219Message(char *messageText)
-{
-    snprintf(MAX7219MessageBuffer, MAX_MESSAGE_LENGTH, messageText);
-
-    mp->update(false);
-
-    mp->clear();
-
-    max7217SetBrightness();
-
-    mp->drawText(0, mp->getYMax(), MAX7219MessageBuffer, MD_MAXPanel::ROT_0);
-
-    mp->update();
-}
+// font defined in 
+extern const uint8_t PROGMEM _sysfont[];  ///< System variable pitch font table
 
 void startMAX7219MessageScroll()
 {
@@ -384,6 +372,39 @@ void stopMAX7219MessageScroll()
     MAX7219scrollPos = 0;
 
     MAX7219scrolling = false;
+}
+
+void displayMAX7219Message(char *messageText, char * options)
+{
+    snprintf(MAX7219MessageBuffer, MAX_MESSAGE_LENGTH, messageText);
+
+    if (strContains(options, "scroll"))
+    {
+        startMAX7219MessageScroll();
+    }
+    else
+    {
+        stopMAX7219MessageScroll();
+    }
+
+    if(strContains(options,"small"))
+    {
+        mp->setFont(_Fixed_5x3);
+    }
+    else
+    {
+        mp->setFont(_sysfont);
+    }
+
+    mp->update(false);
+
+    mp->clear();
+
+    max7217SetBrightness();
+
+    mp->drawText(0, mp->getYMax(), MAX7219MessageBuffer, MD_MAXPanel::ROT_0);
+
+    mp->update();
 }
 
 #define MAX7219_FLOAT_VALUE_OFFSET 0
@@ -411,8 +432,8 @@ struct CommandItem MAX7219floatValueItem = {
     noDefaultAvailable};
 
 struct CommandItem MAX7219CommandOptionName = {
-    "option",
-    "max7219 message option",
+    "options",
+    "max7219 message options (small,scroll)",
     MAX7219_OPTION_OFFSET,
     textCommand,
     validateMAX7219OptionString,
@@ -483,18 +504,9 @@ int doSetMAX7219Message(char *destination, unsigned char *settingBase)
 
     snprintf(buffer, MAX_MESSAGE_LENGTH, "%s%s%s", pre, message, post);
 
-    const char *option = (const char *)(settingBase + MAX7219_OPTION_OFFSET);
+    char *options= (char *)(settingBase + MAX7219_OPTION_OFFSET);
 
-    if (strcasecmp(option, "scroll") == 0)
-    {
-        startMAX7219MessageScroll();
-    }
-    else
-    {
-        stopMAX7219MessageScroll();
-    }
-
-    displayMAX7219Message(buffer);
+    displayMAX7219Message(buffer, options);
 
     return WORKED_OK;
 }
@@ -577,22 +589,13 @@ int doShowMAX7219value(char *destination, unsigned char *settingBase)
     char *post = (char *)(settingBase + MAX7219_POST_TEXT_OFFSET);
     char *pre = (char *)(settingBase + MAX7219_PRE_TEXT_OFFSET);
 
-    const char *option = (const char *)(settingBase + MAX7219_OPTION_OFFSET);
+    char *options = (char *)(settingBase + MAX7219_OPTION_OFFSET);
 
     char buffer[MAX_MESSAGE_LENGTH];
 
     snprintf(buffer, MAX_MESSAGE_LENGTH, "%s%.1f%s", pre, value, post);
 
-    displayMAX7219Message(buffer);
-
-    if (strcasecmp(option, "scroll") == 0)
-    {
-        startMAX7219MessageScroll();
-    }
-    else
-    {
-        stopMAX7219MessageScroll();
-    }
+    displayMAX7219Message(buffer, options);
 
     return WORKED_OK;
 }
@@ -692,6 +695,7 @@ struct CommandItemCollection MAX7219Commands =
 
 unsigned long MAX7219millisAtLastScroll;
 
+
 void initMAX7219Messages()
 {
     // perform all the hardware startup before we start the WiFi running
@@ -711,7 +715,6 @@ void initMAX7219Messages()
 
             mp->begin();
             mp->clear();
-            //mp->setFont(_Fixed_5x3);
 
             MAX7219FrameDelay = (int)max7219MessagesSettings.maxFrameTimeMS *
                                 max7219MessagesSettings.frameTimeFraction;
@@ -735,7 +738,7 @@ void startMAX7219Messages()
         return ;
     }
 
-    displayMAX7219Message(max7219MessagesSettings.max7219DefaultMessage);
+    displayMAX7219Message(max7219MessagesSettings.max7219DefaultMessage,"");
 }
 
 void updateMAX7219Messages()

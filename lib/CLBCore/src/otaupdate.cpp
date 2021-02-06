@@ -5,10 +5,10 @@
 #include "otaupdate.h"
 
 #define ProductKey "efc8b1da-4927-48aa-95d1-c52a6cda8099"
-#define Version "1.0.0.0"
+#define Version "1.0.0.4"
 #define MakeFirmwareInfo(k, v) "&_FirmwareInfo&k=" k "&v=" v "&FirmwareInfo_&"
 
-String version = "1.0.0.0";
+String version = "1.0.0.4";
 
 #define USE_SERIAL Serial
 
