@@ -1,5 +1,7 @@
 #pragma once
 
+#include "controller.h"
+
 #define MAX7219MESSAGES_OK 1200
 #define MAX7219MESSAGES_STOPPED 1201
 
@@ -10,13 +12,12 @@
 #define MAX7219_DEFAULT_FRAME_TIME_FRACTION 0.1
 #define MAX7219_DEFAULT_BRIGHTNESS_FRACTION 0.5
 
-#define MAX7219MESSAGE_LENGTH 20
 #define MAX7219MESSAGE_COMMAND_LENGTH 10
 
 struct Max7219MessagesSettings
 {
     bool max7219MessagesEnabled;
-    char max7219DefaultMessage [MAX7219MESSAGE_LENGTH];
+    char max7219DefaultMessage [MAX_MESSAGE_LENGTH];
     int maxFrameTimeMS;
     float frameTimeFraction;
     float brightness;

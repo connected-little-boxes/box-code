@@ -113,7 +113,7 @@ struct Max7219MessagesSettings max7219MessagesSettings;
 
 MD_MAXPanel *mp = NULL;
 
-char MAX7219MessageBuffer[MAX7219MESSAGE_LENGTH];
+char MAX7219MessageBuffer[MAX_MESSAGE_LENGTH];
 
 int MAX7219scrollPos;
 
@@ -307,14 +307,14 @@ void setDefaultMax7219Message(void *dest)
 
 boolean validateMax7219Message(void *dest, const char *source)
 {
-    return validateString((char *)dest,source, MAX7219MESSAGE_LENGTH);
+    return validateString((char *)dest,source, MAX_MESSAGE_LENGTH);
 }
 
 struct SettingItem max7219defaultMessage = {
     "Text displayed at powerup",
     "max7219defaultMessage",
     &max7219MessagesSettings.max7219DefaultMessage,
-    MAX7219MESSAGE_LENGTH,
+    MAX_MESSAGE_LENGTH,
     text,
     setDefaultMax7219Message,
     validateMax7219Message};
@@ -357,7 +357,9 @@ void max7217SetBrightness()
 
 void displayMAX7219Message(char *messageText)
 {
-    snprintf(MAX7219MessageBuffer, MAX7219MESSAGE_LENGTH, messageText);
+    snprintf(MAX7219MessageBuffer, MAX_MESSAGE_LENGTH, messageText);
+
+    mp->update(false);
 
     mp->clear();
 
@@ -386,8 +388,9 @@ void stopMAX7219MessageScroll()
 
 #define MAX7219_FLOAT_VALUE_OFFSET 0
 #define MAX7219_MESSAGE_OFFSET (MAX7219_FLOAT_VALUE_OFFSET + sizeof(float))
-#define MAX7219_OPTION_OFFSET (MAX7219_MESSAGE_OFFSET + MAX7219MESSAGE_LENGTH)
-#define MAX7219_TAIL_TEXT_OFFSET (MAX7219_OPTION_OFFSET + MAX7219MESSAGE_COMMAND_LENGTH)
+#define MAX7219_OPTION_OFFSET (MAX7219_MESSAGE_OFFSET + MAX_MESSAGE_LENGTH)
+#define MAX7219_PRE_TEXT_OFFSET (MAX7219_OPTION_OFFSET + MAX7219MESSAGE_COMMAND_LENGTH)
+#define MAX7219_POST_TEXT_OFFSET (MAX7219_PRE_TEXT_OFFSET + MAX7219MESSAGE_COMMAND_LENGTH)
 
 boolean validateMAX7219OptionString(void *dest, const char *newValueStr)
 {
@@ -396,7 +399,7 @@ boolean validateMAX7219OptionString(void *dest, const char *newValueStr)
 
 boolean validateMAX7219MessageString(void *dest, const char *newValueStr)
 {
-    return (validateString((char *)dest, newValueStr, MAX7219MESSAGE_LENGTH));
+    return (validateString((char *)dest, newValueStr, MAX_MESSAGE_LENGTH));
 }
 
 struct CommandItem MAX7219floatValueItem = {
@@ -423,10 +426,18 @@ struct CommandItem MAX7219MessageText = {
     validateMAX7219MessageString,
     noDefaultAvailable};
 
-struct CommandItem MAX7219TailText = {
-    "tail",
-    "max7219 tail text",
-    MAX7219_TAIL_TEXT_OFFSET,
+struct CommandItem MAX7219PreText = {
+    "pre",
+    "max7219 pre text",
+    MAX7219_PRE_TEXT_OFFSET,
+    textCommand,
+    validateMAX7219MessageString,
+    setDefaultEmptyString};
+
+struct CommandItem MAX7219PostText = {
+    "post",
+    "max7219 post text",
+    MAX7219_POST_TEXT_OFFSET,
     textCommand,
     validateMAX7219MessageString,
     setDefaultEmptyString};
@@ -434,7 +445,9 @@ struct CommandItem MAX7219TailText = {
 struct CommandItem *MAX7219DisplayMessageCommandItems[] =
     {
         &MAX7219MessageText,
-        &MAX7219CommandOptionName};
+        &MAX7219CommandOptionName,
+        &MAX7219PreText,
+        &MAX7219PostText};
 
 int doSetMAX7219Message(char *destination, unsigned char *settingBase);
 
@@ -463,6 +476,12 @@ int doSetMAX7219Message(char *destination, unsigned char *settingBase)
     }
 
     char *message = (char *)(settingBase + MAX7219_MESSAGE_OFFSET);
+    char *post = (char *)(settingBase + MAX7219_POST_TEXT_OFFSET);
+    char *pre = (char *)(settingBase + MAX7219_PRE_TEXT_OFFSET);
+
+    char buffer[MAX_MESSAGE_LENGTH];
+
+    snprintf(buffer, MAX_MESSAGE_LENGTH, "%s%s%s", pre, message, post);
 
     const char *option = (const char *)(settingBase + MAX7219_OPTION_OFFSET);
 
@@ -475,7 +494,7 @@ int doSetMAX7219Message(char *destination, unsigned char *settingBase)
         stopMAX7219MessageScroll();
     }
 
-    displayMAX7219Message(message);
+    displayMAX7219Message(buffer);
 
     return WORKED_OK;
 }
@@ -521,9 +540,9 @@ int doSetMAX7219DefaultMessage(char *destination, unsigned char *settingBase)
 struct CommandItem *MAX7219DisplayValueCommandItems[] =
     {
         &MAX7219floatValueItem,
-        &MAX7219MessageText,
         &MAX7219CommandOptionName,
-        &MAX7219TailText};
+        &MAX7219PreText,
+        &MAX7219PostText};
 
 int doShowMAX7219value(char *destination, unsigned char *settingBase);
 
@@ -555,15 +574,14 @@ int doShowMAX7219value(char *destination, unsigned char *settingBase)
 
     float value = getUnalignedFloat(valuePtr);
 
-    char *message = (char *)(settingBase + MAX7219_MESSAGE_OFFSET);
-
-    char *tail = (char *)(settingBase + MAX7219_TAIL_TEXT_OFFSET);
+    char *post = (char *)(settingBase + MAX7219_POST_TEXT_OFFSET);
+    char *pre = (char *)(settingBase + MAX7219_PRE_TEXT_OFFSET);
 
     const char *option = (const char *)(settingBase + MAX7219_OPTION_OFFSET);
 
-    char buffer[MAX7219MESSAGE_LENGTH];
+    char buffer[MAX_MESSAGE_LENGTH];
 
-    snprintf(buffer, MAX7219MESSAGE_LENGTH, "%s%.1f%s", message, value, tail);
+    snprintf(buffer, MAX_MESSAGE_LENGTH, "%s%.1f%s", pre, value, post);
 
     displayMAX7219Message(buffer);
 
@@ -693,7 +711,7 @@ void initMAX7219Messages()
 
             mp->begin();
             mp->clear();
-            //            mp->setFont(_Fixed_5x3);
+            //mp->setFont(_Fixed_5x3);
 
             MAX7219FrameDelay = (int)max7219MessagesSettings.maxFrameTimeMS *
                                 max7219MessagesSettings.frameTimeFraction;
@@ -722,7 +740,6 @@ void startMAX7219Messages()
 
 void updateMAX7219Messages()
 {
-
     if (MAX7219scrolling)
     {
         unsigned long currentMillis = millis();

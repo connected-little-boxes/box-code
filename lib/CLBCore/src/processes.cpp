@@ -1,3 +1,5 @@
+#include "debug.h"
+
 #include "processes.h"
 #include "pixels.h"
 
@@ -308,13 +310,20 @@ void iterateThroughProcessCommands(void (*func)(Command *c))
 
 Command * FindCommandInProcess(process * procPtr, const char *commandName)
 {
+	TRACE("Find command:");
+	TRACELN(commandName);
+
 	for (int i = 0; i < procPtr->commands->noOfCommands; i++)
 	{
+		TRACE("    checking:");
+		TRACELN(procPtr->commands->commands[i]->name);
 		if (strcasecmp(procPtr->commands->commands[i]->name, commandName) == 0)
 		{
+			TRACELN("    Found it!");
 			return procPtr->commands->commands[i];
 		}
 	}
+	TRACELN("    Not found");
 	return NULL;
 }
 

@@ -22,7 +22,9 @@
 
 #define TIMER1_TRIGGER_BIT 8
 #define TIMER2_TRIGGER_BIT 16
-#define CLOCK_TIME_TICK 32
+#define CLOCK_SECOND_TICK 32
+#define CLOCK_MINUTE_TICK 64
+#define CLOCK_HOUR_TICK 128
 
 struct clockReading {
 	int hour;

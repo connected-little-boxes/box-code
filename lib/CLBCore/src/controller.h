@@ -6,6 +6,10 @@
 
 #define DEFAULT_READING_INTERVAL_SECS 10
 
+#define MAX_MESSAGE_LENGTH 20
+#define VALUE_START_POSITION 0
+#define MESSAGE_START_POSITION sizeof(float)
+
 struct controllerSettings 
 {
     bool active;

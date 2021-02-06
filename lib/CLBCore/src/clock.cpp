@@ -457,30 +457,53 @@ void checkTimers(struct clockReading *reading)
 
 void checkClock(struct clockReading *reading)
 {
-	// static int lastClockSecond =-1;
+	static int lastClockSecond =-1;
+	static int lastClockMinute = -1;
+	static int lastClockHour = -1;
 
-	// if(lastClockSecond == reading->second){
-	// 	return;
-	// }
+	if(lastClockSecond == reading->second){
+		return;
+	}
 
-	// lastClockSecond = reading->second;
+	lastClockSecond = reading->second;
 
-	// struct sensorListener *pos = clockSensor.listeners;
+	struct sensorListener *pos = clockSensor.listeners;
 
-	// while (pos != NULL)
-	// {
-	// 	//Serial.printf("        Listener:%s sendoption:%d\n", pos->config->listenerName, pos->config->sendOptionMask);
-	// 	if ((pos->config->sendOptionMask & mask) != 0)
-	// 	{
-	// 		//Serial.println("Got a match");
-	// 		// dumpCommand(pos->config->commandProcess, pos->config->commandName, pos->config->optionBuffer);
+	while (pos != NULL)
+	{
+		char * messageBuffer = (char *) pos->config->optionBuffer + MESSAGE_START_POSITION;
 
-	// 		pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
-	// 		//Serial.println("command performed");
-	// 	}
-	// 	pos = pos->nextMessageListener;
-	// }
+		if ((pos->config->sendOptionMask & CLOCK_SECOND_TICK) != 0)
+		{
+			TRACELN("Second Tick");
+			snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%02d:%02d:%02d",
+			reading->hour,
+			reading->minute,
+			reading->second);
+			pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
+		}
 
+		if ((pos->config->sendOptionMask & CLOCK_MINUTE_TICK) != 0)
+		{
+			if(lastClockMinute != reading->minute){
+				TRACELN("Minute Tick");
+				snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%02d:%02d",reading->hour,reading->minute);
+				pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
+				lastClockMinute = reading->minute;
+			}
+		}
+
+		if ((pos->config->sendOptionMask & CLOCK_HOUR_TICK) != 0)
+		{
+			if(lastClockHour != reading->hour){
+				TRACELN("Hour Tick");
+				snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%02d:%02d",reading->hour,reading->minute);
+				pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
+				lastClockHour = reading->hour;
+			}
+		}
+		pos = pos->nextMessageListener;
+	}
 }
 
 struct sensorEventBinder ClockSensorListenerFunctions[] = {
@@ -489,7 +512,9 @@ struct sensorEventBinder ClockSensorListenerFunctions[] = {
 	{"alarm3", ALARM3_TRIGGER_BIT},
 	{"timer1", TIMER1_TRIGGER_BIT},
 	{"timer2", TIMER2_TRIGGER_BIT},
-	{"tick", CLOCK_TIME_TICK}
+	{"second", CLOCK_SECOND_TICK},
+	{"minute", CLOCK_MINUTE_TICK},
+	{"hour", CLOCK_HOUR_TICK}
 	};
 
 Timezone homeTimezone;
