@@ -93,3 +93,7 @@ void iterateThroughSensorListeners(struct sensor * sensor, void (*func) (struct 
 void fireSensorListenersOnMaskBit(struct sensor *sensor, int mask);
 struct sensorEventBinder *findSensorListenerByName(struct sensor *s, const char *name);
 struct sensorEventBinder * findSensorEventBinderByMask(struct sensor * s, int mask);
+
+void addListenerToDeletedListeners(struct sensorListener * listener);
+struct sensorListener * getListenerFromDeletedListeners();
+void removeMessageListenerFromSensor(struct sensor *sensor, struct sensorListener *listener);

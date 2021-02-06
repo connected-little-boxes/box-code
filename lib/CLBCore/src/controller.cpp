@@ -250,14 +250,6 @@ sensorListener *makeSensorListenerFromConfiguration(struct sensorListenerConfigu
 	return result;
 }
 
-// {
-// 	"createlistener",
-// 		"Creates a listener function and add it to a sensor",
-// 		createListenerItems,
-// 		sizeof(createListenerItems) / sizeof(struct CommandItem *),
-// 		doCreateSensorListener
-// };
-
 struct Command *controllerCommandList[] = {};
 
 struct CommandItemCollection controllerCommands =

@@ -1,3 +1,4 @@
+#include "debug.h"
 #include "sensors.h"
 #include "pixels.h"
 #include "settings.h"
@@ -5,6 +6,7 @@
 
 struct sensor *activeSensorList = NULL;
 struct sensor *allSensorList = NULL;
+struct sensorListener * deletedSensorListeners = NULL;
 
 void addSensorToAllSensorsList(struct sensor *newSensor)
 {
@@ -25,6 +27,57 @@ void addSensorToAllSensorsList(struct sensor *newSensor)
 		addPos->nextAllSensors = newSensor;
 	}
 }
+
+void addListenerToDeletedListeners(struct sensorListener * listener)
+{
+	listener->nextMessageListener = deletedSensorListeners;
+	deletedSensorListeners = listener;
+}
+
+struct sensorListener * getListenerFromDeletedListeners()
+{
+	if(deletedSensorListeners == NULL)
+	{
+		return NULL;
+	}
+
+	sensorListener * result = deletedSensorListeners;
+
+	deletedSensorListeners = deletedSensorListeners->nextMessageListener;
+
+	return result;
+}
+
+// Removes a listener from the sensor and adds the listner to the list of deleted listeners
+// The listeners are recycled if used again
+
+void removeMessageListenerFromSensor(struct sensor *sensor, struct sensorListener *listener)
+{
+	sensorListener *nodeBeforeDel = sensor->listeners;
+
+	while(nodeBeforeDel != NULL)
+	{
+		if(nodeBeforeDel->nextMessageListener == listener) 
+		{
+			break;
+		}
+		nodeBeforeDel = nodeBeforeDel->nextMessageListener;
+	}
+
+	if(nodeBeforeDel==NULL)
+	{
+		TRACELN("Remove listener - listner not found");
+		return;
+	}
+
+		// cut this listner out of the list
+	nodeBeforeDel->nextMessageListener = listener->nextMessageListener;
+
+	addListenerToDeletedListeners(listener);
+
+	TRACELN("Remove Listener - listner deleted");
+}
+
 
 void addMessageListenerToSensor(struct sensor *sensor, struct sensorListener *listener)
 {
