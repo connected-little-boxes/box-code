@@ -10,6 +10,6 @@
 
 bool startHostingConfigWebsite();
 
-extern struct process WebServerProcessDescriptor;
+extern struct process WebServerProcess;
 
 void webserverStatusMessage(char * buffer, int bufferLength);

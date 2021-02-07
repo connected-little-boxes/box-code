@@ -281,24 +281,24 @@ void pageNotFound(WebServer *webServer)
 
 void initWebServer()
 {
-	WebServerProcessDescriptor.status = WEBSERVER_OFF;
+	WebServerProcess.status = WEBSERVER_OFF;
 }
 
 void startWebServer()
 {
-	WebServerProcessDescriptor.status = WEBSERVER_READY;
+	WebServerProcess.status = WEBSERVER_READY;
 }
 
 bool startHostingConfigWebsite()
 {
-	Serial.printf("Starting host %d\n", WebServerProcessDescriptor.status);
+	Serial.printf("Starting host %d\n", WebServerProcess.status);
 
-	if(WebServerProcessDescriptor.status == WEBSERVER_OFF)
+	if(WebServerProcess.status == WEBSERVER_OFF)
 	{
 		return false;
 	}
 
-	if(WebServerProcessDescriptor.status == WEBSERVER_HOSTING)
+	if(WebServerProcess.status == WEBSERVER_HOSTING)
 	{
 		return true;
 	}
@@ -312,14 +312,14 @@ bool startHostingConfigWebsite()
 	webServer->on("/", std::bind(serveHome, webServer));
 	webServer->onNotFound(std::bind(pageNotFound, webServer));
 	webServer->begin();
-	WebServerProcessDescriptor.status = WEBSERVER_HOSTING;
+	WebServerProcess.status = WEBSERVER_HOSTING;
 
 	return true;
 }
 
 void updateWebServer()
 {
-	if (WebServerProcessDescriptor.status == WEBSERVER_HOSTING)
+	if (WebServerProcess.status == WEBSERVER_HOSTING)
 	{
 		webServer->handleClient();
 	}
@@ -328,18 +328,18 @@ void updateWebServer()
 
 void stopWebserver()
 {
-	WebServerProcessDescriptor.status = WEBSERVER_OFF;
+	WebServerProcess.status = WEBSERVER_OFF;
 }
 
 bool settingsWebServerStatusOK()
 {
-    return (WebServerProcessDescriptor.status == WEBSERVER_READY) || 
-	(WebServerProcessDescriptor.status == WEBSERVER_HOSTING);
+    return (WebServerProcess.status == WEBSERVER_READY) || 
+	(WebServerProcess.status == WEBSERVER_HOSTING);
 }
 
 void webserverStatusMessage(char * buffer, int bufferLength)
 {
-	switch (WebServerProcessDescriptor.status)
+	switch (WebServerProcess.status)
 	{
 	case WEBSERVER_READY:
 		snprintf(buffer, bufferLength, "Web server Ready");
@@ -356,7 +356,7 @@ void webserverStatusMessage(char * buffer, int bufferLength)
 	}
 }
 
-struct process WebServerProcessDescriptor = { 
+struct process WebServerProcess = { 
 	"Settingswebserver", 
 	initWebServer,
 	startWebServer, 
@@ -370,7 +370,7 @@ struct process WebServerProcessDescriptor = {
 	NULL,
 	NULL, 0, NULL, // no settings
 	NULL, // no commands
-	BOOT_PROCESS + ACTIVE_PROCESS + CONFIG_PROCESS,
+	BOOT_PROCESS + ACTIVE_PROCESS + CONFIG_PROCESS+WIFI_CONFIG_PROCESS,
 	NULL,
 	NULL,
 	NULL

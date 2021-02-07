@@ -21,6 +21,7 @@
 #include "settingsWebServer.h"
 #include "MAX7219Messages.h"
 #include "printer.h"
+#include "apconfig.h"
 
 // This function will be different for each build of the device.
 
@@ -36,9 +37,10 @@ void populateProcessList()
 	addProcessToAllProcessList(&controllerProcess);
 	addProcessToAllProcessList(&ServoProcess);
 	addProcessToAllProcessList(&RegistrationProcessDescriptor);
-	addProcessToAllProcessList(&WebServerProcessDescriptor);
+	addProcessToAllProcessList(&WebServerProcess);
 	addProcessToAllProcessList(&max7219MessagesProcess);
 	addProcessToAllProcessList(&printerProcess);
+	addProcessToAllProcessList(&ApConfigProcess);
 }
 
 void populateSensorList()
@@ -55,7 +57,7 @@ void populateSensorList()
 	addSensorToActiveSensorsList(&potSensor);
 }
 
-void displayControlMessage(int messageNumber,  MessageLevel severity,  char *messageText)
+void displayControlMessage(int messageNumber, MessageLevel severity, char *messageText)
 {
 	char buffer[20];
 
@@ -81,8 +83,8 @@ void startDevice()
 	Serial.printf("Build date: %s %s\n", __DATE__, __TIME__);
 	Serial.printf("Reset reason: %s\n\n", bootReasonMessage);
 
-//	Serial.print("Initial Heap: ");
-//	Serial.println(ESP.getFreeHeap());
+	//	Serial.print("Initial Heap: ");
+	//	Serial.println(ESP.getFreeHeap());
 	heapPrintTime = millis();
 
 	populateProcessList();
@@ -97,7 +99,14 @@ void startDevice()
 
 	initialiseAllProcesses();
 
-	buildActiveProcessListFromMask(BOOT_PROCESS);
+	if (false)
+	{
+		buildActiveProcessListFromMask(WIFI_CONFIG_PROCESS);
+	}
+	else
+	{
+		buildActiveProcessListFromMask(BOOT_PROCESS);
+	}
 
 	startProcesses();
 
@@ -131,7 +140,7 @@ void heapMonitor()
 		{
 			Serial.print("Heap: ");
 			Serial.println(newHeap);
-			oldHeap=newHeap;
+			oldHeap = newHeap;
 		}
 		heapPrintTime = millis();
 	}

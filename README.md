@@ -7,7 +7,7 @@ This is the repository for all the code that runs inside the connected box. This
 The code can run on either an ESP8266 or ESP32. You can select the build target in the platformio.ini file.There are also build options for M5Stack and M5Stick devices. To build and deploy to a device connect it to your computer and perform a deploy from Platform IO. 
 
 ## Configiring the device via the terminal
-The easiest way to configure a device once you have deployed the code is to use the PlatformIO terminal program. You can start this by clicking the serial connection item at the bottom of the screen. When the device boots it loads its setting information and starts the processes and sensors.
+The easiest way to configure a device once you have deployed the code is to use the PlatformIO terminal program. You can start this by clicking the serial connection 
 
 ```
 Connected Little Boxes Device      
@@ -86,10 +86,10 @@ If you enter a JSON string this will be interpreted as a remote command.
 You can assign a value to any of the settings:
 
 
-## Setting Connection Defaults
-You can set connection defaults for WiFi and MQTT connections. These will be stored in the device the first time that runs. 
+## Set default connection defaults into code
+You can put connection defaults for WiFi and MQTT connections into your code. These will be stored in the device the first time that runs. 
 
-Set the default values by entering them in the file defaults.hsec which is in the **lib\clb\src** folder. There is a sample file there called **defaults.hsec.sample** which you can use to get started. Fill in your details and  rename the file to defaults.hsec before building the solution.
+Set the default values by entering them in the file **defaults.hsec** which is in the **lib\clb\src** folder. There is a sample file there called **defaults.hsec.sample** which you can use to get started. Fill in your details and  rename the file to defaults.hsec before building the solution.
 ```
 #define DEFAULT_WIFI1_SSID "Your SSID"
 #define DEFAULT_WIFI1_PWD "Your password"

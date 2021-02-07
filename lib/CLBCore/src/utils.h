@@ -34,6 +34,7 @@ void loadBootReasonMessage();
 #include <WiFiClientSecure.h>
 #include <HTTPUpdate.h>
 #include <WebServer.h>
+//#include <DNSServer.h>
 
 #define LED_BUILTIN 2
 
