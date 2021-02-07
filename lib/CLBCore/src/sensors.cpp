@@ -34,25 +34,46 @@ void addListenerToDeletedListeners(struct sensorListener * listener)
 	deletedSensorListeners = listener;
 }
 
-struct sensorListener * getListenerFromDeletedListeners()
+void clearSensorListener(struct sensorListener * listener)
 {
+	listener->config=NULL;
+	listener->lastReadingMillis = -1;
+	listener->receiveMessage = NULL;
+	listener->nextMessageListener = NULL;
+}
+
+
+struct sensorListener * getNewSensorListener()
+{
+	TRACELN("Getting a sensor listener");
+
+	sensorListener * result ;
+
 	if(deletedSensorListeners == NULL)
 	{
-		return NULL;
+		TRACELN("   creating a new listener");
+		result = new sensorListener();
+	}
+	else {
+		TRACELN("   reusing a discarded listener");
+		result = deletedSensorListeners;
+		// remove this listener from the list
+		deletedSensorListeners = deletedSensorListeners->nextMessageListener;
 	}
 
-	sensorListener * result = deletedSensorListeners;
-
-	deletedSensorListeners = deletedSensorListeners->nextMessageListener;
+	clearSensorListener(result);
 
 	return result;
 }
+
 
 // Removes a listener from the sensor and adds the listner to the list of deleted listeners
 // The listeners are recycled if used again
 
 void removeMessageListenerFromSensor(struct sensor *sensor, struct sensorListener *listener)
 {
+	TRACELN("Remove message listener from a sensor");
+
 	sensorListener *nodeBeforeDel = sensor->listeners;
 
 	while(nodeBeforeDel != NULL)
@@ -66,18 +87,50 @@ void removeMessageListenerFromSensor(struct sensor *sensor, struct sensorListene
 
 	if(nodeBeforeDel==NULL)
 	{
-		TRACELN("Remove listener - listner not found");
+		TRACELN("Remove listener - listener not found");
 		return;
 	}
 
-		// cut this listner out of the list
+	// cut this listener out of the list
 	nodeBeforeDel->nextMessageListener = listener->nextMessageListener;
 
 	addListenerToDeletedListeners(listener);
 
-	TRACELN("Remove Listener - listner deleted");
+	TRACE("   removing process:");
+	TRACE(listener->config->commandProcess);
+	TRACE("   removing command:");
+	TRACELN(listener->config->commandName);
 }
 
+void removeAllMessageListenersFromSensor(struct sensor *sensor)
+{
+	TRACE("Removing all message listeners from sensor:");
+	TRACELN(sensor->sensorName);
+
+	sensorListener *node = sensor->listeners;
+	// sping down the listeners and delete each one
+	while(node != NULL)
+	{
+		TRACE("   removing process:");
+		TRACE(node->config->commandProcess);
+		TRACE("   removing command:");
+		TRACELN(node->config->commandName);
+		// remember the node we are deleting
+		sensorListener * nodeToDelete = node;
+		// move on to the next node
+		node = node->nextMessageListener;
+		// delete the node we have just left
+		addListenerToDeletedListeners(nodeToDelete);
+	}
+
+	// clear all the listeners from the sensor
+	sensor->listeners = NULL;
+}
+
+void removeAllSensorMessageListeners()
+{
+	iterateThroughSensors(removeAllMessageListenersFromSensor);
+}
 
 void addMessageListenerToSensor(struct sensor *sensor, struct sensorListener *listener)
 {
@@ -395,17 +448,16 @@ struct sensorEventBinder *findSensorListenerByName(struct sensor *s, const char 
 	return NULL;
 }
 
-void iterateThroughSensorListeners(struct sensor *sensor, void (*func)(struct sensorListner *listener))
+void iterateThroughSensorListeners(struct sensor *sensor, void (*func)(struct sensorListener *listener))
 {
 	struct sensorListener *pos = sensor->listeners;
 
 	while (pos != NULL)
 	{
-		func((sensorListner *)pos);
+		func((sensorListener *)pos);
 		pos = pos->nextMessageListener;
 	}
 }
-
  
 void fireSensorListenersOnMaskBit(struct sensor *sensor, int mask)
 {

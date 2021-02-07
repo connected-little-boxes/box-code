@@ -89,11 +89,14 @@ void iterateThroughSensorSettings(void (*func) (SettingItem* s));
 void resetSensorsToDefaultSettings();
 SettingItem* FindSensorSettingByFormName(const char* settingName);
 void addMessageListenerToSensor(struct sensor *sensor, struct sensorListener * listener);
-void iterateThroughSensorListeners(struct sensor * sensor, void (*func) (struct sensorListner * listener));
+void iterateThroughSensorListeners(struct sensor * sensor, void (*func) (struct sensorListener * listener));
 void fireSensorListenersOnMaskBit(struct sensor *sensor, int mask);
 struct sensorEventBinder *findSensorListenerByName(struct sensor *s, const char *name);
 struct sensorEventBinder * findSensorEventBinderByMask(struct sensor * s, int mask);
 
 void addListenerToDeletedListeners(struct sensorListener * listener);
-struct sensorListener * getListenerFromDeletedListeners();
+struct sensorListener * getNewSensorListener();
 void removeMessageListenerFromSensor(struct sensor *sensor, struct sensorListener *listener);
+void removeAllMessageListenersFromSensor(struct sensor *sensor);
+void removeAllSensorMessageListeners();
+

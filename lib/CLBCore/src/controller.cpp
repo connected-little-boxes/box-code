@@ -1,3 +1,5 @@
+#include "debug.h"
+
 #include "controller.h"
 #include "processes.h"
 #include "console.h"
@@ -113,6 +115,22 @@ void resetControllerListenersToDefaults()
 	iterateThroughListenerConfigurations(resetListenerConfiguration);
 }
 
+void resetSensorListenersToDefaults(char * sensorName)
+{
+	TRACE("Resetting listeners for sensor:");
+	TRACELN(sensorName);
+
+	for (int i = 0; i < CONTROLLER_NO_OF_LISTENERS; i++)
+	{
+		if(strcasecmp(sensorName, ControllerListenerDescriptions[i].sensorName)==0)
+		{
+			TRACE("   resetting:");
+			TRACELN(ControllerListenerDescriptions[i].listenerName);
+			resetListenerConfiguration(&ControllerListenerDescriptions[i]);
+		}
+	}
+}
+
 void printControllerListeners()
 {
 	iterateThroughListenerConfigurations(printListenerConfiguration);
@@ -170,16 +188,33 @@ bool addMessageListener(sensorListener *m)
 
 	if (s == NULL)
 	{
-		Serial.printf("    ***No sensor %s to match this listener %s\n", config->sensorName, config->listenerName);
+		TRACE("    ***No sensor:");
+		TRACE(config->sensorName);
+		TRACE(" to match this listener:");
+		TRACELN(config->listenerName);
+
 		return false;
 	}
 	else
 	{
-		Serial.printf("    Added listener %s to sensor %s\n", config->listenerName, config->sensorName);
-		// add the handler to the sensor
+		TRACE("    Added listener:");
+		TRACE(config->listenerName);
+		TRACE(" to sensor:");
+		TRACELN(config->sensorName);
+
 		addMessageListenerToSensor(s, m);
+
 		return true;
 	}
+}
+
+void clearAllListeners()
+{
+	resetControllerListenersToDefaults();
+
+	removeAllSensorMessageListeners();
+
+	saveSettings();
 }
 
 boolean validateControllerCommandString(void *dest, const char *newValueStr)
@@ -213,12 +248,14 @@ boolean setDefaultZero(void *dest)
 
 sensorListener *makeSensorListenerFromConfiguration(struct sensorListenerConfiguration *source)
 {
-	struct sensorListener *result = new sensorListener();
+	TRACELN("Making sensor listener from configuration..");
 
 	sensor *sensorListener = findSensorByName(source->sensorName);
 
 	if (sensorListener == NULL)
 	{
+		TRACE("  failed to find sensor:");
+		TRACELN(source->sensorName);
 		return NULL;
 	}
 
@@ -230,27 +267,138 @@ sensorListener *makeSensorListenerFromConfiguration(struct sensorListenerConfigu
 
 	if (listener == NULL)
 	{
+		TRACE("  failed to find listener:");
+		TRACE(source->listenerName);
+		TRACE("  in sensor:");
+		TRACELN(source->sensorName);
 		return NULL;
 	}
-
-	result->config = source;
-	result->sensor = sensorListener;
-	result->lastReadingMillis = 0;
 
 	Command *targetCommand = FindCommandByName(source->commandProcess, source->commandName);
 
 	if (targetCommand == NULL)
 	{
-		Serial.printf("  Can't find the target command\n");
+		TRACE("  failed to find command:");
+		TRACE(source->commandName);
+		TRACE("  in processs:");
+		TRACELN(source->commandProcess);
 		return NULL;
 	}
 
+	// getListener will get a listener from the discarded list or create a new one
+	// as required
+
+	struct sensorListener *result = getNewSensorListener();
+
+	result->config = source;
+	result->sensor = sensorListener;
+	result->lastReadingMillis = 0;
 	result->receiveMessage = targetCommand->performCommand;
 
 	return result;
 }
 
-struct Command *controllerCommandList[] = {};
+#define CONTROLLER_OPTION_OFFSET (MESSAGE_START_POSITION + MAX_MESSAGE_LENGTH)
+
+struct CommandItem ControllerfloatValueItem = {
+    "value",
+    "value",
+    VALUE_START_POSITION,
+    floatCommand,
+    validateFloat,
+    noDefaultAvailable};
+
+struct CommandItem ControllerCommandSensorName = {
+    "clearsensor",
+    "sensor to act on",
+    CONTROLLER_OPTION_OFFSET,
+    textCommand,
+    validateControllerOptionString,
+    noDefaultAvailable};
+
+struct CommandItem *ControllerClearAllListenersCommandItems[] =
+    {
+    };
+
+int doControllerClearAllListeners(char *destination, unsigned char *settingBase);
+
+struct Command ControllerClearAllListenersCommand
+{
+    "clearlisteners",
+        "Clears all the event listeners",
+        ControllerClearAllListenersCommandItems,
+        sizeof(ControllerClearAllListenersCommandItems) / sizeof(struct CommandItem *),
+        doControllerClearAllListeners
+};
+
+int doControllerClearAllListeners(char *destination, unsigned char *settingBase)
+{
+    if (*destination != 0)
+    {
+        // we have a destination for the command. Build the string
+        char buffer[JSON_BUFFER_SIZE];
+        createJSONfromSettings("controller", &ControllerClearAllListenersCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
+        return publishBufferToMQTTTopic(buffer, destination);
+    }
+
+	clearAllListeners();
+
+    return WORKED_OK;
+}
+
+struct CommandItem *ControllerClearSensorListenersCommandItems[] =
+    {
+		&ControllerCommandSensorName
+    };
+
+int doControllerClearSensorListeners(char *destination, unsigned char *settingBase);
+
+struct Command ControllerClearSensorListenersCommand
+{
+    "clearsensorlisteners",
+        "Clears the event listeners for a sensor",
+        ControllerClearSensorListenersCommandItems,
+        sizeof(ControllerClearSensorListenersCommandItems) / sizeof(struct CommandItem *),
+        doControllerClearSensorListeners
+};
+
+int doControllerClearSensorListeners(char *destination, unsigned char *settingBase)
+{
+    if (*destination != 0)
+    {
+        // we have a destination for the command. Build the string
+        char buffer[JSON_BUFFER_SIZE];
+        createJSONfromSettings("controller", &ControllerClearSensorListenersCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
+        return publishBufferToMQTTTopic(buffer, destination);
+    }
+
+	char * sensorName = (char *) settingBase + CONTROLLER_OPTION_OFFSET;
+
+	TRACE("Clearing listeners for sensor:");
+	TRACELN(sensorName);
+
+	sensor * s = findSensorByName(sensorName);
+
+	if(s==NULL)
+	{
+		TRACELN("    Sensor not found");
+		return JSON_MESSAGE_SENSOR_NOT_FOUND_FOR_LISTENER_DELETE;
+	}
+
+	removeAllMessageListenersFromSensor(s);
+
+	resetSensorListenersToDefaults(s->sensorName);
+
+	saveSettings();
+
+    return WORKED_OK;
+}
+
+
+struct Command *controllerCommandList[] = {
+	&ControllerClearAllListenersCommand,
+	&ControllerClearSensorListenersCommand
+};
 
 struct CommandItemCollection controllerCommands =
 	{

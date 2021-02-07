@@ -10,6 +10,8 @@
 #define VALUE_START_POSITION 0
 #define MESSAGE_START_POSITION sizeof(float)
 
+#define CONTROLLERMESSAGE_COMMAND_LENGTH 20
+
 struct controllerSettings 
 {
     bool active;
@@ -69,3 +71,4 @@ void dumpCommand(const char * processName,const char * commandName, unsigned cha
 
 void appendCommandDescriptionToJson(Command * command, char * buffer, int bufferSize);
 void appendCommandItemType(CommandItem * item, char * buffer, int bufferSize);
+void clearAllListeners();

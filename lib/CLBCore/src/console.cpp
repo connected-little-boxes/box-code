@@ -166,11 +166,20 @@ void printCommandsOld(CommandItemCollection *c) {
 	}
 }
 
-void printCommands(CommandItemCollection *c) {
+void printCommands(process *p) {
+
+	if(p->commands == NULL)
+	{
+		return;
+	}
+
+	struct CommandItemCollection * c = p->commands;
 	
 	if(c->noOfCommands>0){
 		// have got some commands in the collection
-		Serial.printf("Commands: %s\n", c->description);
+
+		Serial.printf("Process:%s commands:%s\n", p->processName, c->description);
+		
 		for(int i=0;i<c->noOfCommands;i++)
 		{
 			Command * com = c->commands[i];
@@ -184,7 +193,7 @@ void printCommands(CommandItemCollection *c) {
 void doShowRemoteCommands(char * commandLine)
 {
 	Serial.println();
-	iterateThroughProcessCommandCollections(printCommands);
+	iterateThroughAllProcesses(printCommands);
 }
 
 void act_onJson_message(const char *json, void (*deliverResult)(char *resultText));
@@ -199,12 +208,11 @@ void performRemoteCommand(char * commandLine)
 	act_onJson_message(commandLine,showRemoteCommandResult);
 }
 
+
 void doClearListeners(char * commandLine)
 {
-	Serial.println("\nClearing the listeners\n");
-	resetControllerListenersToDefaults();
-	// now do a restart - which also saves the settings
-	doRestart(commandLine);
+	Serial.println("\nClearing all the listeners\n");
+	clearAllListeners();
 }
 
 void doDumpStorage(char * commandLine)
