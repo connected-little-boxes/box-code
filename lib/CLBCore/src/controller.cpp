@@ -496,7 +496,7 @@ void do_Json_setting(JsonObject &root, void (*deliverResult)(char *resultText))
 		if (!root.containsKey("value"))
 		{
 			// no value - just a status request
-			Serial.println("  No value part");
+			TRACELN("  No value part");
 			sendSettingItemToJSONString(item, buffer, 120);
 			build_text_value_command_reply(WORKED_OK, buffer, root, command_reply_buffer);
 		}
@@ -507,11 +507,11 @@ void do_Json_setting(JsonObject &root, void (*deliverResult)(char *resultText))
 
 			if (root["value"].is<int>())
 			{
-				//Serial.println("Got an int");
 				// need to convert the input value into a string
 				// as our value parser uses strings as inputs
 				int v = root["value"];
-				Serial.printf("  Setting int %d\n", v);
+				TRACE("  Setting int ");
+				TRACELN(v);
 				snprintf(buffer, 120, "%d", v);
 				inputSource = buffer;
 			}
@@ -520,11 +520,12 @@ void do_Json_setting(JsonObject &root, void (*deliverResult)(char *resultText))
 				if (root["value"].is<char *>())
 				{
 					inputSource = root["value"];
-					Serial.printf("  Setting string %s\n", inputSource);
+					TRACE("  Setting string ");
+					TRACELN(inputSource);
 				}
 				else
 				{
-					Serial.println("  Unrecognised setting");
+					TRACELN("  Unrecognised setting");
 				}
 			}
 
@@ -571,8 +572,8 @@ void appendCommandItemType(CommandItem * item, char * buffer, int bufferSize)
 
 void appendCommandDescriptionToJson(Command * command, char * buffer, int bufferSize)
 {
-	snprintf(buffer, bufferSize,"%s{\"name\":\"%s\",\"version\":\"%d.%d\",\"desc\":\"%s\",\"items\":[",
-		buffer, command->name, MAJOR_VERSION, MINOR_VERSION, command->description);
+	snprintf(buffer, bufferSize,"%s{\"name\":\"%s\",\"version\":\"%s\",\"desc\":\"%s\",\"items\":[",
+		buffer, command->name, Version, command->description);
 
 	for(int i=0;i<command->noOfItems;i++)
 	{
@@ -647,11 +648,14 @@ int CreateSensorListener(
 	char *destination,
 	unsigned char *commandParameterBuffer)
 {
-	Serial.printf("Creating listener:%s assigned to sensor:%s destination:%s send on change:%d\n",
-				  targetListener->listenerName,
-				  targetSensor->sensorName,
-				  destination,
-				  targetListener->optionMask);
+	TRACE("Creating listener:");
+	TRACE(targetListener->listenerName);
+	TRACE(" assigned to sensor:");
+	TRACE(targetSensor->sensorName);
+	TRACE(" destination:");
+	TRACE(destination);
+	TRACE("send on change:");
+	TRACELN(targetListener->optionMask);
 
 	// Make sure we have a target for this listener
 
@@ -669,7 +673,7 @@ int CreateSensorListener(
 				// .. and got a matching destination
 				if (strcasecmp(targetListener->listenerName, sensorConfig->listenerName) == 0)
 				{
-					Serial.println("Found the listener");
+					TRACELN("Found the listener");
 					dest = sensorConfig;
 					break;
 				}
@@ -682,7 +686,7 @@ int CreateSensorListener(
 		// Nothing already in the table - need to make a new entry
 		// find an empty listener to store this in...
 
-		Serial.println("Finding an empty listener config slot");
+		TRACELN("Finding an empty listener config slot");
 
 		dest = findEmptyListener();
 
@@ -691,7 +695,7 @@ int CreateSensorListener(
 			return JSON_MESSAGE_NO_ROOM_TO_STORE_LISTENER;
 		}
 
-		Serial.println("Got an empty listener config slot");
+		TRACELN("Got an empty listener config slot");
 
 		// if the listener was already present it will already be bound to the
 		// sensor becuase we do this at boot
@@ -716,25 +720,25 @@ int CreateSensorListener(
 
 		// make a new listener
 
-		Serial.println("Creating a listener");
+		TRACELN("Creating a listener");
 
 		sensorListener *newListener = makeSensorListenerFromConfiguration(dest);
 
 		if (newListener == NULL)
 		{
-			Serial.println("Listener creation failed");
+			TRACELN("Listener creation failed");
 			return JSON_MESSAGE_LISTENER_COULD_NOT_BE_CREATED;
 		}
 
 		// add it to the sensor
 
-		Serial.println("Adding the listener to the sensor");
+		TRACELN("Adding the listener to the sensor");
 
 		addMessageListenerToSensor(targetSensor, newListener);
 
 		// dumpCommand(targetProcess->processName, targetCommand->name, dest->optionBuffer);
 
-		Serial.println("All done");
+		TRACELN("All done");
 	}
 	else
 	{
@@ -754,6 +758,7 @@ unsigned char commandParameterBuffer[OPTION_STORAGE_SIZE];
 int decodeCommand(process *process, Command *command,
 				  unsigned char *parameterBuffer, JsonObject &root)
 {
+	TRACELN("Decoding a command");
 	char buffer[120];
 
 	char destination[DESTINATION_NAME_LENGTH];
@@ -782,6 +787,7 @@ int decodeCommand(process *process, Command *command,
 			
 			if (item->setDefaultValue(parameterBuffer + item->commandSettingOffset))
 			{
+				TRACE("Found a default option");
 				// set OK - move on to the next one
 				continue;
 			}
@@ -795,7 +801,7 @@ int decodeCommand(process *process, Command *command,
 
 		if (root[item->name].is<int>())
 		{
-			//Serial.println("Got an int");
+			TRACELN("Got an int");
 			// need to convert the input value into a string
 			// as our value parser uses strings as inputs
 			int iv = root[item->name];
@@ -806,7 +812,7 @@ int decodeCommand(process *process, Command *command,
 		{
 			if (root[item->name].is<float>())
 			{
-				//Serial.println("Got a float");
+				TRACELN("Got a float");
 				// need to convert the input value into a string
 				// as our value parser uses strings as inputs
 				float fv = root[item->name];

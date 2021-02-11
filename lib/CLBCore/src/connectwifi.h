@@ -77,3 +77,6 @@ enum WiFiConnectionState { WiFiOff, WiFiStarting, WiFiScanning, WiFiConnecting, 
 extern WiFiConnectionState wifiState;
 
 extern struct process WiFiProcessDescriptor;
+
+void startWiFiConfigAP();
+

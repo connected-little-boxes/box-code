@@ -5,18 +5,13 @@
 
 struct RegistrationSettings RegistrationSettings;
 
-void setDefaultFriendlyName(void *dest)
-{
-	snprintf((char *)dest, FRIENDLY_NAME_LENGTH, "Friendly Name Here");
-}
-
 struct SettingItem friendlyNameSetting = {
 	"Friendly name",
 	"friendlyName",
 	RegistrationSettings.friendlyName,
 	FRIENDLY_NAME_LENGTH,
 	text,
-	setDefaultFriendlyName,
+	setEmptyString,
 	validateMQTTtopic};
 
 struct SettingItem *RegistrationSettingItemPointers[] =
@@ -114,11 +109,11 @@ void sendRegistrationMessage()
 	char messageBuffer[CONNECTION_MESSAGE_BUFFER_SIZE];
 
 	snprintf(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE,
-			 "{\"device\":\"%s\",\"processor\":\"%s\",\"friendlyName\":\"%s\",\"version\":\"%d.%d\",",
+			 "{\"deviceName\":\"%s\",\"processor\":\"%s\",\"friendlyName\":\"%s\",\"version\":\"%s\",",
 			 settings.deviceName,
 			 PROC_NAME,
 			 RegistrationSettings.friendlyName,
-			 MAJOR_VERSION, MINOR_VERSION);
+			 Version);
 
 	buildConfigJson(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE);
 
@@ -132,7 +127,7 @@ void sendConnectionMessage()
 	char messageBuffer[CONNECTION_MESSAGE_BUFFER_SIZE];
 
 	snprintf(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE,
-				"{\"device\":\"%s\",\"reset\":\"%s\","
+				"{\"deviceName\":\"%s\",\"reset\":\"%s\","
 				"\"cpu\":\"%s\",\"resetcode\":%d}",
 				settings.deviceName, bootReasonMessage,
 				PROC_NAME, getRestartCode());
@@ -159,11 +154,11 @@ void updateRegistration()
 		{
 			if (clockSensor.status == SENSOR_OK)
 			{
-				// say we have connected
-				sendConnectionMessage();
-
 				// register the settings for this device
 				sendRegistrationMessage();
+
+				// say we have connected
+				sendConnectionMessage();
 
 				RegistrationProcessDescriptor.status = REGISTRATION_OK;
 			}
@@ -278,7 +273,7 @@ int doRegistrationGetSetupCommand(char *destination, unsigned char *settingBase)
 	char messageBuffer[CONNECTION_MESSAGE_BUFFER_SIZE];
 
 	snprintf(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE,
-				"{\"device\":\"%s\",",
+				"{\"deviceName\":\"%s\",",
 				settings.deviceName);
 
 	buildConfigJson(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE);
@@ -342,7 +337,7 @@ int doRegistrationGetSettingsCommand(char *destination, unsigned char *settingBa
 	char messageBuffer[CONNECTION_MESSAGE_BUFFER_SIZE];
 
 	snprintf(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE,
-			 "{\"device\":\"%s\",\"name\":\"%s\",\"settings\":",
+			 "{\"deviceName\":\"%s\",\"name\":\"%s\",\"settings\":",
 			 settings.deviceName, name);
 
 	appendSettingCollectionJson(settingCollection, messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE);

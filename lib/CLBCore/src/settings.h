@@ -16,11 +16,8 @@
 
 #endif
 
-
 #include "utils.h"
-
-#define MAJOR_VERSION 1
-#define MINOR_VERSION 0
+#define Version "1.0.0.5"
 
 // Sensor settings
 #define UNKNOWN_SENSOR 0

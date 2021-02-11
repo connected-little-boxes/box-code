@@ -1,3 +1,7 @@
+#include "utils.h"
+#include "settings.h"
+#include "sensors.h"
+#include "processes.h"
 #include "connectwifi.h"
 #include "settingsWebServer.h"
 
@@ -308,6 +312,7 @@ void checkWiFIOK()
 void stopWiFi()
 {
 	TRACELN("WiFi turned off");
+
 	WiFiProcessDescriptor.status = WIFI_TURNED_OFF;
 	WiFi.mode(WIFI_OFF);
 	delay(500);

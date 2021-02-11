@@ -1,5 +1,8 @@
 #include <Arduino.h>
 
+#include "debug.h"
+#include "utils.h"
+
 #include "settings.h"
 #include "pixels.h"
 #include "processes.h"
@@ -21,7 +24,6 @@
 #include "settingsWebServer.h"
 #include "MAX7219Messages.h"
 #include "printer.h"
-#include "apconfig.h"
 
 // This function will be different for each build of the device.
 
@@ -40,7 +42,6 @@ void populateProcessList()
 	addProcessToAllProcessList(&WebServerProcess);
 	addProcessToAllProcessList(&max7219MessagesProcess);
 	addProcessToAllProcessList(&printerProcess);
-	addProcessToAllProcessList(&ApConfigProcess);
 }
 
 void populateSensorList()
@@ -80,7 +81,10 @@ void startDevice()
 
 	Serial.printf("Connected Little Boxes Device\n");
 	Serial.printf("www.connectedlittleboxes.com\n");
-	Serial.printf("Build date: %s %s\n", __DATE__, __TIME__);
+	Serial.printf("Version %s build date: %s %s\n", Version, __DATE__, __TIME__);
+#ifdef DEBUG
+	Serial.println("**** Debug output enabled");
+#endif
 	Serial.printf("Reset reason: %s\n\n", bootReasonMessage);
 
 	//	Serial.print("Initial Heap: ");
@@ -99,14 +103,9 @@ void startDevice()
 
 	initialiseAllProcesses();
 
-	if (false)
-	{
-		buildActiveProcessListFromMask(WIFI_CONFIG_PROCESS);
-	}
-	else
-	{
-		buildActiveProcessListFromMask(BOOT_PROCESS);
-	}
+	// this is where we do the configuration thing - or not
+
+	buildActiveProcessListFromMask(BOOT_PROCESS);
 
 	startProcesses();
 

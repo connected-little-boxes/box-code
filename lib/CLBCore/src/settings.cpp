@@ -578,7 +578,7 @@ void PrintSettingCollectionFiltered(SettingItemCollection *settingCollection)
 
 void PrintSystemDetails()
 {
-	Serial.printf("   device:%s Version %d.%d\n", settings.deviceName, MAJOR_VERSION, MINOR_VERSION);
+	Serial.printf("   device:%s Version %s\n", settings.deviceName, Version);
 }
 
 void PrintAllSettings()

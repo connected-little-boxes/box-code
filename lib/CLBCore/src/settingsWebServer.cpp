@@ -24,8 +24,8 @@ const char homePageHeader[] =
 "<style>input {margin: 5px auto; } </style>"
 "</head>"
 "<body>"
-"<h1>Connected Humber Environmental Sensor</h1>"
-"<h3>Version %d.%d</h3>" // version number goes here;
+"<h1>Connected Little Boxes</h1>"
+"<h3>Version %s</h3>" // version  goes here;
 "<h1>Settings</h1>";
 
 const char homePageFooter[] =
@@ -45,7 +45,7 @@ void addItem(SettingItemCollection * settings)
 
 void buildHomePage()
 {
-	snprintf(webPageBuffer, WEB_PAGE_BUFFER_SIZE, homePageHeader, MAJOR_VERSION, MINOR_VERSION);
+	snprintf(webPageBuffer, WEB_PAGE_BUFFER_SIZE, homePageHeader, Version);
 
 	iterateThroughProcessSettingCollections(addItem);
 
@@ -173,7 +173,6 @@ void updateItem(SettingItemCollection* settings)
 		settings->collectionName,
 		settings->collectionDescription);
 }
-
 
 void updateSettings(WebServer *webServer, SettingItemCollection * settingCollection)
 {

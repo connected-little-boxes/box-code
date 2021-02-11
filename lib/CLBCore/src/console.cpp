@@ -5,6 +5,8 @@
 #include "rotarySensor.h"
 #include "potSensor.h"
 #include "pixels.h"
+#include "connectwifi.h"
+#include "settingsWebServer.h"
 
 struct ConsoleSettings consoleSettings;
 
@@ -96,10 +98,9 @@ char consoleMessageBuffer[CONSOLE_MESSAGE_SIZE];
 
 void doStartWebServer(char * commandLine)
 {
-	Serial.println("Starting Web Server process");
-	Serial.println("Restart the device to finish");
+	startWiFiConfigAP();
 
-//	startWifiConfigProcesses();
+	Serial.println("Restart the device after configuration");
 }
 
 void doDumpStatus(char * commandLine)
@@ -266,8 +267,8 @@ struct consoleCommand userCommands[] =
 
 void doHelp(char * commandLine)
 {
-	Serial.printf("\n\nConnected Little Boxes\n Device Version %d.%d\n\nThese are all the available commands.\n\n",
-		MAJOR_VERSION, MINOR_VERSION);
+	Serial.printf("\n\nConnected Little Boxes\n Device Version %s\n\nThese are all the available commands.\n\n",
+		Version);
 
 	int noOfCommands = sizeof(userCommands) / sizeof(struct consoleCommand);
 

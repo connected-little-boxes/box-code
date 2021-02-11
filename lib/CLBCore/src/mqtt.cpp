@@ -324,7 +324,6 @@ boolean publishBufferToMQTTTopic(char *buffer, char *topic)
 	if (MQTTProcessDescriptor.status == MQTT_OK)
 	{
 		messagesSent++;
-		Serial.println("Publishing message");
 		Serial.printf("Publishing %s to %s\n", buffer, topic);
 		boolean result = mqttPubSubClient->publish(topic, buffer);
 

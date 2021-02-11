@@ -52,6 +52,7 @@ void loadBootReasonMessage();
 #include <WiFiClientSecure.h>
 #include <ESP8266httpUpdate.h>
 #include <ESP8266WebServer.h>
+#include <DNSServer.h>
 
 #define PROC_ID (unsigned long)ESP.getChipId()
 #define PROC_NAME "ESP8266"
