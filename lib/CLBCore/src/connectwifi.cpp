@@ -320,13 +320,13 @@ void stopWiFi()
 
 void startWiFiConfigAP()
 {
-	Serial.printf("Starting config access point at %s: ", settings.deviceName);
+	Serial.printf("Starting config access point at %s: ", settings.name);
 
 	WiFi.mode(WIFI_AP);
 
 	delay(100);
 
-	WiFi.softAP(settings.deviceName);
+	WiFi.softAP(settings.name);
 
 	delay(500);
 
@@ -337,7 +337,7 @@ void startWiFiConfigWebsite()
 {
 	if (startHostingConfigWebsite())
 	{
-		Serial.printf("   Hosting at 192.168.4.1 on %s\n", settings.deviceName);
+		Serial.printf("   Hosting at 192.168.4.1 on %s\n", settings.name);
 		WiFiProcessDescriptor.status = WIFI_CONFIG_HOSTING_WEBSITE;
 	}
 	else

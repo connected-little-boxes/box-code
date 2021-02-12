@@ -79,7 +79,7 @@ void startSensors();
 void dumpSensorStatus();
 void startSensorsReading();
 void updateSensors();
-void createSensorJson(char * deviceName, char * buffer, int bufferLength);
+void createSensorJson(char * name, char * buffer, int bufferLength);
 void displaySensorStatus();
 void stopSensors();
 void iterateThroughSensors (void (*func) (sensor * s) );

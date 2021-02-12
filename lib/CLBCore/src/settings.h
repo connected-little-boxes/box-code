@@ -48,7 +48,7 @@
 
 struct Device_Settings
 {
-	char deviceName[DEVICE_NAME_LENGTH];
+	char name[DEVICE_NAME_LENGTH];
 };
 
 extern struct Device_Settings settings;

@@ -109,8 +109,8 @@ void sendRegistrationMessage()
 	char messageBuffer[CONNECTION_MESSAGE_BUFFER_SIZE];
 
 	snprintf(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE,
-			 "{\"deviceName\":\"%s\",\"processor\":\"%s\",\"friendlyName\":\"%s\",\"version\":\"%s\",",
-			 settings.deviceName,
+			 "{\"name\":\"%s\",\"processor\":\"%s\",\"friendlyName\":\"%s\",\"version\":\"%s\",",
+			 settings.name,
 			 PROC_NAME,
 			 RegistrationSettings.friendlyName,
 			 Version);
@@ -127,9 +127,9 @@ void sendConnectionMessage()
 	char messageBuffer[CONNECTION_MESSAGE_BUFFER_SIZE];
 
 	snprintf(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE,
-				"{\"deviceName\":\"%s\",\"reset\":\"%s\","
+				"{\"name\":\"%s\",\"reset\":\"%s\","
 				"\"cpu\":\"%s\",\"resetcode\":%d}",
-				settings.deviceName, bootReasonMessage,
+				settings.name, bootReasonMessage,
 				PROC_NAME, getRestartCode());
 
 	publishBufferToMQTTTopic(messageBuffer, MQTT_CONNECTED_TOPIC);
@@ -273,8 +273,8 @@ int doRegistrationGetSetupCommand(char *destination, unsigned char *settingBase)
 	char messageBuffer[CONNECTION_MESSAGE_BUFFER_SIZE];
 
 	snprintf(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE,
-				"{\"deviceName\":\"%s\",",
-				settings.deviceName);
+				"{\"name\":\"%s\",",
+				settings.name);
 
 	buildConfigJson(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE);
 
@@ -337,8 +337,8 @@ int doRegistrationGetSettingsCommand(char *destination, unsigned char *settingBa
 	char messageBuffer[CONNECTION_MESSAGE_BUFFER_SIZE];
 
 	snprintf(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE,
-			 "{\"deviceName\":\"%s\",\"name\":\"%s\",\"settings\":",
-			 settings.deviceName, name);
+			 "{\"name\":\"%s\",\"name\":\"%s\",\"settings\":",
+			 settings.name, name);
 
 	appendSettingCollectionJson(settingCollection, messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE);
 

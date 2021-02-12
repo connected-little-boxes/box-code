@@ -578,7 +578,7 @@ void PrintSettingCollectionFiltered(SettingItemCollection *settingCollection)
 
 void PrintSystemDetails()
 {
-	Serial.printf("   device:%s Version %s\n", settings.deviceName, Version);
+	Serial.printf("   device:%s Version %s\n", settings.name, Version);
 }
 
 void PrintAllSettings()
@@ -671,7 +671,7 @@ void DumpSomeSettings(char *filter)
 void resetSettings()
 {
 	// PROC_ID is defined in utils.h
-	snprintf(settings.deviceName, DEVICE_NAME_LENGTH, "CLB-%06lx", (unsigned long)PROC_ID);
+	snprintf(settings.name, DEVICE_NAME_LENGTH, "CLB-%06lx", (unsigned long)PROC_ID);
 	resetProcessesToDefaultSettings();
 	resetSensorsToDefaultSettings();
 	resetControllerListenersToDefaults();
@@ -1037,7 +1037,7 @@ void testSettingsStorage()
 	else
 		Serial.println("Something wrong with setting storage");
 
-	settings.deviceName[0] = 'x';
+	settings.name[0] = 'x';
 
 	if (!validStoredSettings())
 		Serial.println("Settings change detected");

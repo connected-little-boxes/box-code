@@ -285,9 +285,9 @@ void updateSensors()
 	}
 }
 
-void createSensorJson(char *deviceName, char *buffer, int bufferLength)
+void createSensorJson(char *name, char *buffer, int bufferLength)
 {
-	snprintf(buffer, bufferLength, "{ \"dev\":\"%s\"", deviceName);
+	snprintf(buffer, bufferLength, "{ \"dev\":\"%s\"", name);
 
 	sensor *activeSensorPtr = activeSensorList;
 

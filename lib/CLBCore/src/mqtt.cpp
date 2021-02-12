@@ -302,7 +302,7 @@ void restartMQTT()
 
 	//snprintf(mqtt_send_buffer, MQTT_SEND_BUFFER_SIZE,
 	//	"{\"dev\":\"%s\", \"status\":\"starting\"}",
-	//	mqttSettings.deviceName);
+	//	mqttSettings.name);
 
 	//if (!mqttPubSubClient->publish(mqttSettings.mqttReportTopic, mqtt_send_buffer))
 	//{
