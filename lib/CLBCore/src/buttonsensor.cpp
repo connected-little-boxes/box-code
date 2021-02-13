@@ -60,9 +60,9 @@ struct SettingItemCollection buttonSensorSettingItems = {
 	sizeof(buttonSensorSettingItemPointers) / sizeof(struct SettingItem *)};
 
 struct sensorEventBinder ButtonSensorListenerFunctions[] = {
-	{"pressed", BUTTONSENSOR_BUTTON_PRESSED_MASK_BIT},
-	{"released", BUTTONSENSOR_BUTTON_RELEASED_MASK_BIT},
-	{"changed", BUTTONSENSOR_SEND_ON_CHANGE_MASK_BIT}};
+	{"pressed", BUTTONSENSOR_BUTTON_PRESSED},
+	{"released", BUTTONSENSOR_BUTTON_RELEASED},
+	{"changed", BUTTONSENSOR_SEND_ON_CHANGE}};
 
 int lastButtonInputValue;
 long buttonInputDebounceStartTime;
@@ -126,7 +126,7 @@ bool updateButtonSensor()
 
 	while (pos != NULL)
 	{
-		if (pos->config->sendOptionMask & BUTTONSENSOR_SEND_ON_CHANGE_MASK_BIT)
+		if (pos->config->sendOptionMask & BUTTONSENSOR_SEND_ON_CHANGE)
 		{
 			// send on change - so send for this listener
 			pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
@@ -136,7 +136,7 @@ bool updateButtonSensor()
 			continue;
 		}
 
-		if (pos->config->sendOptionMask & BUTTONSENSOR_BUTTON_PRESSED_MASK_BIT)
+		if (pos->config->sendOptionMask & BUTTONSENSOR_BUTTON_PRESSED)
 		{
 			// send on pressed - is the button pressed now?
 			if (buttonSensoractiveReading->pressed)
@@ -149,7 +149,7 @@ bool updateButtonSensor()
 			}
 		}
 
-		if (pos->config->sendOptionMask & BUTTONSENSOR_BUTTON_RELEASED_MASK_BIT)
+		if (pos->config->sendOptionMask & BUTTONSENSOR_BUTTON_RELEASED)
 		{
 			// send on pressed - is the button pressed now?
 			if (!buttonSensoractiveReading->pressed)

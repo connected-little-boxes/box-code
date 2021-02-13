@@ -54,9 +54,9 @@ struct SettingItemCollection pirSensorSettingItems = {
 	sizeof(pirSensorSettingItemPointers) / sizeof(struct SettingItem *)};
 
 struct sensorEventBinder PIRSensorListenerFunctions[] = {
-	{"change", PIRSENSOR_SEND_ON_CHANGE_MASK_BIT},
-	{"triggered", PIRSENSOR_SEND_ON_TRIGGERED_MASK_BIT},
-	{"clear", PIRSENSOR_SEND_ON_CLEAR_MASK_BIT}};
+	{"change", PIRSENSOR_SEND_ON_CHANGE},
+	{"triggered", PIRSENSOR_SEND_ON_TRIGGERED},
+	{"clear", PIRSENSOR_SEND_ON_CLEAR}};
 
 void readPIRSensor(struct pirSensorReading *pirSensoractiveReading)
 {
@@ -85,7 +85,7 @@ void readPIRSensor(struct pirSensorReading *pirSensoractiveReading)
 	}
 }
 
-bool updatePIRSensor()
+void updatePIRSensor()
 {
 	struct pirSensorReading *pirSensoractiveReading =
 		(struct pirSensorReading *)pirSensor.activeReading;
@@ -99,8 +99,8 @@ bool updatePIRSensor()
 	if (pirSensoractiveReading->triggered == previousReading)
 	{
 		// we have read the PIR but the value has not changed
-		// just return that we worked OK
-		return true;
+		// just return
+		return;
 	}
 
 	sensorListener *pos = pirSensor.listeners;
@@ -109,7 +109,7 @@ bool updatePIRSensor()
 	{
 		struct sensorListenerConfiguration *config = pos->config;
 
-		if (config->sendOptionMask & PIRSENSOR_SEND_ON_CHANGE_MASK_BIT)
+		if (config->sendOptionMask & PIRSENSOR_SEND_ON_CHANGE)
 		{
 			pos->receiveMessage(config->destination, config->optionBuffer);
 			pos->lastReadingMillis = pirSensor.millisAtLastReading;
@@ -117,7 +117,7 @@ bool updatePIRSensor()
 			continue;
 		}
 
-		if (config->sendOptionMask & PIRSENSOR_SEND_ON_TRIGGERED_MASK_BIT)
+		if (config->sendOptionMask & PIRSENSOR_SEND_ON_TRIGGERED)
 		{
 			if (pirSensoractiveReading->triggered)
 			{
@@ -128,7 +128,7 @@ bool updatePIRSensor()
 			}
 		}
 
-		if (config->sendOptionMask & PIRSENSOR_SEND_ON_CLEAR_MASK_BIT)
+		if (config->sendOptionMask & PIRSENSOR_SEND_ON_CLEAR)
 		{
 			if (!pirSensoractiveReading->triggered)
 			{
@@ -140,8 +140,6 @@ bool updatePIRSensor()
 		}
 		pos = pos->nextMessageListener;
 	}
-
-	return true;
 }
 
 void pirSensorTest()

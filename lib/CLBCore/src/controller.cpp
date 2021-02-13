@@ -45,7 +45,7 @@ void printListenerConfiguration(sensorListenerConfiguration *item)
 			return;
 		}
 
-		struct sensorEventBinder * binder = findSensorEventBinderByMask(s, item->sendOptionMask);
+		struct sensorEventBinder * binder = findSensorEventBinderByTrigger(s, item->sendOptionMask);
 
 		if(item->destination[0]==0)
 		{
@@ -655,7 +655,7 @@ int CreateSensorListener(
 	TRACE(" destination:");
 	TRACE(destination);
 	TRACE("send on change:");
-	TRACELN(targetListener->optionMask);
+	TRACELN(targetListener->trigger);
 
 	// Make sure we have a target for this listener
 
@@ -709,14 +709,14 @@ int CreateSensorListener(
 		strcpy(dest->listenerName, targetListener->listenerName);
 		strcpy(dest->sensorName, targetSensor->sensorName);
 		strcpy(dest->destination, destination);
-		dest->sendOptionMask = targetListener->optionMask;
+		dest->sendOptionMask = targetListener->trigger;
 
 		// copy the command options into the new listener config slot
 
 		memcpy(dest->optionBuffer, commandParameterBuffer, OPTION_STORAGE_SIZE);
 
 		// set the sensor option mask for this listener
-		dest->sendOptionMask = targetListener->optionMask;
+		dest->sendOptionMask = targetListener->trigger;
 
 		// make a new listener
 
@@ -745,7 +745,7 @@ int CreateSensorListener(
 		// just copy the incoming command into the storage as the listener is already active
 		memcpy(dest->optionBuffer, commandParameterBuffer, OPTION_STORAGE_SIZE);
 		// set the sensor option mask for this listener
-		dest->sendOptionMask = targetListener->optionMask;
+		dest->sendOptionMask = targetListener->trigger;
 	}
 
 	saveSettings();
@@ -852,7 +852,7 @@ int decodeCommand(process *process, Command *command,
 
 	// need to get the destination of this command
 
-	const char *destSource = root["destination"];
+	const char *destSource = root["to"];
 
 	if (destSource == NULL)
 	{
@@ -999,9 +999,15 @@ void act_onJson_message(const char *json, void (*deliverResult)(char *resultText
 
 void createJSONfromSettings(char *processName, struct Command *command, char *destination, unsigned char *settingBase, char *buffer, int bufferLength)
 {
-	Serial.printf("Creating json for %s to destination %s\n", command->name, destination);
-
-	Serial.printf("Got %d command items\n", command->noOfItems);
+	TRACE("Creating json for command:");
+	TRACE(command->name);
+	TRACE(" from process:");
+	TRACE(processName);
+	TRACE(" to destination ");
+	TRACE(destination);
+	TRACE(" with ");
+	TRACE(command->noOfItems);
+	TRACELN(" items");
 
 	sprintf(buffer, "{");
 

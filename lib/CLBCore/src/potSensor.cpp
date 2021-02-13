@@ -79,7 +79,7 @@ struct SettingItemCollection potSensorSettingItems = {
 	sizeof(potSensorSettingItemPointers) / sizeof(struct SettingItem *)};
 
 struct sensorEventBinder POTSensorListenerFunctions[] = {
-	{"turned", POTSENSOR_SEND_ON_POS_CHANGE_MASK_BIT}};
+	{"turned", POTSENSOR_SEND_ON_POS_CHANGE}};
 
 void readPOTSensor(struct potSensorReading *potSensoractiveReading)
 {
@@ -87,11 +87,11 @@ void readPOTSensor(struct potSensorReading *potSensoractiveReading)
 //	potSensoractiveReading->counter = 100;
 }
 
-bool updatePOTSensor()
+void updatePOTSensor()
 {
 	if(WiFiProcessDescriptor.status != WIFI_OK && WiFiProcessDescriptor.status != WIFI_TURNED_OFF )
 	{
-		return true;
+		return;
 	}
 
 	unsigned long currentMillis = millis();
@@ -102,7 +102,7 @@ bool updatePOTSensor()
 
 	if(millisSinceLastPotUpdate<potSensorSettings.millisBetweenReadings)
 	{
-		return true;
+		return;
 	}
 
 	struct potSensorReading *potSensoractiveReading =
@@ -119,7 +119,7 @@ bool updatePOTSensor()
 
 	if(readingChange < potSensorSettings.potDeadZone)
 	{
-		return true;
+		return ;
 	}
 
 	potSensoractiveReading->previousPotReading = potSensoractiveReading->counter;
@@ -132,7 +132,7 @@ bool updatePOTSensor()
 
 	while (pos != NULL)
 	{
-		if (pos->config->sendOptionMask & POTSENSOR_SEND_ON_POS_CHANGE_MASK_BIT)
+		if (pos->config->sendOptionMask & POTSENSOR_SEND_ON_POS_CHANGE)
 		{
 			// if the command has a value element we now need to take the element value and put
 			// it into the command data for the message that is about to be received.
@@ -150,7 +150,6 @@ bool updatePOTSensor()
 		// move on to the next one
 		pos = pos->nextMessageListener;
 	}
-	return true;
 }
 
 void potSensorTest()

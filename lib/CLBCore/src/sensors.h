@@ -41,7 +41,7 @@ struct sensorListener{
 
 struct sensorEventBinder{
 	char * listenerName;
-	int optionMask;
+	int trigger;
 };
 
 struct sensor
@@ -92,7 +92,7 @@ void addMessageListenerToSensor(struct sensor *sensor, struct sensorListener * l
 void iterateThroughSensorListeners(struct sensor * sensor, void (*func) (struct sensorListener * listener));
 void fireSensorListenersOnMaskBit(struct sensor *sensor, int mask);
 struct sensorEventBinder *findSensorListenerByName(struct sensor *s, const char *name);
-struct sensorEventBinder * findSensorEventBinderByMask(struct sensor * s, int mask);
+struct sensorEventBinder * findSensorEventBinderByTrigger(struct sensor * s, int mask);
 
 void addListenerToDeletedListeners(struct sensorListener * listener);
 struct sensorListener * getNewSensorListener();

@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <SPI.h>
+#include <Wire.h>
 
 #include "debug.h"
 #include "utils.h"
@@ -24,6 +26,7 @@
 #include "settingsWebServer.h"
 #include "MAX7219Messages.h"
 #include "printer.h"
+#include "BME280Sensor.h"
 
 // This function will be different for each build of the device.
 
@@ -56,6 +59,8 @@ void populateSensorList()
 	addSensorToActiveSensorsList(&rotarySensor);
 	addSensorToAllSensorsList(&potSensor);
 	addSensorToActiveSensorsList(&potSensor);
+	addSensorToAllSensorsList(&bme280Sensor);
+	addSensorToActiveSensorsList(&bme280Sensor);
 }
 
 void displayControlMessage(int messageNumber, MessageLevel severity, char *messageText)

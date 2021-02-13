@@ -97,7 +97,8 @@ void printMessage(char *messageText, const char *option)
 #define PRINTER_FLOAT_VALUE_OFFSET 0
 #define PRINTER_MESSAGE_OFFSET (PRINTER_FLOAT_VALUE_OFFSET + sizeof(float))
 #define PRINTER_OPTION_OFFSET (PRINTER_MESSAGE_OFFSET + PRINTERMESSAGE_LENGTH)
-#define PRINTER_TAIL_TEXT_OFFSET (PRINTER_OPTION_OFFSET + PRINTERMESSAGE_COMMAND_LENGTH)
+#define PRINTER_PRE_TEXT_OFFSET (PRINTER_OPTION_OFFSET + PRINTERMESSAGE_COMMAND_LENGTH)
+#define PRINTER_POST_TEXT_OFFSET (PRINTER_PRE_TEXT_OFFSET + PRINTERMESSAGE_COMMAND_LENGTH)
 
 boolean validatePrinterOptionString(void *dest, const char *newValueStr)
 {
@@ -108,14 +109,6 @@ boolean validatePRINTERMessageString(void *dest, const char *newValueStr)
 {
     return (validateString((char *)dest, newValueStr, PRINTERMESSAGE_LENGTH));
 }
-
-struct CommandItem printerfloatValueItem = {
-    "value",
-    "value",
-    PRINTER_FLOAT_VALUE_OFFSET,
-    floatCommand,
-    validateFloat,
-    noDefaultAvailable};
 
 struct CommandItem PrinterCommandOptionName = {
     "option",
@@ -133,18 +126,29 @@ struct CommandItem PrinterMessageText = {
     validatePRINTERMessageString,
     noDefaultAvailable};
 
-struct CommandItem PrinterTailText = {
-    "tail",
-    "printer tail text",
-    PRINTER_TAIL_TEXT_OFFSET,
+struct CommandItem printerPreText = {
+    "pre",
+    "printer pre text",
+    PRINTER_PRE_TEXT_OFFSET,
     textCommand,
     validatePRINTERMessageString,
     setDefaultEmptyString};
 
+struct CommandItem printerPostText = {
+    "post",
+    "printer post text",
+    PRINTER_POST_TEXT_OFFSET,
+    textCommand,
+    validatePRINTERMessageString,
+    setDefaultEmptyString};
+
+
 struct CommandItem *PrintTextCommandItems[] =
     {
         &PrinterMessageText,
-        &PrinterCommandOptionName};
+        &PrinterCommandOptionName,
+        &printerPreText,
+        &printerPostText};
 
 int doPrintText(char *destination, unsigned char *settingBase);
 
@@ -163,7 +167,7 @@ int doPrintText(char *destination, unsigned char *settingBase)
     {
         // we have a destination for the command. Build the string
         char buffer[JSON_BUFFER_SIZE];
-        createJSONfromSettings("printerMessages", &printMessageCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
+        createJSONfromSettings("printer", &printMessageCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
         return publishBufferToMQTTTopic(buffer, destination);
     }
 
@@ -173,69 +177,23 @@ int doPrintText(char *destination, unsigned char *settingBase)
     }
 
     char *message = (char *)(settingBase + PRINTER_MESSAGE_OFFSET);
+    char *post = (char *)(settingBase +PRINTER_POST_TEXT_OFFSET);
+    char *pre = (char *)(settingBase + PRINTER_PRE_TEXT_OFFSET);
+    const char *options = (const char *)(settingBase + PRINTER_OPTION_OFFSET);
 
-    const char *option = (const char *)(settingBase + PRINTER_OPTION_OFFSET);
+    char buffer[MAX_MESSAGE_LENGTH];
 
-    printMessage(message, option);
-
-    return WORKED_OK;
-}
-
-struct CommandItem *PrintValueCommandItems[] =
-    {
-        &printerfloatValueItem,
-        &PrinterMessageText,
-        &PrinterCommandOptionName,
-        &PrinterTailText};
-
-int doPrintValue(char *destination, unsigned char *settingBase);
-
-struct Command printValueCommand
-{
-    "showvalue",
-        "show a value",
-        PrintValueCommandItems,
-        sizeof(PrintValueCommandItems) / sizeof(struct CommandItem *),
-        doPrintValue
-};
-
-int doPrintValue(char *destination, unsigned char *settingBase)
-{
-    if (*destination != 0)
-    {
-        // we have a destination for the command. Build the string
-        char buffer[JSON_BUFFER_SIZE];
-        createJSONfromSettings("printerMessages", &printValueCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-        return publishBufferToMQTTTopic(buffer, destination);
-    }
-
-    if (printerProcess.status != PRINTER_OK)
-    {
-        return JSON_MESSAGE_PRINTER_NOT_ENABLED;
-    }
-
-    unsigned char *valuePtr = (settingBase + PRINTER_FLOAT_VALUE_OFFSET);
-
-    float value = getUnalignedFloat(valuePtr);
-
-    char *message = (char *)(settingBase + PRINTER_MESSAGE_OFFSET);
-
-    char *tail = (char *)(settingBase + PRINTER_TAIL_TEXT_OFFSET);
-
-    const char *option = (const char *)(settingBase + PRINTER_OPTION_OFFSET);
-
-    char buffer[PRINTERMESSAGE_LENGTH];
-
-    snprintf(buffer, PRINTERMESSAGE_LENGTH, "%s%.1f%s", message, value, tail);
-
-    printMessage(buffer, option);
+    snprintf(buffer, MAX_MESSAGE_LENGTH, "%s%s%s", pre, message, post);
+    printMessage(buffer, options);
+    TRACE("Printing: ");
+    TRACELN(buffer);
 
     return WORKED_OK;
 }
 
 struct Command *PRINTERCommandList[] = {
-    &printMessageCommand,
-    &printValueCommand};
+    &printMessageCommand
+    };
 
 struct CommandItemCollection PRINTERCommands =
     {

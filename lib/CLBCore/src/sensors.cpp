@@ -433,7 +433,7 @@ struct sensorEventBinder *findSensorListenerByName(struct sensor *s, const char 
 	}
 
 	if (s->noOfSensorListenerFunctions == 0)
-	{
+	{ 
 		return NULL;
 	}
 
@@ -480,12 +480,12 @@ void fireSensorListenersOnMaskBit(struct sensor *sensor, int mask)
 	}
 }
 
-struct sensorEventBinder * findSensorEventBinderByMask(struct sensor * s, int mask)
+struct sensorEventBinder * findSensorEventBinderByTrigger(struct sensor * s, int trigger)
 {
 	for(int i=0; i<s->noOfSensorListenerFunctions;i++)
 	{
 		struct sensorEventBinder * pos = &s->sensorListenerFunctions[i];
-		if((pos->optionMask&mask) != 0)
+		if(pos->trigger==trigger)
 		{
 			return pos;
 		}

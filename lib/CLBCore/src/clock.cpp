@@ -238,9 +238,9 @@ struct clockAlarmDescriptor
 };
 
 struct clockAlarmDescriptor alarms[] = {
-	{&clockSensorSettings.alarm1, ALARM1_TRIGGER_BIT},
-	{&clockSensorSettings.alarm2, ALARM2_TRIGGER_BIT},
-	{&clockSensorSettings.alarm3, ALARM3_TRIGGER_BIT}};
+	{&clockSensorSettings.alarm1, ALARM1_TRIGGER},
+	{&clockSensorSettings.alarm2, ALARM2_TRIGGER},
+	{&clockSensorSettings.alarm3, ALARM3_TRIGGER}};
 
 struct clockTimerDescriptor
 {
@@ -249,8 +249,8 @@ struct clockTimerDescriptor
 };
 
 struct clockTimerDescriptor timers[] = {
-	{&clockSensorSettings.timer1, TIMER1_TRIGGER_BIT},
-	{&clockSensorSettings.timer2, TIMER2_TRIGGER_BIT}};
+	{&clockSensorSettings.timer1, TIMER1_TRIGGER},
+	{&clockSensorSettings.timer2, TIMER2_TRIGGER}};
 
 void iterateThroughAlarms(void (*func)(clockAlarmDescriptor *alarm))
 {
@@ -476,7 +476,7 @@ void checkClock(struct clockReading *reading)
 
 		if ((pos->config->sendOptionMask & CLOCK_SECOND_TICK) != 0)
 		{
-			TRACELN("Second Tick");
+			//TRACELN("Second Tick");
 			snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%02d:%02d:%02d",
 			reading->hour,
 			reading->minute,
@@ -519,11 +519,11 @@ void checkClock(struct clockReading *reading)
 }
 
 struct sensorEventBinder ClockSensorListenerFunctions[] = {
-	{"alarm1", ALARM1_TRIGGER_BIT},
-	{"alarm2", ALARM2_TRIGGER_BIT},
-	{"alarm3", ALARM3_TRIGGER_BIT},
-	{"timer1", TIMER1_TRIGGER_BIT},
-	{"timer2", TIMER2_TRIGGER_BIT},
+	{"alarm1", ALARM1_TRIGGER},
+	{"alarm2", ALARM2_TRIGGER},
+	{"alarm3", ALARM3_TRIGGER},
+	{"timer1", TIMER1_TRIGGER},
+	{"timer2", TIMER2_TRIGGER},
 	{"second", CLOCK_SECOND_TICK},
 	{"minute", CLOCK_MINUTE_TICK},
 	{"hour",   CLOCK_HOUR_TICK},

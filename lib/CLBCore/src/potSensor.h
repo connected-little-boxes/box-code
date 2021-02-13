@@ -8,7 +8,7 @@
 #define POTSENSOR_NOT_FITTED -1
 #define POTSENSOR_NOT_CONNECTED -2
 
-#define POTSENSOR_SEND_ON_POS_CHANGE_MASK_BIT 1
+#define POTSENSOR_SEND_ON_POS_CHANGE 1
 
 struct potSensorReading {
 	int counter;

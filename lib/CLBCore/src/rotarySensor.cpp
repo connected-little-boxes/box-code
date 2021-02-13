@@ -77,9 +77,9 @@ struct SettingItemCollection rotarySensorSettingItems = {
 	sizeof(rotarySensorSettingItemPointers) / sizeof(struct SettingItem *)};
 
 struct sensorEventBinder ROTARYSensorListenerFunctions[] = {
-	{"turned", ROTARYSENSOR_SEND_ON_COUNT_CHANGE_MASK_BIT},
-	{"pressed", ROTARYSENSOR_SEND_ON_PRESSED_MASK_BIT},
-	{"released", ROTARYSENSOR_SEND_ON_RELEASED_MASK_BIT}};
+	{"turned", ROTARYSENSOR_SEND_ON_COUNT_CHANGE},
+	{"pressed", ROTARYSENSOR_SEND_ON_PRESSED},
+	{"released", ROTARYSENSOR_SEND_ON_RELEASED}};
 
 volatile int counter = 0;
 int oldCounter = 0;
@@ -172,7 +172,7 @@ void ICACHE_RAM_ATTR clockChange()
 	lastPulseMillis = intMillis;
 }
 
-bool updateROTARYSensor()
+void updateROTARYSensor()
 {
 	struct rotarySensorReading *rotarySensoractiveReading =
 		(struct rotarySensorReading *)rotarySensor.activeReading;
@@ -193,7 +193,7 @@ bool updateROTARYSensor()
 		if (previousPressed != rotarySensoractiveReading->pressed)
 		{
 
-			if (pos->config->sendOptionMask & ROTARYSENSOR_SEND_ON_PRESSED_MASK_BIT)
+			if (pos->config->sendOptionMask & ROTARYSENSOR_SEND_ON_PRESSED)
 			{
 				// send on pressed - is the button pressed now?
 				if (rotarySensoractiveReading->pressed)
@@ -206,7 +206,7 @@ bool updateROTARYSensor()
 				}
 			}
 
-			if (pos->config->sendOptionMask & ROTARYSENSOR_SEND_ON_RELEASED_MASK_BIT)
+			if (pos->config->sendOptionMask & ROTARYSENSOR_SEND_ON_RELEASED)
 			{
 				// send on released - is the button released now?
 				if (!rotarySensoractiveReading->pressed)
@@ -220,7 +220,7 @@ bool updateROTARYSensor()
 			}
 		}
 
-		if (pos->config->sendOptionMask & ROTARYSENSOR_SEND_ON_COUNT_CHANGE_MASK_BIT)
+		if (pos->config->sendOptionMask & ROTARYSENSOR_SEND_ON_COUNT_CHANGE)
 		{
 			if (rotarySensoractiveReading->counter != previousCounter)
 			{
@@ -241,7 +241,6 @@ bool updateROTARYSensor()
 		// move on to the next one
 		pos = pos->nextMessageListener;
 	}
-	return true;
 }
 
 void rotarySensorTest()
