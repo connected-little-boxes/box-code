@@ -1,3 +1,6 @@
+#pragma once
+
+
 // Performs the variable management 
 // Variables can be given names, stored and evaluated
 // Simple two operand expressions only
@@ -73,7 +76,7 @@ bool greaterThanOp(int op1, int op2);
 extern struct logicalOp logicGreaterThan;
 
 bool lessThanEqualsOp(int op1, int op2);
-struct logicalOp logicLessThanEquals;
+extern struct logicalOp logicLessThanEquals;
 
 bool greaterThanEqualsOp(int op1, int op2);
 extern struct logicalOp logicGreaterThanEquals;
@@ -101,13 +104,13 @@ int readTest();
 extern struct reading test;
 
 int readRandom();
-struct reading randomReading = { "random", readRandom };
+extern struct reading randomReading;
 
 #define NO_OF_HARDWARE_READERS 2
 
 extern struct reading * readers[];
 
-bool validReadingz(char * text);
+bool validReading(char * text);
 struct reading * getReading(char * text);
 
 struct variable
@@ -126,9 +129,9 @@ void setupVariables();
 void setVariable(int position, int value);
 int getVariable(int position);
 bool isAssigned(int position);
-inline bool isVariableNameStart(char * ch);
-inline bool isVariableNameChar(char * ch);
-inline bool variableSlotEmpty(int position);
+bool isVariableNameStart(char * ch);
+bool isVariableNameChar(char * ch);
+bool variableSlotEmpty(int position);
 int checkIdentifier(char * var);
 bool matchVariable(int position, char * text);
 

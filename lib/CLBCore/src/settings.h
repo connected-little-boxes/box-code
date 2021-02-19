@@ -131,3 +131,11 @@ boolean validateFloat0to1(void *dest, const char *newValueStr);
 boolean validateDevName(void* dest, const char* newValueStr);
 
 boolean validateServerName(void* dest, const char* newValueStr);
+
+#define STORED_PROGRAM_OFFSET 20
+
+bool storeProgramIntoEEPROM(char * programStart, int EEPromStart);
+void setProgramStored();
+void clearProgramStoredFlag();
+bool isProgramStored();
+bool storeByteIntoEEPROM(char byte, int pos);

@@ -27,6 +27,7 @@
 #include "MAX7219Messages.h"
 #include "printer.h"
 #include "BME280Sensor.h"
+#include "HullOS.h"
 
 // This function will be different for each build of the device.
 
@@ -45,6 +46,7 @@ void populateProcessList()
 	addProcessToAllProcessList(&WebServerProcess);
 	addProcessToAllProcessList(&max7219MessagesProcess);
 	addProcessToAllProcessList(&printerProcess);
+	addProcessToAllProcessList(&hullosProcess);
 }
 
 void populateSensorList()

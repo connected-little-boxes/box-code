@@ -24,26 +24,24 @@ int evaluateMinus(int op1, int op2)
 {
 	return op1 - op2;
 }
+struct op minusOp = { '-', evaluateMinus };
 
 int evaluateTimes(int op1, int op2)
 {
 	return op1 * op2;
 }
-
 struct op timesOp = { '*', evaluateTimes };
 
 int evaluateDivide(int op1, int op2)
 {
 	return op1 / op2;
 }
-
 struct op divideOp = { '/', evaluateDivide };
 
 int evaluateModulus(int op1, int op2)
 {
 	return op1 % op2;
 }
-
 struct op modulusOp = { '%', evaluateModulus };
 
 struct op * operators[NUMBER_OF_ARITHMETIC_OPERATORS] = { &addOp, &minusOp, &timesOp, &divideOp, &modulusOp };
@@ -98,9 +96,15 @@ bool lessThanEqualsOp(int op1, int op2)
 }
 struct logicalOp logicLessThanEquals = { "<=",lessThanEqualsOp };
 
-struct logicalOp * logicalOps[NUMBER_OF_LOGICAL_OPERATORS] = { &logicEquals, &logicNotEquals,
-  &logicLessThan, &logicGreaterThan,
-  &logicLessThanEquals, &logicGreaterThanEquals };
+bool greaterThanEqualsOp(int op1, int op2)
+{
+	return op1 >= op2;
+}
+struct logicalOp logicGreaterThanEquals = { ">=",greaterThanEqualsOp };
+
+struct logicalOp * logicalOps[NUMBER_OF_LOGICAL_OPERATORS] = { 
+    &logicEquals, &logicNotEquals,
+    &logicLessThan, &logicGreaterThan, &logicLessThanEquals, &logicGreaterThanEquals };
 
 struct logicalOp * findLogicalOp(char * text)
 {
@@ -167,7 +171,7 @@ struct reading randomReading = { "random", readRandom };
 
 struct reading * readers[NO_OF_HARDWARE_READERS] = { &randomReading, &test };
 
-bool validReadingz(char * text)
+bool validReading(char * text)
 {
 	if (!isReadingNameStart(text))
 	{
@@ -175,7 +179,7 @@ bool validReadingz(char * text)
 		{
 			Serial.println(F("Reading name first character not valid"));
 		}
-		return;
+		return false;
 	}
 
 	for (int i = 0; i < NO_OF_HARDWARE_READERS; i++)
@@ -303,17 +307,17 @@ bool isAssigned(int position)
 	return !variables[position].unassigned;
 }
 
-inline bool isVariableNameStart(char * ch)
+bool isVariableNameStart(char * ch)
 {
 	return (isalpha(*ch));
 }
 
-inline bool isVariableNameChar(char * ch)
+bool isVariableNameChar(char * ch)
 {
 	return (isAlphaNumeric(*ch));
 }
 
-inline bool variableSlotEmpty(int position)
+bool variableSlotEmpty(int position)
 {
 	return variables[position].empty;
 }
@@ -387,6 +391,7 @@ bool matchVariable(int position, char * text)
 
 		text++;
 	}
+    return false;
 }
 
 // returns the length of the variable name at the given position in the variable store
@@ -418,7 +423,7 @@ parseOperandResult findVariable(char * name, int *position)
 #ifdef VAR_DEBUG
 		Serial.println(F("    Invalid variable name"));
 #endif
-		return INVALID_VARIABLE_NAME;
+		return parseOperandResult::INVALID_VARIABLE_NAME;
 	}
 
 	for (int i = 0; i < NUMBER_OF_VARIABLES; i++)
@@ -430,10 +435,10 @@ parseOperandResult findVariable(char * name, int *position)
 		if (matchVariable(i, name))
 		{
 			*position = i;
-			return OPERAND_OK;
+			return parseOperandResult::OPERAND_OK;
 		}
 	}
-	return VARIABLE_NOT_FOUND;
+	return parseOperandResult::VARIABLE_NOT_FOUND;
 }
 
 // finds an empty location in the variable table and returns the offset into that table
@@ -445,11 +450,11 @@ parseOperandResult findVariableSlot(int * result)
 		if (variableSlotEmpty(i))
 		{
 			*result = i;
-			return OPERAND_OK;
+			return parseOperandResult::OPERAND_OK;
 		}
 	}
 
-	return NO_ROOM_FOR_VARIABLE;
+	return parseOperandResult::NO_ROOM_FOR_VARIABLE;
 }
 
 // returns INVALID_VARIABLE_NAME if the name is invalid 
@@ -466,13 +471,13 @@ parseOperandResult createVariable(char * namePos, int * varPos)
 	Serial.println(F("Creating variable"));
 #endif
 
-	if (findVariableSlot(&position) == NO_ROOM_FOR_VARIABLE)
+	if (findVariableSlot(&position) == parseOperandResult::NO_ROOM_FOR_VARIABLE)
 	{
 
 #ifndef VAR_DEBUG
 		Serial.println(F("   no room for variable"));
 #endif
-		return NO_ROOM_FOR_VARIABLE;
+		return parseOperandResult::NO_ROOM_FOR_VARIABLE;
 	}
 
 	// Need a valid variable name start - must be a letter
@@ -481,7 +486,7 @@ parseOperandResult createVariable(char * namePos, int * varPos)
 #ifdef VAR_DEBUG
 		Serial.println(F("   invalid variable name"));
 #endif
-		return INVALID_VARIABLE_NAME;
+		return parseOperandResult::INVALID_VARIABLE_NAME;
 	}
 
 	int i;
@@ -512,13 +517,13 @@ parseOperandResult createVariable(char * namePos, int * varPos)
 			variables[position].empty = false;
 			// return the position value
 			*varPos = position;
-			return OPERAND_OK;
+			return parseOperandResult::OPERAND_OK;
 		}
 	}
 
 	// Reached the end of the store without reaching the end of the variable
 	clearVariableSlot(position);
-	return VARIABLE_NAME_TOO_LONG;
+	return parseOperandResult::VARIABLE_NAME_TOO_LONG;
 }
 
 //#define READ_INTEGER_DEBUG
@@ -558,7 +563,7 @@ bool readInteger(int * result)
 		Serial.println((char)ch);
 #endif
 
-		if (ch<'0' | ch>'9')
+		if ((ch<'0') || (ch>'9'))
 		{
 #ifdef READ_INTEGER_DEBUG
 			Serial.println(".  not a digit ");
@@ -615,9 +620,9 @@ parseOperandResult parseOperand(int * result)
 		// its a variable
 		int position;
 
-		if (findVariable(decodePos, &position) == VARIABLE_NOT_FOUND)
+		if (findVariable(decodePos, &position) == parseOperandResult::VARIABLE_NOT_FOUND)
 		{
-			return VARIABLE_NOT_FOUND;
+			return parseOperandResult::VARIABLE_NOT_FOUND;
 		}
 
 		// move down to the end of the name
@@ -625,12 +630,12 @@ parseOperandResult parseOperand(int * result)
 
 		if (!isAssigned(position))
 		{
-			return USING_UNASSIGNED_VARIABLE;
+			return parseOperandResult::USING_UNASSIGNED_VARIABLE;
 		}
 
 		*result = variables[position].value;
 
-		return OPERAND_OK;
+		return parseOperandResult::OPERAND_OK;
 	}
 
 	// numeric values can start with a digit or a sign character
@@ -642,11 +647,11 @@ parseOperandResult parseOperand(int * result)
 #endif
 		if (readInteger(result))
 		{
-			return OPERAND_OK;
+			return parseOperandResult::OPERAND_OK;
 		}
 		else
 		{
-			return NO_DIGITS_IN_VALUE;
+			return parseOperandResult::NO_DIGITS_IN_VALUE;
 		}
 	}
 
@@ -660,24 +665,24 @@ parseOperandResult parseOperand(int * result)
 
 		if (reader == NULL)
 		{
-			return INVALID_HARDWARE_READING_NAME;
+			return parseOperandResult::INVALID_HARDWARE_READING_NAME;
 		}
 
 		decodePos = decodePos + strlen(reader->name);
 
 		*result = reader->reader();
 
-		return OPERAND_OK;
+		return parseOperandResult::OPERAND_OK;
 	}
 
-	return INVALID_OPERAND;
+	return parseOperandResult::INVALID_OPERAND;
 }
 
 bool getOperand(int * result)
 {
 	parseOperandResult getResult = parseOperand(result);
 
-	if (getResult != OPERAND_OK)
+	if (getResult != parseOperandResult::OPERAND_OK)
 	{
 		Serial.print(F("Operand error: "));
 		Serial.println(getResult);
@@ -823,8 +828,6 @@ void setVariable()
 		}
 		return;
 	}
-
-	char * variableStart = decodePos;
 
 	// First see if we can find the variable in the store
 

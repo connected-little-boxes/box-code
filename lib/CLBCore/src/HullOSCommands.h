@@ -1,6 +1,9 @@
+#pragma once
+
+#include "HullOSVariables.h"
 
 //#define DIAGNOSTICS_ACTIVE
-//#define STORE_RECEIVED_UINT8_T_DEBUG
+//#define STORE_RECEIVED_BYTE_DEBUG
 
 // Stored program management
 
@@ -14,9 +17,7 @@ enum ProgramState
 	PROGRAM_STOPPED,
 	PROGRAM_PAUSED,
 	PROGRAM_ACTIVE,
-	PROGRAM_AWAITING_MOVE_COMPLETION,
-	PROGRAM_AWAITING_DELAY_COMPLETION,
-	SYSTEM_CONFIGURATION_CONNECTION // will never enter this state
+	PROGRAM_AWAITING_DELAY_COMPLETION
 };
 
 enum DeviceState
@@ -39,7 +40,23 @@ enum DeviceState
 #define READ_INTEGER_DEBUG
 #endif
 
-#include "HullOSVariables.h"
+extern ProgramState programState;
+extern DeviceState deviceState;
+
+extern uint8_t diagnosticsOutputLevel;
+
+extern unsigned long delayEndTime;
+
+extern char programCommand[];
+extern char *commandPos;
+extern char *commandLimit;
+extern char *bufferLimit;
+extern char *decodePos;
+extern char *decodeLimit;
+
+extern char remoteCommand[];
+extern char *remotePos;
+extern char *remoteLimit;
 
 ///////////////////////////////////////////////////////////
 /// Serial comms
@@ -67,35 +84,12 @@ enum lineStorageState
 };
 
 void resetLineStorageState();
-void storeProgramUint8_t(uint8_t b);
+void storeProgramByte(uint8_t b);
 void clearStoredProgram();
 void startDownloadingCode(int downloadPosition);
 void endProgramReceive();
-void storeReceivedUint8_t(uint8_t b);
+void storeReceivedByte(uint8_t b);
 void resetCommand();
-
-bool readColour(uint8_t *r, uint8_t *g, uint8_t *b);
-
-// Command PCrrr,ggg,bbb - set a coloured candle with the red, green
-// and blue components as given
-// Return OK
-void remoteColouredCandle();
-
-// Command PNname - set a coloured candle with the name as given
-// Return OK
-void remoteSetColorByName();
-
-void remoteFadeToColor();
-
-// PFddd - set flicker speed to value given
-void remoteSetFlickerSpeed();
-
-// PIppp,rrr,ggg,bbb
-// Set individual pixel colour
-void remoteSetIndividualPixel();
-void remoteSetPixelsOff();
-void remoteSetRandomColors();
-void remotePixelControl();
 
 // Command CDddd - delay time
 // Command CD    - previous delay
@@ -105,7 +99,7 @@ void remoteDelay();
 // Command CLxxxx - program label
 // Ignored at execution, specifies the destination of a branch
 // Return OK
-void declareLabel()
+void declareLabel();
 
 	int findNextStatement(int programPosition);
 
@@ -159,14 +153,14 @@ void remoteWriteOutput();
 
 void actOnCommand(char *commandDecodePos, char *comandDecodeLimit);
 
-void processCommandUint8_t(uint8_t b);
+void processCommandByte(uint8_t b);
 void resetSerialBuffer();
-void interpretSerialUint8_t(uint8_t b);
-void processSerialUint8_t(uint8_t b);
+void interpretSerialByte(uint8_t b);
+void processHullOSSerialByte(uint8_t b);
 void setupRemoteControl();
 
 // Executes the statement in the EEPROM at the current program counter
-// The statement is assembled into a buffer by interpretCommandUint8_t
+// The statement is assembled into a buffer by interpretCommandByte
 bool exeuteProgramStatement();
 
 void updateHullOS();

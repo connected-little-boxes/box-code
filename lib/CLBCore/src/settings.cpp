@@ -1069,3 +1069,52 @@ void setupSettings()
 
 	//PrintAllSettings();
 }
+
+bool storeByteIntoEEPROM(char byte, int pos)
+{
+	return true;
+}
+
+// Stores a program into the eeprom at the stated location
+// The program is a string of text which is zero terminated
+// The EEPromStart value is the offset in the EEProm into which the program is to be written
+// The function returns true if the program was loaded, false if not
+
+bool storeProgramIntoEEPROM(char * programStart, int EEPromStart)
+{
+//   while (*programStart)
+//   {
+//     if (!storeByteIntoEEPROM(*programStart, EEPromStart))
+//       return false;
+//     programStart++;
+//     EEPromStart++;
+//   }
+
+//   // put the terminator on the end of the program
+//   storeByteIntoEEPROM(*programStart, EEPromStart);
+  return true;
+}
+
+void setProgramStored()
+{
+//   storeByteIntoEEPROM(PROGRAM_STORED_VALUE1, PROGRAM_STATUS_BYTE_OFFSET);
+//   storeByteIntoEEPROM(PROGRAM_STORED_VALUE2, PROGRAM_STATUS_BYTE_OFFSET + 1);
+}
+
+void clearProgramStoredFlag()
+{
+//   storeByteIntoEEPROM(0, PROGRAM_STATUS_BYTE_OFFSET);
+//   storeByteIntoEEPROM(0, PROGRAM_STATUS_BYTE_OFFSET + 1);
+}
+
+bool isProgramStored()
+{
+//   if ((EEPROM.read(PROGRAM_STATUS_BYTE_OFFSET) == PROGRAM_STORED_VALUE1) &
+//     (EEPROM.read(PROGRAM_STATUS_BYTE_OFFSET + 1) == PROGRAM_STORED_VALUE2))
+//     return true;
+//   else
+//     return false;
+return true;
+}
+
+

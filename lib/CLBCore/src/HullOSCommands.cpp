@@ -11,14 +11,15 @@
 #include "controller.h"
 #include "registration.h"
 #include "HullOSCommands.h"
-
+#include "HullOSVariables.h"
+#include "HullOSScript.h"
 
 ProgramState programState = PROGRAM_STOPPED;
 DeviceState deviceState = EXECUTE_IMMEDIATELY;
 
 uint8_t diagnosticsOutputLevel = 0;
 
-long delayEndTime;
+unsigned long delayEndTime;
 
 char programCommand[COMMAND_BUFFER_SIZE];
 char *commandPos;
@@ -68,17 +69,17 @@ void dumpProgramFromEEPROM(int EEPromStart)
 
     Serial.println(F("Program: "));
 
-    char uint8_t;
+    char byte;
     while (true)
     {
-        uint8_t = EEPROM.read(EEPromPos++);
+        byte = EEPROM.read(EEPromPos++);
 
-        if (uint8_t == STATEMENT_TERMINATOR)
+        if (byte == STATEMENT_TERMINATOR)
             Serial.println();
         else
-            Serial.print(uint8_t);
+            Serial.print(byte);
 
-        if (uint8_t == PROGRAM_TERMINATOR)
+        if (byte == PROGRAM_TERMINATOR)
         {
             Serial.print(F("Program size: "));
             Serial.println(EEPromPos - EEPromStart);
@@ -103,7 +104,6 @@ void startProgramExecution(int programPosition)
         Serial.println(programPosition);
 #endif
         clearVariables();
-        setAllLightsOff();
         programCounter = programPosition;
         programBase = programPosition;
         programState = PROGRAM_ACTIVE;
@@ -117,8 +117,6 @@ void haltProgramExecution()
     Serial.print(F(".Ending program execution at: "));
     Serial.println(programCounter);
 #endif
-
-    motorStop();
 
     programState = PROGRAM_STOPPED;
 }
@@ -187,19 +185,19 @@ void resetLineStorageState()
 }
 
 
-void storeProgramUint8_t(uint8_t b)
+void storeProgramByte(uint8_t b)
 {
-	storeUint8_tIntoEEPROM(b, programWriteBase++);
+	storeByteIntoEEPROM(b, programWriteBase++);
 }
 
 void clearStoredProgram()
 {
 	clearProgramStoredFlag();
-	storeUint8_tIntoEEPROM(PROGRAM_TERMINATOR, STORED_PROGRAM_OFFSET);
+	storeByteIntoEEPROM(PROGRAM_TERMINATOR, STORED_PROGRAM_OFFSET);
 }
 
 // Called to start the download of program code
-// each uint8_t that arrives down the serial port is now stored in program memory
+// each byte that arrives down the serial port is now stored in program memory
 //
 void startDownloadingCode(int downloadPosition)
 {
@@ -221,8 +219,6 @@ void startDownloadingCode(int downloadPosition)
 
 	resetLineStorageState();
 
-	startBusyPixel(128, 128, 128);
-
 #ifdef DIAGNOSTICS_ACTIVE
 
 	if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
@@ -235,22 +231,20 @@ void startDownloadingCode(int downloadPosition)
 
 void endProgramReceive()
 {
-	stopBusyPixel();
-
 	// enable immediate command receipt
 
 	deviceState = EXECUTE_IMMEDIATELY;
 }
 
-// Called when a uint8_t is received from the host when in program storage mode
+// Called when a byte is received from the host when in program storage mode
 // Adds it to the stored program, updates the stored position and the counter
-// If the uint8_t is the terminator uint8_t (zero) it changes to the "wait for checksum" state
+// If the byte is the terminator byte (zero) it changes to the "wait for checksum" state
 // for the program checksum
-void storeReceivedUint8_t(uint8_t b)
+void storeReceivedByte(uint8_t b)
 {
 	// ignore odd characters - except for CR
 
-	if (b < 32 | b>128)
+	if ((b < 32) || (b>128))
 	{
 		if (b != STATEMENT_TERMINATOR)
 			return;
@@ -262,7 +256,7 @@ void storeReceivedUint8_t(uint8_t b)
 	case LINE_START:
 		// at the start of a line - look for an R command
 
-		if (b == 'r' | b == 'R')
+		if ((b == 'r') || (b == 'R'))
 		{
 			lineStoreState = GOT_R;
 		}
@@ -283,7 +277,7 @@ void storeReceivedUint8_t(uint8_t b)
 
 			// put the terminator on the end
 
-			storeProgramUint8_t(PROGRAM_TERMINATOR);
+			storeProgramByte(PROGRAM_TERMINATOR);
 
 			setProgramStored();
 
@@ -336,8 +330,8 @@ void storeReceivedUint8_t(uint8_t b)
 	{
 		// get here if we are storing or just got a line start
 
-		// if we get here we store the uint8_t
-		storeProgramUint8_t(b);
+		// if we get here we store the byte
+		storeProgramByte(b);
 
 #ifdef DIAGNOSTICS_ACTIVE
 
@@ -361,8 +355,6 @@ void storeReceivedUint8_t(uint8_t b)
 
 #endif
 			lineStoreState = LINE_START;
-			// look busy
-			updateBusyPixel();
 		}
 	}
 }
@@ -376,505 +368,6 @@ void resetCommand()
 	bufferLimit = commandPos + COMMAND_BUFFER_SIZE;
 }
 
-#ifdef COMMAND_DEBUG
-#define PIXEL_COLOUR_DEBUG
-#endif
-
-bool readColour(uint8_t *r, uint8_t *g, uint8_t*b)
-{
-	int result;
-
-	if (!getValue(&result))
-	{
-		return false;
-	}
-
-	*r = (uint8_t)result;
-
-#ifdef PIXEL_COLOUR_DEBUG
-	Serial.print(".  Red: ");
-	Serial.println(*r);
-#endif
-
-	if (*decodePos == STATEMENT_TERMINATOR | decodePos == decodeLimit)
-	{
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-		if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-		{
-			Serial.println(F("FAIL: mising colour values in readColor"));
-		}
-
-#endif
-		return false;
-	}
-
-	decodePos++;
-
-	if (*decodePos == STATEMENT_TERMINATOR | decodePos == decodeLimit)
-	{
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-		if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-		{
-			Serial.println(F("FAIL: mising colours after red in readColor"));
-		}
-
-#endif
-
-		return false;
-	}
-
-	if (!getValue(&result))
-	{
-		return false;
-	}
-
-	*g = (uint8_t)result;
-
-#ifdef PIXEL_COLOUR_DEBUG
-	Serial.print(".  Green: ");
-	Serial.println(*g);
-#endif
-
-	decodePos++;
-
-	if (*decodePos == STATEMENT_TERMINATOR | decodePos == decodeLimit)
-	{
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-		if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-		{
-			Serial.println(F("FAIL: mising colours after green in readColor"));
-		}
-
-#endif
-
-		return false;
-	}
-
-	if (!getValue(&result))
-	{
-		return false;
-	}
-
-	*b = (uint8_t)result;
-
-#ifdef PIXEL_COLOUR_DEBUG
-	Serial.print(".  Blue: ");
-	Serial.println(*b);
-#endif
-
-	return true;
-}
-
-
-// Command PCrrr,ggg,bbb - set a coloured candle with the red, green 
-// and blue components as given
-// Return OK
-
-void remoteColouredCandle()
-{
-#ifdef PIXEL_COLOUR_DEBUG
-	Serial.println(".**remoteColouredCandle: ");
-#endif
-
-	uint8_t r, g, b;
-
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-	if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-	{
-		Serial.print("PC");
-	}
-
-#endif
-
-	if (readColour(&r, &g, &b))
-	{
-		flickeringColouredLights(r, g, b, 0, 200);
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-		if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-		{
-			Serial.println(F("OK"));
-		}
-#endif
-	}
-}
-
-// Command PNname - set a coloured candle with the name as given
-// Return OK
-
-void remoteSetColorByName()
-{
-#ifdef PIXEL_COLOUR_DEBUG
-	Serial.println(".**remoteColouredName: ");
-#endif
-
-	uint8_t r = 0, g = 0, b = 0;
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-	if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-	{
-		Serial.print("PN");
-	}
-
-#endif
-
-	if (*decodePos == STATEMENT_TERMINATOR | decodePos == decodeLimit)
-	{
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-		if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-		{
-			Serial.println(F("FAIL: mising colour in set colour by name"));
-		}
-
-#endif
-
-		return;
-	}
-
-	char inputCh = toLowerCase(*decodePos);
-
-	switch (inputCh)
-	{
-	case 'r':
-		r = 255;
-		break;
-	case 'g':
-		g = 255;
-		break;
-	case 'b':
-		b = 255;
-		break;
-	case 'c':
-		g = 255;
-		b = 255;
-		break;
-	case 'm':
-		r = 255;
-		b = 255;
-		break;
-	case 'y':
-		g = 255;
-		r = 255;
-		break;
-	case 'w':
-		r = 255;
-		g = 255;
-		b = 255;
-		break;
-	case 'k':
-		break;
-	default:
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-		if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-		{
-			Serial.println(F("FAIL: invalid colour in set colour by name"));
-		}
-#endif
-		return;
-	}
-
-	flickeringColouredLights(r, g, b, 0, 200);
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-	if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-	{
-		Serial.println(F("OK"));
-	}
-
-#endif
-}
-
-//#define REMOTE_PIXEL_COLOR_FADE_DEBUG
-
-void remoteFadeToColor()
-{
-#ifdef PIXEL_COLOUR_DEBUG
-	Serial.println(".**remoteFadeToColour: ");
-#endif
-
-	int result;
-
-	if (!getValue(&result))
-	{
-		return;
-	}
-
-	uint8_t no = (uint8_t)result;
-
-	if (no < 1)
-		no = 1;
-	if (no > 20)
-		no = 20;
-
-	no = 21 - no;
-
-#ifdef REMOTE_PIXEL_COLOR_FADE_DEBUG
-	Serial.print(".  Setting: ");
-	Serial.println(no);
-#endif
-
-	decodePos++;
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-	if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-	{
-		Serial.print("PX");
-	}
-
-#endif
-
-	if (*decodePos == STATEMENT_TERMINATOR | decodePos == decodeLimit)
-	{
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-		if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-		{
-			Serial.println(F("Fail: mising colours after speed"));
-		}
-
-#endif
-
-		return;
-	}
-
-	uint8_t r, g, b;
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-	if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-	{
-		Serial.print(F("PX"));
-	}
-
-#endif
-
-	if (readColour(&r, &g, &b))
-	{
-		transitionToColor(no, r, g, b);
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-		if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-		{
-			Serial.println(F("OK"));
-		}
-
-#endif
-	}
-}
-
-// PFddd - set flicker speed to value given
-void remoteSetFlickerSpeed()
-{
-#ifdef PIXEL_COLOUR_DEBUG
-	Serial.println(".**remoteSetFlickerSpeed: ");
-#endif
-
-	int result;
-
-	if (!getValue(&result))
-	{
-		return;
-	}
-
-	uint8_t no = (uint8_t)result;
-
-#ifdef PIXEL_COLOUR_DEBUG
-	Serial.print(".  Setting: ");
-	Serial.println(no);
-#endif
-
-	setFlickerUpdateSpeed(no);
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-	if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-	{
-		Serial.println(F("PFOK"));
-	}
-
-#endif
-}
-
-// PIppp,rrr,ggg,bbb
-// Set individual pixel colour
-
-void remoteSetIndividualPixel()
-{
-
-#ifdef PIXEL_COLOUR_DEBUG
-	Serial.println(".**remoteSetIndividualPixel: ");
-#endif
-
-	int result;
-
-	if (!getValue(&result))
-	{
-		return;
-	}
-
-	uint8_t no = (uint8_t)result;
-
-#ifdef PIXEL_COLOUR_DEBUG
-	Serial.print(".  Setting: ");
-	Serial.println(no);
-#endif
-
-	decodePos++;
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-	if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-	{
-		Serial.print("PI");
-	}
-
-#endif
-
-	if (*decodePos == STATEMENT_TERMINATOR | decodePos == decodeLimit)
-	{
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-		if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-		{
-			Serial.println(F("Fail: mising colours after pixel"));
-		}
-
-#endif
-
-		return;
-	}
-
-	uint8_t r, g, b;
-
-	if (readColour(&r, &g, &b))
-	{
-		setLightColor(r, g, b, no);
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-		if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-		{
-			Serial.println("OK");
-		}
-
-#endif
-	}
-}
-
-void remoteSetPixelsOff()
-{
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-	if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-	{
-		Serial.println("POOK");
-	}
-
-#endif
-
-	setAllLightsOff();
-}
-
-
-void remoteSetRandomColors()
-{
-
-#ifdef DIAGNOSTICS_ACTIVE
-
-	if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
-	{
-		Serial.println("PROK");
-	}
-
-#endif
-
-	randomiseLights();
-}
-
-void remotePixelControl()
-{
-	if (*decodePos == STATEMENT_TERMINATOR | decodePos == decodeLimit)
-	{
-
-#ifdef DIAGNOSTICS_ACTIVE
-		Serial.println(F("FAIL: mising pixel control command character"));
-#endif
-		return;
-	}
-
-#ifdef PIXEL_COLOUR_DEBUG
-	Serial.println(".**remotePixelControl: ");
-#endif
-
-	char commandCh = *decodePos;
-
-#ifdef PIXEL_COLOUR_DEBUG
-	Serial.print(".  Pixel Command code : ");
-	Serial.println(commandCh);
-#endif
-
-	decodePos++;
-
-	switch (commandCh)
-	{
-	case 'a':
-	case 'A':
-		flickerOn();
-		break;
-	case 's':
-	case 'S':
-		flickerOff();
-		break;
-	case 'i':
-	case 'I':
-		remoteSetIndividualPixel();
-		break;
-	case 'o':
-	case 'O':
-		remoteSetPixelsOff();
-		break;
-	case 'c':
-	case 'C':
-		remoteColouredCandle();
-		break;
-	case 'f':
-	case 'F':
-		remoteSetFlickerSpeed();
-		break;
-	case 'x':
-	case 'X':
-		remoteFadeToColor();
-		break;
-	case 'r':
-	case 'R':
-		remoteSetRandomColors();
-		break;
-	case 'n':
-	case 'N':
-		remoteSetColorByName();
-		break;
-	}
-}
 
 // Command CDddd - delay time
 // Command CD    - previous delay
@@ -952,7 +445,7 @@ int findNextStatement(int programPosition)
 	{
 		char ch = EEPROM.read(programPosition);
 
-		if (ch == PROGRAM_TERMINATOR | programPosition == EEPROM_SIZE)
+		if ((ch == PROGRAM_TERMINATOR) || (programPosition == EEPROM_SIZE))
 			return -1;
 
 		if (ch == STATEMENT_TERMINATOR)
@@ -989,15 +482,15 @@ int findLabelInProgram(char *label, int programPosition)
 
 		int statementStart = programPosition;
 
-		char programUint8_t = EEPROM.read(programPosition++);
+		char programByte = EEPROM.read(programPosition++);
 
 #ifdef FIND_LABEL_IN_PROGRAM_DEBUG
 		Serial.print("Statement at: ");
 		Serial.print(statementStart);
 		Serial.print(" starting: ");
-		Serial.println(programUint8_t);
+		Serial.println(programByte);
 #endif
-		if (programUint8_t != 'C' & programUint8_t != 'c')
+		if ((programByte != 'C') && (programByte != 'c'))
 		{
 
 #ifdef FIND_LABEL_IN_PROGRAM_DEBUG
@@ -1026,17 +519,17 @@ int findLabelInProgram(char *label, int programPosition)
 
 		// If we get here we have found a C
 
-		programUint8_t = EEPROM.read(programPosition++);
+		programByte = EEPROM.read(programPosition++);
 
 #ifdef FIND_LABEL_IN_PROGRAM_DEBUG
 
 		Serial.print("Second statement character: ");
-		Serial.println(programUint8_t);
+		Serial.println(programByte);
 
 #endif
 
 		// if we get here we have a control command - see if the command is a label
-		if (programUint8_t != 'L' & programUint8_t != 'l')
+		if ((programByte != 'L') && (programByte != 'l'))
 		{
 
 #ifdef FIND_LABEL_IN_PROGRAM_DEBUG
@@ -1065,24 +558,24 @@ int findLabelInProgram(char *label, int programPosition)
 
 		// Now spin down the label looking for a match
 
-		while (*labelTest != STATEMENT_TERMINATOR & programPosition < EEPROM_SIZE)
+		while ((*labelTest != STATEMENT_TERMINATOR) && (programPosition < EEPROM_SIZE))
 		{
-			programUint8_t = EEPROM.read(programPosition);
+			programByte = EEPROM.read(programPosition);
 
 #ifdef FIND_LABEL_IN_PROGRAM_DEBUG
-			Serial.print("Destination uint8_t: ");
+			Serial.print("Destination byte: ");
 			Serial.print(*labelTest);
-			Serial.print(" Program uint8_t: ");
-			Serial.println(programUint8_t);
+			Serial.print(" Program byte: ");
+			Serial.println(programByte);
 #endif
 
-			if (*labelTest == programUint8_t)
+			if (*labelTest == programByte)
 			{
 
 #ifdef FIND_LABEL_IN_PROGRAM_DEBUG
 				Serial.println("Got a match");
 #endif
-				// Move on to the next uint8_t
+				// Move on to the next byte
 				labelTest++;
 				programPosition++;
 			}
@@ -1097,11 +590,11 @@ int findLabelInProgram(char *label, int programPosition)
 
 		// get here when we reach the end of the statement or we have a mismatch
 
-		// Get the uint8_t at the end of the destination statement
+		// Get the byte at the end of the destination statement
 
-		programUint8_t = EEPROM.read(programPosition);
+		programByte = EEPROM.read(programPosition);
 
-		if (*labelTest == programUint8_t)
+		if (*labelTest == programByte)
 		{
 			// If the end of the label matches the end of the statement code we have a match
 			// Note that this means that if the last line of the program is a label we can only
@@ -1146,9 +639,6 @@ void jumpToLabel()
 #ifdef JUMP_TO_LABEL_DEBUG
 	Serial.println(".**jump to label");
 #endif
-
-	char *labelPos = decodePos;
-	char *labelSearch = decodePos;
 
 	int labelStatementPos = findLabelInProgram(decodePos, programBase);
 
@@ -1198,9 +688,6 @@ void jumpToLabelCoinToss()
 	send
 
 #endif
-
-		char *labelPos = decodePos;
-	char *labelSearch = decodePos;
 
 	int labelStatementPos = findLabelInProgram(decodePos, programBase);
 
@@ -1276,7 +763,7 @@ void compareAndJump(bool jumpIfTrue)
 	}
 #endif
 
-	if (*decodePos == STATEMENT_TERMINATOR | decodePos == decodeLimit)
+	if ((*decodePos == STATEMENT_TERMINATOR) || (decodePos == decodeLimit))
 	{
 #ifdef DIAGNOSTICS_ACTIVE
 		if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
@@ -1289,7 +776,7 @@ void compareAndJump(bool jumpIfTrue)
 
 	decodePos++;
 
-	if (*decodePos == STATEMENT_TERMINATOR | decodePos == decodeLimit)
+	if ((*decodePos == STATEMENT_TERMINATOR) || (decodePos == decodeLimit))
 	{
 #ifdef DIAGNOSTICS_ACTIVE
 		if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
@@ -1348,7 +835,7 @@ void compareAndJump(bool jumpIfTrue)
 
 void programControl()
 {
-	if (*decodePos == STATEMENT_TERMINATOR | decodePos == decodeLimit)
+	if ((*decodePos == STATEMENT_TERMINATOR) || (decodePos == decodeLimit))
 	{
 #ifdef DIAGNOSTICS_ACTIVE
 		Serial.println(F("FAIL: missing program control command character"));
@@ -1420,6 +907,18 @@ void remoteDownload()
 	startDownloadingCode(STORED_PROGRAM_OFFSET);
 }
 
+void startProgramCommand()
+{
+	startProgramExecution(STORED_PROGRAM_OFFSET);
+
+#ifdef DIAGNOSTICS_ACTIVE
+	if (diagnosticsOutputLevel & STATEMENT_CONFIRMATION)
+	{
+		Serial.println(F("RSOK"));
+	}
+#endif
+}
+
 void haltProgramExecutionCommand()
 {
 	haltProgramExecution();
@@ -1448,7 +947,7 @@ void clearProgramStoreCommand()
 
 void remoteManagement()
 {
-	if (*decodePos == STATEMENT_TERMINATOR | decodePos == decodeLimit)
+	if ((*decodePos == STATEMENT_TERMINATOR) || (decodePos == decodeLimit))
 	{
 #ifdef DIAGNOSTICS_ACTIVE
 		Serial.println(F("FAIL: missing remote control command character"));
@@ -1508,7 +1007,7 @@ void displayVersion()
 	}
 #endif
 
-	Serial.println(version);
+	Serial.println(Version);
 }
 
 void printStatus()
@@ -1571,7 +1070,7 @@ void printProgram()
 
 void information()
 {
-	if (*decodePos == STATEMENT_TERMINATOR | decodePos == decodeLimit)
+	if ((*decodePos == STATEMENT_TERMINATOR) || (decodePos == decodeLimit))
 	{
 #ifdef DIAGNOSTICS_ACTIVE
 		Serial.println(F("FAIL: missing information command character"));
@@ -1625,7 +1124,7 @@ void doClearVariables()
 
 void variableManagement()
 {
-	if (*decodePos == STATEMENT_TERMINATOR | decodePos == decodeLimit)
+	if ((*decodePos == STATEMENT_TERMINATOR) || (decodePos == decodeLimit))
 	{
 #ifdef DIAGNOSTICS_ACTIVE
 		Serial.println(F("FAIL: missing variable command character"));
@@ -1667,7 +1166,7 @@ void variableManagement()
 
 void doRemoteWriteText()
 {
-	while (*decodePos != STATEMENT_TERMINATOR & decodePos != decodeLimit)
+	while ((*decodePos != STATEMENT_TERMINATOR) && (decodePos != decodeLimit))
 	{
 		Serial.print(*decodePos);
 		decodePos++;
@@ -1691,7 +1190,7 @@ void doRemotePrintValue()
 
 void remoteWriteOutput()
 {
-	if (*decodePos == STATEMENT_TERMINATOR | decodePos == decodeLimit)
+	if ((*decodePos == STATEMENT_TERMINATOR) || (decodePos == decodeLimit))
 	{
 #ifdef DIAGNOSTICS_ACTIVE
 		Serial.println(F("FAIL: missing write output command character"));
@@ -1761,14 +1260,6 @@ void actOnCommand(char *commandDecodePos, char *comandDecodeLimit)
 	case 'i':
 		information();
 		break;
-	case 'M':
-	case 'm':
-		remoteMoveControl();
-		break;
-	case 'P':
-	case 'p':
-		remotePixelControl();
-		break;
 	case 'C':
 	case 'c':
 		programControl();
@@ -1781,11 +1272,6 @@ void actOnCommand(char *commandDecodePos, char *comandDecodeLimit)
 	case 'v':
 		variableManagement();
 		break;
-	case 's':
-	case 'S':
-		remoteSoundPlay();
-		break;
-
 	case 'w':
 	case 'W':
 		remoteWriteOutput();
@@ -1807,7 +1293,7 @@ void actOnCommand(char *commandDecodePos, char *comandDecodeLimit)
 	}
 }
 
-void processCommandUint8_t(uint8_t b)
+void processCommandByte(uint8_t b)
 {
 	if (commandPos == bufferLimit)
 	{
@@ -1839,7 +1325,7 @@ void resetSerialBuffer()
 	remoteLimit = remoteCommand + COMMAND_BUFFER_SIZE;
 }
 
-void interpretSerialUint8_t(uint8_t b)
+void interpretSerialByte(uint8_t b)
 {
 	if (remotePos == remoteLimit)
 	{
@@ -1861,20 +1347,20 @@ void interpretSerialUint8_t(uint8_t b)
 	}
 }
 
-void processSerialUint8_t(uint8_t b)
+void processHullOSSerialByte(uint8_t b)
 {
 #ifdef COMMAND_DEBUG
-	Serial.print(F(".**processSerialUint8_t: "));
+	Serial.print(F(".**processSerialByte: "));
 	Serial.println((char)b);
 #endif
 
 	switch (deviceState)
 	{
 	case EXECUTE_IMMEDIATELY:
-		decodeScriptChar(b, interpretSerialUint8_t);
+		decodeScriptChar(b, interpretSerialByte);
 		break;
 	case STORE_PROGRAM:
-		decodeScriptChar(b, storeReceivedUint8_t);
+		decodeScriptChar(b, storeReceivedByte);
 		break;
 	}
 }
@@ -1890,7 +1376,7 @@ void setupRemoteControl()
 
 bool exeuteProgramStatement()
 {
-	char programUint8_t;
+	char programByte;
 
 #ifdef PROGRAM_DEBUG
 	Serial.println(F(".Executing statement"));
@@ -1906,61 +1392,24 @@ bool exeuteProgramStatement()
 
 	while (true)
 	{
-		programUint8_t = EEPROM.read(programCounter++);
+		programByte = EEPROM.read(programCounter++);
 
-		if (programCounter >= EEPROM_SIZE || programUint8_t == PROGRAM_TERMINATOR)
+		if (programCounter >= EEPROM_SIZE || programByte == PROGRAM_TERMINATOR)
 		{
 			haltProgramExecution();
 			return false;
 		}
 
 #ifdef PROGRAM_DEBUG
-		Serial.print(F(".    program uint8_t: "));
-		Serial.println(programUint8_t);
+		Serial.print(F(".    program byte: "));
+		Serial.println(programByte);
 #endif
 
-		processCommandUint8_t(programUint8_t);
+		processCommandByte(programByte);
 
-		if (programUint8_t == STATEMENT_TERMINATOR)
+		if (programByte == STATEMENT_TERMINATOR)
 			return true;
 	}
 }
 
-void updateHullOS()
-{
 
-	// If we recieve serial data the program that is running
-	// must stop.
-	while (CharsAvailable())
-	{
-		uint8_t b = GetRawCh();
-		processSerialUint8_t(b);
-	}
-
-	switch (programState)
-	{
-	case PROGRAM_STOPPED:
-	case PROGRAM_PAUSED:
-		break;
-	case PROGRAM_ACTIVE:
-		exeuteProgramStatement();
-		break;
-	case PROGRAM_AWAITING_MOVE_COMPLETION:
-		if (!motorsMoving())
-		{
-			programState = PROGRAM_ACTIVE;
-		}
-		break;
-	case PROGRAM_AWAITING_DELAY_COMPLETION:
-		if (millis() > delayEndTime)
-		{
-			programState = PROGRAM_ACTIVE;
-		}
-		break;
-	}
-}
-
-bool commandsNeedFullSpeed()
-{
-	return deviceState != EXECUTE_IMMEDIATELY;
-}
