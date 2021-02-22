@@ -166,3 +166,10 @@ bool exeuteProgramStatement();
 void updateHullOS();
 bool commandsNeedFullSpeed();
 
+uint8_t readHullOSProgramByte(int address);
+bool storeProgramIntoEEPROM(char * programStart, int EEPromStart);
+void setProgramStored();
+void clearProgramStoredFlag();
+bool isProgramStored();
+bool storeByteIntoEEPROM(char byte, int pos);
+

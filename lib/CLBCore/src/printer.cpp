@@ -43,7 +43,7 @@ struct SettingItem PrinterBaudRate = {
 
 struct SettingItem printerEnabledSetting = {
     "Printer enabled",
-    "printerMessagesactive",
+    "printeron",
     &printerSettings.printerEnabled,
     ONOFF_INPUT_LENGTH,
     yesNo,
@@ -226,8 +226,10 @@ void startPrinter()
 
     if (printerSettings.printerEnabled)
     {
+        char buffer[100];
+        snprintf(buffer,100,"\n\nPrinter starting on:%s\n\n\n", settings.name);
         printerProcess.status = PRINTER_OK;
-        printMessage("Printer starting", NULL);
+        printMessage(buffer, NULL);
     }
 }
 

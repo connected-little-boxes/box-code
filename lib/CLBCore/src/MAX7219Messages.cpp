@@ -487,7 +487,7 @@ int doSetMAX7219Message(char *destination, unsigned char *settingBase)
     {
         // we have a destination for the command. Build the string
         char buffer[JSON_BUFFER_SIZE];
-        createJSONfromSettings("max7219Messages", &setMAX7219Message, destination, settingBase, buffer, JSON_BUFFER_SIZE);
+        createJSONfromSettings("max7219", &setMAX7219Message, destination, settingBase, buffer, JSON_BUFFER_SIZE);
         return publishBufferToMQTTTopic(buffer, destination);
     }
 
@@ -573,7 +573,7 @@ int doShowMAX7219value(char *destination, unsigned char *settingBase)
     {
         // we have a destination for the command. Build the string
         char buffer[JSON_BUFFER_SIZE];
-        createJSONfromSettings("max7219Messages", &showMAX7219value, destination, settingBase, buffer, JSON_BUFFER_SIZE);
+        createJSONfromSettings("max7219", &showMAX7219value, destination, settingBase, buffer, JSON_BUFFER_SIZE);
         return publishBufferToMQTTTopic(buffer, destination);
     }
 
@@ -621,7 +621,7 @@ int doSetMAX7219ScrollSpeed(char *destination, unsigned char *settingBase)
     {
         // we have a destination for the command. Build the string
         char buffer[JSON_BUFFER_SIZE];
-        createJSONfromSettings("max7219Messages", &setMAX7219ScrollSpeed, destination, settingBase, buffer, JSON_BUFFER_SIZE);
+        createJSONfromSettings("max7219", &setMAX7219ScrollSpeed, destination, settingBase, buffer, JSON_BUFFER_SIZE);
         return publishBufferToMQTTTopic(buffer, destination);
     }
 
@@ -662,7 +662,7 @@ int doSetMAX7219Brightness(char *destination, unsigned char *settingBase)
     {
         // we have a destination for the command. Build the string
         char buffer[JSON_BUFFER_SIZE];
-        createJSONfromSettings("max7219Messages", &setMAX7219Brightness, destination, settingBase, buffer, JSON_BUFFER_SIZE);
+        createJSONfromSettings("max7219", &setMAX7219Brightness, destination, settingBase, buffer, JSON_BUFFER_SIZE);
         return publishBufferToMQTTTopic(buffer, destination);
     }
 

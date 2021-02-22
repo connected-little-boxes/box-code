@@ -18,9 +18,23 @@ struct SettingItem hullosEnabled = {
     setFalse,
     validateYesNo};
 
+boolean validateHullOSCode(void *dest, const char *newValueStr)
+{
+	return (validateString((char *)dest, newValueStr, HULLOS_PROGRAM_SIZE));
+}
+
+void setDefaultHullOSCode(void *dest)
+{
+	strcpy((char *)dest, "WThello world\nRH");
+}
+
+struct SettingItem hullosProgramSetting = {
+	"hullosCode", "Hullos program", hullosSettings.hullosCode, HULLOS_PROGRAM_SIZE, text, setEmptyString, validateHullOSCode};
+
 struct SettingItem *hullosSettingItemPointers[] =
     {
-        &hullosEnabled};
+        &hullosEnabled,
+        &hullosProgramSetting};
 
 struct SettingItemCollection hullosSettingItems = {
     "hullos",
@@ -30,22 +44,18 @@ struct SettingItemCollection hullosSettingItems = {
 
 void hullosOff()
 {
-    hullosSettings.hullosEnabled = false;
-    saveSettings();
+    hullosProcess.status = HULLOS_STOPPED;
 }
 
 void hullosOn()
 {
-    hullosSettings.hullosEnabled = true;
-    saveSettings();
+        hullosProcess.status = HULLOS_OK;
+        clearVariables();
 }
-
-bool hullOSActive;
 
 void initHullOS()
 {
     hullosProcess.status = HULLOS_STOPPED;
-    hullOSActive = false;
 }
 
 void startHullOS()
@@ -53,7 +63,6 @@ void startHullOS()
     if (hullosSettings.hullosEnabled)
     {
         hullosProcess.status = HULLOS_OK;
-        hullOSActive=true;
         clearVariables();
     }
 }
@@ -67,6 +76,11 @@ void updateHullOS()
 {
     // If we recieve serial data the program that is running
     // must stop.
+
+    if(hullosProcess.status == HULLOS_STOPPED)
+    {
+        return;
+    }
 
     while (CharsAvailable())
     {

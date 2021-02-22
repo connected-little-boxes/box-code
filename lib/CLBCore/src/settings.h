@@ -17,7 +17,7 @@
 #endif
 
 #include "utils.h"
-#define Version "1.0.0.8"
+#define Version "1.0.0.9"
 
 // Sensor settings
 #define UNKNOWN_SENSOR 0
@@ -132,10 +132,3 @@ boolean validateDevName(void* dest, const char* newValueStr);
 
 boolean validateServerName(void* dest, const char* newValueStr);
 
-#define STORED_PROGRAM_OFFSET 20
-
-bool storeProgramIntoEEPROM(char * programStart, int EEPromStart);
-void setProgramStored();
-void clearProgramStoredFlag();
-bool isProgramStored();
-bool storeByteIntoEEPROM(char byte, int pos);

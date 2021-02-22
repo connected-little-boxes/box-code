@@ -23,3 +23,17 @@ struct ConsoleSettings
 };
 
 extern struct ConsoleSettings consoleSettings;
+
+struct consoleCommand {
+	char * name;
+	char * commandDescription;
+	void(*actOnCommand)(char * commandLine);
+};
+
+
+struct consoleCommand * findCommand(char * commandLine,consoleCommand * commands, int noOfCommands);
+char * skipCommand(char * commandLine);
+boolean performCommand(char * commandLine, consoleCommand * commands, int noOfCommands);
+
+
+

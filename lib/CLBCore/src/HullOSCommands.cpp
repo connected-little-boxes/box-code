@@ -13,6 +13,7 @@
 #include "HullOSCommands.h"
 #include "HullOSVariables.h"
 #include "HullOSScript.h"
+#include "HullOS.h"
 
 ProgramState programState = PROGRAM_STOPPED;
 DeviceState deviceState = EXECUTE_IMMEDIATELY;
@@ -63,6 +64,64 @@ int bufferWritePosition;
 // Checksum for the download
 uint8_t downloadChecksum;
 
+uint8_t readHullOSProgramByte(int address)
+{
+	return hullosSettings.hullosCode[address];
+}
+
+bool storeByteIntoEEPROM(char byte, int pos)
+{
+	return true;
+}
+
+// Stores a program into the eeprom at the stated location
+// The program is a string of text which is zero terminated
+// The EEPromStart value is the offset in the EEProm into which the program is to be written
+// The function returns true if the program was loaded, false if not
+
+bool storeProgramIntoEEPROM(char * programStart, int EEPromStart)
+{
+//   while (*programStart)
+//   {
+//     if (!storeByteIntoEEPROM(*programStart, EEPromStart))
+//       return false;
+//     programStart++;
+//     EEPromStart++;
+//   }
+
+//   // put the terminator on the end of the program
+//   storeByteIntoEEPROM(*programStart, EEPromStart);
+  return true;
+}
+
+void setProgramStored()
+{
+//   storeByteIntoEEPROM(PROGRAM_STORED_VALUE1, PROGRAM_STATUS_BYTE_OFFSET);
+//   storeByteIntoEEPROM(PROGRAM_STORED_VALUE2, PROGRAM_STATUS_BYTE_OFFSET + 1);
+}
+
+void clearProgramStoredFlag()
+{
+//   storeByteIntoEEPROM(0, PROGRAM_STATUS_BYTE_OFFSET);
+//   storeByteIntoEEPROM(0, PROGRAM_STATUS_BYTE_OFFSET + 1);
+}
+
+bool isProgramStored()
+{
+//   if ((EEPROM.read(PROGRAM_STATUS_BYTE_OFFSET) == PROGRAM_STORED_VALUE1) &
+//     (EEPROM.read(PROGRAM_STATUS_BYTE_OFFSET + 1) == PROGRAM_STORED_VALUE2))
+//     return true;
+//   else
+//     return false;
+return true;
+}
+
+
+
+
+
+
+
 void dumpProgramFromEEPROM(int EEPromStart)
 {
     int EEPromPos = EEPromStart;
@@ -72,7 +131,7 @@ void dumpProgramFromEEPROM(int EEPromStart)
     char byte;
     while (true)
     {
-        byte = EEPROM.read(EEPromPos++);
+        byte = readHullOSProgramByte(EEPromPos++);
 
         if (byte == STATEMENT_TERMINATOR)
             Serial.println();
@@ -443,7 +502,7 @@ int findNextStatement(int programPosition)
 
 	while (true)
 	{
-		char ch = EEPROM.read(programPosition);
+		char ch = readHullOSProgramByte(programPosition);
 
 		if ((ch == PROGRAM_TERMINATOR) || (programPosition == EEPROM_SIZE))
 			return -1;
@@ -482,7 +541,7 @@ int findLabelInProgram(char *label, int programPosition)
 
 		int statementStart = programPosition;
 
-		char programByte = EEPROM.read(programPosition++);
+		char programByte = readHullOSProgramByte(programPosition++);
 
 #ifdef FIND_LABEL_IN_PROGRAM_DEBUG
 		Serial.print("Statement at: ");
@@ -519,7 +578,7 @@ int findLabelInProgram(char *label, int programPosition)
 
 		// If we get here we have found a C
 
-		programByte = EEPROM.read(programPosition++);
+		programByte = readHullOSProgramByte(programPosition++);
 
 #ifdef FIND_LABEL_IN_PROGRAM_DEBUG
 
@@ -560,7 +619,7 @@ int findLabelInProgram(char *label, int programPosition)
 
 		while ((*labelTest != STATEMENT_TERMINATOR) && (programPosition < EEPROM_SIZE))
 		{
-			programByte = EEPROM.read(programPosition);
+			programByte = readHullOSProgramByte(programPosition);
 
 #ifdef FIND_LABEL_IN_PROGRAM_DEBUG
 			Serial.print("Destination byte: ");
@@ -592,7 +651,7 @@ int findLabelInProgram(char *label, int programPosition)
 
 		// Get the byte at the end of the destination statement
 
-		programByte = EEPROM.read(programPosition);
+		programByte = readHullOSProgramByte(programPosition);
 
 		if (*labelTest == programByte)
 		{
@@ -1392,7 +1451,7 @@ bool exeuteProgramStatement()
 
 	while (true)
 	{
-		programByte = EEPROM.read(programCounter++);
+		programByte = readHullOSProgramByte(programCounter++);
 
 		if (programCounter >= EEPROM_SIZE || programByte == PROGRAM_TERMINATOR)
 		{

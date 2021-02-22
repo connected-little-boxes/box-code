@@ -7,6 +7,7 @@
 #include "pixels.h"
 #include "connectwifi.h"
 #include "settingsWebServer.h"
+#include "HullOS.h"
 
 struct ConsoleSettings consoleSettings;
 
@@ -39,12 +40,6 @@ struct SettingItemCollection consoleSettingItems = {
 	"Serial console configuration",
 	consoleSettingItemPointers,
 	sizeof(consoleSettingItemPointers) / sizeof(struct SettingItem*)
-};
-
-struct consoleCommand {
-	char * name;
-	char * commandDescription;
-	void(*actOnCommand)(char * commandLine);
 };
 
 void doHelp(char * commandLine);
@@ -151,22 +146,6 @@ void doDumpListeners(char * commandline)
 	printControllerListeners();
 }
 
-void printCommandsOld(CommandItemCollection *c) {
-	if(c->noOfCommands>0){
-		// have got some commands in the collection
-		Serial.printf("Commands: %s\n", c->description);
-		for(int i=0;i<c->noOfCommands;i++)
-		{
-			Command * com = c->commands[i];
-			Serial.printf("  %s:%s\n", com->name, com->description);
-			for(int j=0; j<com->noOfItems;j++){
-				CommandItem * item = com->items[j];
-				Serial.printf("    %s:%s\n",item->name, item->description);
-			}
-		}
-	}
-}
-
 void printCommands(process *p) {
 
 	if(p->commands == NULL)
@@ -244,6 +223,32 @@ void doColourDisplay(char * commandLine)
 	}
 }
 
+
+void doHullOSHelp(char * commandLine)
+{
+	Serial.println("Hullos help");
+
+}
+
+void doHullOSRun(char * commandLine)
+{
+	Serial.println("Hullos run");
+
+}
+
+struct consoleCommand HullOSCommands[] =
+{
+	{"help", "show all the commands", doHullOSHelp},
+	{"run", "run the HullOS program ", doHullOSRun}
+};
+
+void doHullOS(char * commandLine)
+{
+	char * hullosCommand = skipCommand(commandLine);
+
+	performCommand(hullosCommand, HullOSCommands, sizeof(HullOSCommands) / sizeof(struct consoleCommand));
+}
+
 struct consoleCommand userCommands[] =
 {
 	{"help", "show all the commands", doHelp},
@@ -261,6 +266,7 @@ struct consoleCommand userCommands[] =
 	{"listeners", "list the command listeners", doDumpListeners},
 	{"clearlisteners", "clear the command listeners (also restarts the device)", doClearListeners},
 	{"restart", "restart the device", doRestart},
+	{"hullos", "HullOS commands", doHullOS},
 	{"otaupdate", "start an over-the-air firmware update", doOTAUpdate},
 	{"clear", "clear all seeings and restart the device", doClear}
 };
@@ -316,21 +322,19 @@ boolean findCommandName(consoleCommand * com, char * name)
 	return false;
 }
 
-struct consoleCommand * findCommand(char * commandLine)
+struct consoleCommand * findCommand(char * commandLine,consoleCommand * commands, int noOfCommands)
 {
-	int noOfCommands = sizeof(userCommands) / sizeof(struct consoleCommand);
-
 	for (int i = 0; i < noOfCommands; i++)
 	{
-		if (findCommandName(&userCommands[i], commandLine))
+		if (findCommandName(&commands[i], commandLine))
 		{
-			return &userCommands[i];
+			return &commands[i];
 		}
 	}
 	return NULL;
 }
 
-boolean performCommand(char * commandLine)
+boolean performCommand(char * commandLine, consoleCommand * commands, int noOfCommands)
 {
 	Serial.printf("Processing: %s ", commandLine);
 
@@ -343,7 +347,7 @@ boolean performCommand(char * commandLine)
 
 	// Look for a command with that name
 
-	consoleCommand * comm = findCommand(commandLine);
+	consoleCommand * comm = findCommand(commandLine, commands, noOfCommands);
 
 	if (comm != NULL)
 	{
@@ -397,7 +401,7 @@ void reset_serial_buffer()
 
 void actOnSerialCommand()
 {
-	performCommand(serialReceiveBuffer);
+	performCommand(serialReceiveBuffer,userCommands,sizeof(userCommands) / sizeof(struct consoleCommand));
 }
 
 #define BACKSPACE_CHAR 0x08
@@ -532,7 +536,7 @@ int doRemoteConsoleCommand(char * destination, unsigned char * settingBase)
 
 	char * command = (char *) (settingBase + COMMANDNAME_CONSOLE_COMMAND_OFFSET);
 
-	if(performCommand(command)){
+	if(performCommand(command,userCommands,sizeof(userCommands) / sizeof(struct consoleCommand))){
 		return WORKED_OK;
 	}
 
