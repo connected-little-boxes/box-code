@@ -106,9 +106,9 @@ void startDevice()
 
 	startstatusLedFlash(1000);
 
-	beginStatusDisplay();
-
 	initialiseAllProcesses();
+
+	beginStatusDisplay();
 
 	// this is where we do the configuration thing - or not
 

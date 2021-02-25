@@ -6,6 +6,7 @@
 #include "controller.h"
 #include "pixels.h"
 #include "buttonsensor.h"
+#include "utils.h"
 
 struct RotarySensorSettings rotarySensorSettings;
 

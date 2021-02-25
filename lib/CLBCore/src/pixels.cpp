@@ -5,161 +5,15 @@
 #include "controller.h"
 #include "clock.h"
 
+#include "Colour.h"
+#include "Frame.h"
+#include "Led.h"
+#include "Leds.h"
+#include "Sprite.h"
+#include "Sprites.h"
+
 // Some of the colours have been commented out because they don't render well
 // on NeoPixels
-
-struct colourLookup colourNames[] = {
-{ "black",BLACK_COLOUR },
-{ "red",RED_COLOUR },
-{ "green",GREEN_COLOUR },
-{ "blue",BLUE_COLOUR },
-{ "yellow",YELLOW_COLOUR },
-{ "orange",ORANGE_COLOUR },
-{ "magenta",MAGENTA_COLOUR },
-{ "cyan",CYAN_COLOUR },
-{ "white",WHITE_COLOUR },
-//{ "aquamarine",AQUAMARINE_COLOUR },
-{ "azure",AZURE_COLOUR },
-//{ "beige",BEIGE_COLOUR },
-{ "blueviolet",BLUE_VIOLET_COLOUR },
-{ "brown",BROWN_COLOUR },
-//{ "burleywood",BURLYWOOD_COLOUR },
-//{ "cadetblue",CADET_BLUE_COLOUR },
-{ "chartreuse",CHARTREUSE_COLOUR },
-//{ "chocolate",CHOCOLATE_COLOUR },
-//{ "coral",CORAL_COLOUR },
-//{ "cornflowerblue",CORNFLOWER_BLUE_COLOUR },
-//{ "cornsilk",CORNSILK_COLOUR },
-//{ "darkblue",DARK_BLUE_COLOUR },
-//{ "darkcyan",DARK_CYAN_COLOUR },
-{ "darkgoldenrod",DARK_GOLDENROD_COLOUR },
-//{ "darkgrey",DARK_GRAY_COLOUR },
-{ "darkgreen",DARK_GREEN_COLOUR },
-//{ "darkkhaki",DARK_KHAKI_COLOUR },
-{ "darkmagenta",DARK_MAGENTA_COLOUR },
-//{ "darkolive",DARKOLIVE_GREEN_COLOUR },
-{ "darkorange",DARK_ORANGE_COLOUR },
-//{ "darkorchid",DARK_ORCHID_COLOUR },
-{ "darkred",DARK_RED_COLOUR },
-//{ "darksalmon",DARK_SALMON_COLOUR },
-//{ "darkseagreen",DARK_SEA_GREEN_COLOUR },
-//{ "darkslateblue",DARK_SLATE_BLUE_COLOUR },
-//{ "darkslategrey",DARK_SLATE_GRAY_COLOUR },
-{ "darkturquoise",DARK_TURQUOISE_COLOUR },
-{ "darkviolet",DARK_VIOLET_COLOUR },
-{ "deeppink",DEEP_PINK_COLOUR },
-{ "deepskyblue",DEEP_SKY_BLUE_COLOUR },
-//{ "dimgray",DIM_GRAY_COLOUR },
-//{ "dodgerblue",DODGERBLUE_COLOUR },
-{ "firebrick",FIREBRICK_COLOUR },
-//{ "floralwhite",FLORAL_WHITE_COLOUR },
-{ "forestgreen",FOREST_GREEN_COLOUR },
-//{ "gainsboro",GAINSBORO_COLOUR },
-//{ "ghostwhite",GHOST_WHITE_COLOUR },
-{ "gold",GOLD_COLOUR },
-//{ "goldenrod",GOLDENROD_COLOUR },
-//{ "grey",GRAY_COLOUR },
-//{ "honeydew",HONEYDEW_COLOUR },
-//{ "hotpink",HOT_PINK_COLOUR },
-{ "indianred",INDIAN_RED_COLOUR },
-//{ "ivory",IVORY_COLOUR },
-//{ "khaki",KHAKI_COLOUR },
-//{ "lavender",LAVENDER_COLOUR },
-//{ "lavenderblush",LAVENDER_BLUSH_COLOUR },
-{ "lawngreen",LAWN_GREEN_COLOUR },
-//{ "lemon",LEMON_COLOUR },
-//{ "lightblue",LIGHT_BLUE_COLOUR },
-//{ "lightcoral",LIGHT_CORAL_COLOUR },
-//{ "lightcyan",LIGHT_CYAN_COLOUR },
-//{ "lightgoldenrod",LIGHT_GOLDENROD_COLOUR },
-//{ "lightgrey",LIGHT_GRAY_COLOUR },
-//{ "lightgreen",LIGHT_GREEN_COLOUR },
-//{ "lightpink",LIGHT_PINK_COLOUR },
-//{ "lightsalmon",LIGHT_SALMON_COLOUR },
-{ "lightseagreen",LIGHT_SEA_GREEN_COLOUR },
-//{ "lightskyblue",LIGHT_SKY_BLUE_COLOUR },
-//{ "lightslateblue",LIGHT_SLATE_BLUE_COLOUR },
-//{ "lightslategrey",LIGHT_SLATE_GRAY_COLOUR },
-//{ "lightsteelblue",LIGHT_STEEL_BLUE_COLOUR },
-//{ "lightyellow",LIGHT_YELLOW_COLOUR },
-{ "limegreen",LIME_GREEN_COLOUR },
-//{ "linen",LINEN_COLOUR },
-{ "maroon",MAROON_COLOUR },
-//{ "mediumaquamarine",MEDIUM_AQUAMARINE_COLOUR },
-{ "mediumblue",MEDIUM_BLUE_COLOUR },
-//{ "mediumorchid",MEDIUM_ORCHID_COLOUR },
-//{ "mediumpurple",MEDIUM_PURPLE_COLOUR },
-//{ "mediumseagreen",MEDIUM_SEA_GREEN_COLOUR },
-//{ "mediumslateblue",MEDIUM_SLATE_BLUE_COLOUR },
-{ "mediumspringgreen",MEDIUM_SPRING_GREEN_COLOUR },
-//{ "mediumturqoise",MEDIUM_TURQUOISE_COLOUR },
-{ "mediumviolet",MEDIUM_VIOLET_COLOUR },
-{ "midnightblue",MIDNIGHT_BLUE_COLOUR },
-//{ "mintcream",MINT_CREAM_COLOUR },
-//{ "mistyrose",MISTY_ROSE_COLOUR },
-//{ "moccasin",MOCCASIN_COLOUR },
-//{ "navajowhite",NAVAJO_WHITE_COLOUR },
-{ "navy",NAVY_COLOUR },
-//{ "oldlace",OLD_LACE_COLOUR },
-//{ "olive",OLIVE_COLOUR },
-//{ "olivedrab",OLIVE_DRAB_COLOUR },
-{ "orchid",ORCHID_COLOUR },
-//{ "palegoldenrod",PALE_GOLDENROD_COLOUR },
-//{ "palegreen",PALE_GREEN_COLOUR },
-//{ "paleturquoise",PALE_TURQUOISE_COLOUR },
-//{ "paleviolet",PALE_VIOLET_COLOUR },
-//{ "papayawhip",PAPAYA_WHIP_COLOUR },
-//{ "peachpuff",PEACH_PUFF_COLOUR },
-//{ "peru",PERU_COLOUR },
-//{ "pink",PINK_COLOUR },
-//{ "plum",PLUM_COLOUR },
-//{ "powderblue",POWDER_BLUE_COLOUR },
-{ "purple",PURPLE_COLOUR },
-//{ "rosybrown",ROSY_BROWN_COLOUR },
-//{ "royalblue",ROYAL_BLUE_COLOUR },
-{ "saddlebrown",SADDLE_BROWN_COLOUR },
-{ "salmon",SALMON_COLOUR },
-//{ "sandybrown",SANDY_BROWN_COLOUR },
-{ "seagreen",SEA_GREEN_COLOUR },
-//{ "seashell",SEASHELL_COLOUR },
-//{ "sienna",SIENNA_COLOUR },
-//{ "silver",SILVER_COLOUR },
-//{ "skyblue",SKY_BLUE_COLOUR },
-//{ "slateblue",SLATE_BLUE_COLOUR },
-//{ "slategrey",SLATE_GRAY_COLOUR },
-//{ "snow",SNOW_COLOUR },
-{ "springgreen",SPRING_GREEN_COLOUR },
-//{ "steelblue",STEEL_BLUE_COLOUR },
-//{ "tan",TAN_COLOUR },
-{ "teal",TEAL_COLOUR },
-//{ "thistle",THISTLE_COLOUR },
-{ "tomato",TOMATO_COLOUR },
-//{ "turqoise",TURQUOISE_COLOUR },
-{ "violet",VIOLET_COLOUR },
-//{ "wheat",WHEAT_COLOUR },
-//{ "whitesmoke",WHITE_SMOKE_COLOUR }
-};
-
-int noOfColours = sizeof(colourNames)/sizeof(struct colourLookup);
-
-struct colourLookup *findColourByName(const char *name)
-{
-	for (unsigned int i = 0; i < sizeof(colourNames) / sizeof(struct colourLookup); i++)
-	{
-		if (strcasecmp(name, colourNames[i].name) == 0)
-		{
-			return &colourNames[i];
-		}
-	}
-	return NULL;
-}
-
-struct colourLookup *findRandomColour()
-{
-	// never picks black
-	int pos = random(1, sizeof(colourNames) / sizeof(struct colourLookup));
-	return &colourNames[pos];
-}
 
 Adafruit_NeoPixel *strip = NULL;
 
@@ -198,19 +52,33 @@ struct SettingItem pixelControlPinSetting = {"Pixel Control Pin",
 											 setDefaultPixelControlPinNo,
 											 validateInt};
 
-void setDefaultNoOfPixels(void *dest)
+void setDefaultNoOfXPixels(void *dest)
 {
 	int *destInt = (int *)dest;
 	*destInt = 12;
 }
 
-struct SettingItem pixelNoOfPixelsSetting = {"Number of pixels (0 for pixels not fitted)",
-											 "noofpixels",
-											 &pixelSettings.noOfPixels,
-											 NUMBER_INPUT_LENGTH,
-											 integerValue,
-											 setDefaultNoOfPixels,
-											 validateInt};
+void setDefaultNoOfYPixels(void *dest)
+{
+	int *destInt = (int *)dest;
+	*destInt = 1;
+}
+
+struct SettingItem pixelNoOfXPixelsSetting = {"Number of X pixels (0 for pixels not fitted)",
+											  "noofXpixels",
+											  &pixelSettings.noOfXPixels,
+											  NUMBER_INPUT_LENGTH,
+											  integerValue,
+											  setDefaultNoOfXPixels,
+											  validateInt};
+
+struct SettingItem pixelNoOfYPixelsSetting = {"Number of Y pixels (0 for pixels not fitted)",
+											  "noofYpixels",
+											  &pixelSettings.noOfYPixels,
+											  NUMBER_INPUT_LENGTH,
+											  integerValue,
+											  setDefaultNoOfYPixels,
+											  validateInt};
 
 void setDefaultPixelConfig(void *dest)
 {
@@ -218,14 +86,13 @@ void setDefaultPixelConfig(void *dest)
 	*destConfig = 1;
 }
 
-
-void setDefaultNoOfVirtualPixels(void *dest)
+void setDefaultNoOfSprites(void *dest)
 {
 	int *destInt = (int *)dest;
 	*destInt = 3;
 }
 
-boolean validateVirtualPixelConfig(void *dest, const char *newValueStr)
+boolean validateSpriteConfig(void *dest, const char *newValueStr)
 {
 	int config;
 
@@ -234,7 +101,7 @@ boolean validateVirtualPixelConfig(void *dest, const char *newValueStr)
 	if (!validConfig)
 		return false;
 
-	if (config < 1 || config >= MAX_NO_OF_VIRTUAL_PIXELS)
+	if (config < 1 || config >= MAX_NO_OF_SPRITES)
 		return false;
 
 	int *intDest = (int *)dest;
@@ -244,13 +111,13 @@ boolean validateVirtualPixelConfig(void *dest, const char *newValueStr)
 	return true;
 }
 
-struct SettingItem pixelNoOfVirtualPixelsSetting = {"Number of virtual pixels",
-											 "noofvirtpixels",
-											 &pixelSettings.noOfVirtualPixels,
-											 NUMBER_INPUT_LENGTH,
-											 integerValue,
-											 setDefaultNoOfVirtualPixels,
-											 validateVirtualPixelConfig};
+struct SettingItem pixelNoOfSpritesSetting = {"Number of sprites",
+											  "noofsprites",
+											  &pixelSettings.noOfSprites,
+											  NUMBER_INPUT_LENGTH,
+											  integerValue,
+											  setDefaultNoOfSprites,
+											  validateSpriteConfig};
 
 boolean validatePixelConfig(void *dest, const char *newValueStr)
 {
@@ -282,8 +149,9 @@ struct SettingItem pixelPixelConfig = {"Pixel config(1=ring 2=strand)",
 struct SettingItem *pixelSettingItemPointers[] =
 	{
 		&pixelControlPinSetting,
-		&pixelNoOfPixelsSetting,
-		&pixelNoOfVirtualPixelsSetting,
+		&pixelNoOfXPixelsSetting,
+		&pixelNoOfYPixelsSetting,
+		&pixelNoOfSpritesSetting,
 		&pixelPixelConfig,
 };
 
@@ -387,7 +255,7 @@ void dump_light_factor(Light_Factor *factor)
 #define FLICKER_FACTOR (BLUE_FACTOR + 1)
 #define POSITION_FACTOR (FLICKER_FACTOR + 1)
 #define WIDTH_FACTOR (POSITION_FACTOR + 1)
-#define BRIGHTNESS_FACTOR (WIDTH_FACTOR+1)
+#define BRIGHTNESS_FACTOR (WIDTH_FACTOR + 1)
 #define NO_OF_FACTORS (BRIGHTNESS_FACTOR + 1)
 
 char *factor_names[] = {"Red", "Green", "Blue", "Flicker", "Position", "Width", "Brightness"};
@@ -397,7 +265,7 @@ struct VirtualPixel
 	Light_Factor factors[NO_OF_FACTORS];
 };
 
-struct VirtualPixel lamps[MAX_NO_OF_VIRTUAL_PIXELS];
+struct VirtualPixel lamps[MAX_NO_OF_SPRITES];
 
 void dumpVirtualPixel(VirtualPixel *lamp)
 {
@@ -413,7 +281,7 @@ void dumpVirtualPixel(VirtualPixel *lamp)
 
 void dumpVirtualPixels(struct VirtualPixel *lamps)
 {
-	for (int i = 0; i < pixelSettings.noOfPixels; i++)
+	for (int i = 0; i < pixelSettings.noOfXPixels; i++)
 	{
 		dumpVirtualPixel(&lamps[i]);
 		Serial.println();
@@ -429,7 +297,7 @@ struct Pixel pixels[MAX_NO_OF_PIXELS];
 
 void clear_pixels()
 {
-	for (int i = 0; i < pixelSettings.noOfPixels; i++)
+	for (int i = 0; i < pixelSettings.noOfXPixels; i++)
 	{
 		pixels[i].r = 0;
 		pixels[i].g = 0;
@@ -463,7 +331,7 @@ void renderSingleVirtualPixel(VirtualPixel *lamp)
 
 	// Map the position value from 360 degrees to a pixel number
 
-	float pixel_pos = (lamp->factors[POSITION_FACTOR].factor_value / 360.0) * pixelSettings.noOfPixels;
+	float pixel_pos = (lamp->factors[POSITION_FACTOR].factor_value / 360.0) * pixelSettings.noOfXPixels;
 
 	int pos = (int)(pixel_pos);
 
@@ -481,7 +349,7 @@ void renderSingleVirtualPixel(VirtualPixel *lamp)
 	g = (byte)(lamp->factors[GREEN_FACTOR].factor_value * brightness * diff);
 	b = (byte)(lamp->factors[BLUE_FACTOR].factor_value * brightness * diff);
 
-	add_color_to_pixel((pos + 1) % pixelSettings.noOfPixels, r, g, b);
+	add_color_to_pixel((pos + 1) % pixelSettings.noOfXPixels, r, g, b);
 }
 
 void renderVirtualPixel(VirtualPixel *lamp)
@@ -501,8 +369,8 @@ void renderVirtualPixel(VirtualPixel *lamp)
 	float left_pos = pos - half_width;
 	float right_pos = pos + half_width;
 
-	float left_pixel_pos = (left_pos / 360 * pixelSettings.noOfPixels);
-	float right_pixel_pos = (right_pos / 360 * pixelSettings.noOfPixels);
+	float left_pixel_pos = (left_pos / 360 * pixelSettings.noOfXPixels);
+	float right_pixel_pos = (right_pos / 360 * pixelSettings.noOfXPixels);
 
 	int left_int_pos = (int)(left_pixel_pos);
 	int right_int_pos = (int)(right_pixel_pos);
@@ -564,12 +432,12 @@ void renderVirtualPixels(struct VirtualPixel *lamps)
 
 	clear_pixels();
 
-	for (int i = 0; i < pixelSettings.noOfVirtualPixels; i++)
+	for (int i = 0; i < pixelSettings.noOfSprites; i++)
 	{
 		renderVirtualPixel(&lamps[i]);
 	}
 
-	for (int i = 0; i < pixelSettings.noOfPixels; i++)
+	for (int i = 0; i < pixelSettings.noOfXPixels; i++)
 	{
 		// Serial.printf("p:%d r:%x g:%x b:%x  ", i, pixels[i].r, pixels[i].g, pixels[i].b);
 
@@ -591,7 +459,7 @@ void updateVirtualPixel(VirtualPixel *target)
 
 void updateVirtualPixels(struct VirtualPixel *lamps)
 {
-	for (int i = 0; i < pixelSettings.noOfVirtualPixels; i++)
+	for (int i = 0; i < pixelSettings.noOfSprites; i++)
 	{
 		updateVirtualPixel(&lamps[i]);
 	}
@@ -617,7 +485,7 @@ void clearVirtualPixel(VirtualPixel *target)
 
 void clearVirtualPixels(struct VirtualPixel *lamps)
 {
-	for (int i = 0; i < pixelSettings.noOfVirtualPixels; i++)
+	for (int i = 0; i < pixelSettings.noOfSprites; i++)
 	{
 		clearVirtualPixel(&lamps[i]);
 	}
@@ -648,25 +516,25 @@ void setupVirtualPixelFactor(VirtualPixel *target, byte factor_number, float fac
 // pixels that are actually in the message
 // Need to change this is the message changes.
 
-void setupWalkingColour(ColourValue colour)
+void setupWalkingColourOld(ColourValue colour)
 {
-	if (pixelSettings.noOfPixels == 0)
+	if (pixelSettings.noOfXPixels == 0)
 		return;
 
 	float start_speed = 0.125;
 	//	float speed_update = 0.125;    // speed for the desktop sensor
 	float speed_update = .25; // speed for the top hat
 
-	float degreesPerPixel = 360.0 / pixelSettings.noOfVirtualPixels;
+	float degreesPerPixel = 360.0 / pixelSettings.noOfSprites;
 
 	clearVirtualPixels(lamps);
 
-	for (int i = 0; i < MAX_NO_OF_VIRTUAL_PIXELS; i++)
+	for (int i = 0; i < MAX_NO_OF_SPRITES; i++)
 	{
 		int pos = i * degreesPerPixel;
 		// Serial.printf("Pixel: %d position:%d", i, pos);
 
-		setupVirtualPixel(&lamps[i], colour.r, colour.g, colour.b, pos, 0, 1.0,1.0);
+		setupVirtualPixel(&lamps[i], colour.r, colour.g, colour.b, pos, 0, 1.0, 1.0);
 		setupVirtualPixelFactor(&lamps[i], POSITION_FACTOR, pos, 0, 359, start_speed, do_update_loop);
 		start_speed += speed_update;
 	}
@@ -703,7 +571,7 @@ void startFade(Light_Factor *factor, float targetValue, int noOfsteps)
 
 void fadeWalkingColour(ColourValue newColour, int noOfSteps)
 {
-	for (int i = 0; i < pixelSettings.noOfVirtualPixels; i++)
+	for (int i = 0; i < pixelSettings.noOfSprites; i++)
 	{
 		startFade(&lamps[i].factors[RED_FACTOR], newColour.r, noOfSteps);
 		startFade(&lamps[i].factors[GREEN_FACTOR], newColour.g, noOfSteps);
@@ -718,7 +586,7 @@ void changeWalkingColour(ColourValue colour)
 
 void fadeWalkingColours(ColourValue *newColours, int noOfColours, int noOfSteps)
 {
-	for (int i = 0; i < pixelSettings.noOfVirtualPixels; i++)
+	for (int i = 0; i < pixelSettings.noOfSprites; i++)
 	{
 		int colourNo = i % noOfColours;
 		startFade(&lamps[i].factors[RED_FACTOR], newColours[colourNo].r, noOfSteps);
@@ -731,14 +599,21 @@ unsigned long millisOfLastPixelUpdate;
 
 void startPixelStrip()
 {
+	int noOfPixels = pixelSettings.noOfXPixels * pixelSettings.noOfYPixels;
+
+	if (noOfPixels == 0)
+	{
+		return;
+	}
+
 	switch (pixelSettings.pixelConfig)
 	{
 	case 1:
-		strip = new Adafruit_NeoPixel(pixelSettings.noOfPixels, pixelSettings.pixelControlPinNo,
+		strip = new Adafruit_NeoPixel(noOfPixels, pixelSettings.pixelControlPinNo,
 									  NEO_GRB + NEO_KHZ800);
 		break;
 	case 2:
-		strip = new Adafruit_NeoPixel(pixelSettings.noOfPixels, pixelSettings.pixelControlPinNo,
+		strip = new Adafruit_NeoPixel(noOfPixels, pixelSettings.pixelControlPinNo,
 									  NEO_KHZ400 + NEO_RGB);
 		break;
 	default:
@@ -754,77 +629,6 @@ void startPixelStrip()
 	strip->begin();
 }
 
-// status display doesn't use the animated leds
-// this means that it can overlay the display
-
-int statusPixelNo = 0;
-
-void initialiseStatusDisplay(byte r, byte g, byte b)
-{
-	if (pixelSettings.noOfPixels == 0)
-		return;
-
-	statusPixelNo = 0;
-
-	for (int i = 0; i < pixelSettings.noOfPixels; i++)
-	{
-		setPixelFromStruct(i, {(float)r, (float)g, (float)b});
-	}
-
-	renderStatusDisplay();
-}
-
-boolean setStatusDisplayPixel(int pixelNumber, boolean statusOK)
-{
-	if (pixelSettings.noOfPixels == 0)
-		return false;
-
-	if (pixelNumber >= pixelSettings.noOfPixels)
-		return false;
-
-	if (statusOK)
-	{
-		setPixelFromStruct(pixelNumber, {0, 128, 0});
-	}
-	else
-	{
-		setPixelFromStruct(pixelNumber, {128, 0, 0});
-	}
-
-	return true;
-}
-
-void beginStatusDisplay()
-{
-	initialiseStatusDisplay(0, 10, 0);
-}
-
-void beginWifiStatusDisplay()
-{
-	initialiseStatusDisplay(10, 0, 10);
-}
-
-void renderStatusDisplay()
-{
-	if (strip == NULL)
-		return;
-
-	strip->show();
-	delay(200);
-}
-
-boolean addStatusItem(boolean status)
-{
-	if (statusPixelNo >= pixelSettings.noOfPixels)
-		return false;
-
-	setStatusDisplayPixel(statusPixelNo, status);
-
-	statusPixelNo++;
-
-	return true;
-}
-
 /// commands
 
 boolean validatePixelCommandString(void *dest, const char *newValueStr)
@@ -836,13 +640,13 @@ boolean validatePixelCommandString(void *dest, const char *newValueStr)
 // This will be loaded with a normalised value to be used by the process when it runs
 
 #define FLOAT_VALUE_OFFSET 0
-#define RED_PIXEL_COMMAND_OFFSET (FLOAT_VALUE_OFFSET+sizeof(float))
+#define RED_PIXEL_COMMAND_OFFSET (FLOAT_VALUE_OFFSET + sizeof(float))
 #define BLUE_PIXEL_COMMAND_OFFSET (RED_PIXEL_COMMAND_OFFSET + sizeof(float))
 #define GREEN_PIXEL_COMMAND_OFFSET (BLUE_PIXEL_COMMAND_OFFSET + sizeof(float))
 #define SPEED_PIXEL_COMMAND_OFFSET (GREEN_PIXEL_COMMAND_OFFSET + sizeof(float))
 #define COMMAND_PIXEL_COMMAND_OFFSET (SPEED_PIXEL_COMMAND_OFFSET + sizeof(int))
 #define COLOURNAME_PIXEL_COMMAND_OFFSET (COMMAND_PIXEL_COMMAND_OFFSET + PIXEL_COMMAND_NAME_LENGTH)
-#define COMMAND_PIXEL_OPTION_OFFSET (COLOURNAME_PIXEL_COMMAND_OFFSET+PIXEL_COMMAND_NAME_LENGTH)
+#define COMMAND_PIXEL_OPTION_OFFSET (COLOURNAME_PIXEL_COMMAND_OFFSET + PIXEL_COMMAND_NAME_LENGTH)
 
 struct CommandItem redCommandItem = {
 	"red",
@@ -874,7 +678,6 @@ boolean setDefaultPixelSpeed(void *dest)
 	*destInt = 20;
 	return true;
 }
-
 
 struct CommandItem speedCommandItem = {
 	"pixelSpeed",
@@ -946,10 +749,10 @@ int doSetPixelColor(char *destination, unsigned char *settingBase)
 
 	// sets the pixel colour - caller has set the r,g and b values
 
-	float red = (float) getUnalignedFloat(settingBase + RED_PIXEL_COMMAND_OFFSET);
-	float blue = (float) getUnalignedFloat(settingBase + BLUE_PIXEL_COMMAND_OFFSET);
-	float green = (float) getUnalignedFloat(settingBase + GREEN_PIXEL_COMMAND_OFFSET);
-	int steps = (int) getUnalignedInt(settingBase + SPEED_PIXEL_COMMAND_OFFSET);
+	float red = (float)getUnalignedFloat(settingBase + RED_PIXEL_COMMAND_OFFSET);
+	float blue = (float)getUnalignedFloat(settingBase + BLUE_PIXEL_COMMAND_OFFSET);
+	float green = (float)getUnalignedFloat(settingBase + GREEN_PIXEL_COMMAND_OFFSET);
+	int steps = (int)getUnalignedInt(settingBase + SPEED_PIXEL_COMMAND_OFFSET);
 
 	fadeWalkingColour({red, green, blue}, steps);
 
@@ -1022,7 +825,7 @@ void seedRandomFromClock()
 	if (clockSensor.status != SENSOR_OK)
 	{
 		// no clock - just pick a random colour
-		return ;
+		return;
 	}
 
 	// get a seed for the random number generator
@@ -1100,7 +903,7 @@ int doSetTwinkle(char *destination, unsigned char *settingBase)
 
 	int steps = getUnalignedInt(settingBase + SPEED_PIXEL_COMMAND_OFFSET);
 
-	for (int i = 0; i < pixelSettings.noOfVirtualPixels; i++)
+	for (int i = 0; i < pixelSettings.noOfSprites; i++)
 	{
 		struct colourLookup *newColour = findRandomColour();
 		startFade(&lamps[i].factors[RED_FACTOR], newColour->col.r, steps);
@@ -1111,11 +914,10 @@ int doSetTwinkle(char *destination, unsigned char *settingBase)
 	return WORKED_OK;
 }
 
-struct CommandItem * setPixelBrightnessItems [] =
-{
-	&floatValueItem,
-	&speedCommandItem
-};
+struct CommandItem *setPixelBrightnessItems[] =
+	{
+		&floatValueItem,
+		&speedCommandItem};
 
 int doSetBrightness(char *destination, unsigned char *settingBase);
 
@@ -1142,7 +944,7 @@ int doSetBrightness(char *destination, unsigned char *settingBase)
 
 	int steps = getUnalignedInt(settingBase + SPEED_PIXEL_COMMAND_OFFSET);
 
-	for (int i = 0; i < pixelSettings.noOfVirtualPixels; i++)
+	for (int i = 0; i < pixelSettings.noOfSprites; i++)
 	{
 		startFade(&lamps[i].factors[BRIGHTNESS_FACTOR], brightness, steps);
 	}
@@ -1163,19 +965,159 @@ struct CommandItemCollection pixelCommands =
 		pixelCommandList,
 		sizeof(pixelCommandList) / sizeof(struct Command *)};
 
+
+Leds *leds;
+Frame *frame;
+
+void setupWalkingColour(Colour colour)
+{
+
+	Serial.println("Setting up walking colour");
+
+	float brightness = 1;
+	float opacity = 1.0;
+	float speed = 0.02;
+
+	frame->addSprite(RED_COLOUR, brightness / 2, opacity, 0, 0, new WrapMove(-speed, -speed, pixelSettings.noOfXPixels,pixelSettings.noOfYPixels));
+	frame->addSprite(BLUE_COLOUR, brightness/2, opacity, 0, 0, new WrapMove(speed, speed, pixelSettings.noOfXPixels,pixelSettings.noOfYPixels));
+	frame->addSprite(GREEN_COLOUR, brightness/2, opacity, 0, 0, new WrapMove(speed, -speed, pixelSettings.noOfXPixels,pixelSettings.noOfYPixels));
+
+}
+
+void show()
+{
+	strip->show();
+}
+
+int *rasterLookup;
+
+void setPixel(int no, float r, float g, float b)
+{
+	unsigned char rs = (unsigned char)round(r * 255);
+	unsigned char gs = (unsigned char)round(g * 255);
+	unsigned char bs = (unsigned char)round(b * 255);
+	strip->setPixelColor(rasterLookup[no], rs, gs, bs);
+}
+
+// status display doesn't use the animated leds
+// this means that it can overlay the display
+
+int statusPixelNo = 0;
+
+void initialiseStatusDisplay(ColourValue col )
+{
+	int noOfPixels = pixelSettings.noOfXPixels * pixelSettings.noOfYPixels;
+
+	if (noOfPixels == 0)
+		return;
+
+	statusPixelNo = 0;
+
+	for (int i = 0; i < noOfPixels; i++)
+	{
+		setPixel(i, col.r, col.g, col.b);
+	}
+	renderStatusDisplay();
+}
+
+void beginStatusDisplay()
+{
+	initialiseStatusDisplay( DARK_SLATE_GRAY_COLOUR);
+}
+
+boolean setStatusDisplayPixel(int pixelNumber, boolean statusOK)
+{
+	int noOfPixels = pixelSettings.noOfXPixels * pixelSettings.noOfYPixels;
+
+	if (noOfPixels == 0)
+		return false;
+
+	if (pixelNumber >= noOfPixels)
+		return false;
+
+	if (statusOK)
+	{
+		setPixel(pixelNumber, 0, 0.5, 0);
+	}
+	else
+	{
+		setPixel(pixelNumber, 0.5, 0, 0);
+	}
+
+	return true;
+}
+
+
+void renderStatusDisplay()
+{
+	if (strip == NULL)
+		return;
+
+	strip->show();
+	delay(200);
+}
+
+boolean addStatusItem(boolean status)
+{
+	int noOfPixels = pixelSettings.noOfXPixels * pixelSettings.noOfYPixels;
+
+	if (statusPixelNo >= noOfPixels)
+		return false;
+
+	setStatusDisplayPixel(statusPixelNo, status);
+
+	statusPixelNo++;
+
+	return true;
+}
+
 void initPixel()
 {
 	pixelProcess.status = PIXEL_OFF;
-}
+	int noOfPixels = pixelSettings.noOfXPixels * pixelSettings.noOfYPixels;
 
-void startPixel()
-{
-	if (pixelSettings.noOfPixels == 0)
+	if (noOfPixels == 0)
 	{
 		pixelProcess.status = PIXEL_ERROR_NO_PIXELS;
 	}
 
+	rasterLookup = new int[noOfPixels];
+
+	int dest = 0;
+
+	for (int y = 0; y < pixelSettings.noOfYPixels; y++)
+	{
+		for (int x = 0; x < pixelSettings.noOfXPixels; x++)
+		{
+			int rowStart = y * pixelSettings.noOfXPixels;
+			int pos;
+
+			if ((y & 1) == 0)
+			{
+				// even row - ascending order
+				pos = rowStart + x;
+				rasterLookup[dest] = pos;
+			}
+			else
+			{
+				// odd row - descending order
+				pos = rowStart + (pixelSettings.noOfXPixels - x - 1);
+			}
+			rasterLookup[dest] = pos;
+			dest++;
+		}
+	}
+
 	startPixelStrip();
+}
+
+void startPixel()
+{
+	leds = new Leds(pixelSettings.noOfXPixels, pixelSettings.noOfXPixels, show, setPixel);
+
+	frame = new Frame(leds, {0.05,0.05,0.05});
+	frame->on();
+	frame->fadeUp(0.01);
 
 	millisOfLastPixelUpdate = millis();
 	pixelProcess.status = PIXEL_OK;
@@ -1186,7 +1128,7 @@ boolean getInputSwitchValue(); // declared in inputswitch.h
 
 void updatePixel()
 {
-	if (pixelSettings.noOfPixels == 0)
+	if (pixelSettings.noOfXPixels == 0)
 		return;
 
 	if (pixelProcess.status != PIXEL_OK)
@@ -1199,7 +1141,8 @@ void updatePixel()
 
 	if (millisSinceLastUpdate >= MILLIS_BETWEEN_UPDATES)
 	{
-		updateVirtualPixels(lamps);
+		frame->update();
+		frame->render();
 		millisOfLastPixelUpdate = currentMillis;
 	}
 }
@@ -1216,7 +1159,7 @@ bool pixelStatusOK()
 
 void pixelStatusMessage(char *buffer, int bufferLength)
 {
-	if (pixelSettings.noOfPixels == 0)
+	if (pixelSettings.noOfXPixels == 0)
 	{
 		snprintf(buffer, bufferLength, "No pixels connected");
 		return;

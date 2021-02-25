@@ -32,10 +32,12 @@ void update_progress(int cur, int total) {
 	}
 
 	Serial.printf("CALLBACK:  HTTP update process at %d of %d bytes...\n", cur, total);
+
 	if (!addStatusItem(true))
 	{
 		beginStatusDisplay();
 	}
+	
 	renderStatusDisplay();
 }
 
