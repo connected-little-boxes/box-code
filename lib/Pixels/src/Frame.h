@@ -20,11 +20,11 @@ public:
 	int noOfPixels;
 	float brightness;
 	float brightnessStep;
-	Sprite * sprites;
+	Sprite ** sprites ;
+	int noOfSprites;
+	Frame(Leds* inLeds, Colour inBackground, int noOfSprites); 
 
-	Frame(Leds* inLeds, Colour inBackground); 
-
-	Sprite * addSprite(Colour colour, float brightness, float opacity, float x, float y, Updater * updaters);
+	bool setupSprite(int spriteNo, Colour colour, float brightness, float opacity, float x, float y, Updater * updaters);
 
 	void render();
 

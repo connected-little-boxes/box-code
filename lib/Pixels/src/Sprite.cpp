@@ -1,6 +1,12 @@
 #include "Sprite.h"
 
-void Sprite::render() {
-    frame->leds->renderDot(x, y, oldX, oldY, colour, brightness, opacity);
-}
+// declared here becuase of issues with forward declaration of the frame
+// class
 
+void Sprite::render()
+{
+    if (!enabled)
+        return;
+
+    frame->leds->renderDot(x, y, colour, brightness, opacity);
+}

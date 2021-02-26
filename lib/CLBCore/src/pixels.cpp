@@ -10,7 +10,6 @@
 #include "Led.h"
 #include "Leds.h"
 #include "Sprite.h"
-#include "Sprites.h"
 
 // Some of the colours have been commented out because they don't render well
 // on NeoPixels
@@ -516,7 +515,7 @@ void setupVirtualPixelFactor(VirtualPixel *target, byte factor_number, float fac
 // pixels that are actually in the message
 // Need to change this is the message changes.
 
-void setupWalkingColourOld(ColourValue colour)
+void setupWalkingColour(Colour colour)
 {
 	if (pixelSettings.noOfXPixels == 0)
 		return;
@@ -534,7 +533,7 @@ void setupWalkingColourOld(ColourValue colour)
 		int pos = i * degreesPerPixel;
 		// Serial.printf("Pixel: %d position:%d", i, pos);
 
-		setupVirtualPixel(&lamps[i], colour.r, colour.g, colour.b, pos, 0, 1.0, 1.0);
+		setupVirtualPixel(&lamps[i], colour.Red, colour.Green, colour.Blue, pos, 0, 1.0, 1.0);
 		setupVirtualPixelFactor(&lamps[i], POSITION_FACTOR, pos, 0, 359, start_speed, do_update_loop);
 		start_speed += speed_update;
 	}
@@ -969,18 +968,17 @@ struct CommandItemCollection pixelCommands =
 Leds *leds;
 Frame *frame;
 
-void setupWalkingColour(Colour colour)
+void setupWalkingColourNew(Colour colour)
 {
 
 	Serial.println("Setting up walking colour");
 
 	float brightness = 1;
 	float opacity = 1.0;
-	float speed = 0.02;
+	float speed = 0.125;
 
-	frame->addSprite(RED_COLOUR, brightness / 2, opacity, 0, 0, new WrapMove(-speed, -speed, pixelSettings.noOfXPixels,pixelSettings.noOfYPixels));
-	frame->addSprite(BLUE_COLOUR, brightness/2, opacity, 0, 0, new WrapMove(speed, speed, pixelSettings.noOfXPixels,pixelSettings.noOfYPixels));
-	frame->addSprite(GREEN_COLOUR, brightness/2, opacity, 0, 0, new WrapMove(speed, -speed, pixelSettings.noOfXPixels,pixelSettings.noOfYPixels));
+	float xStepsPerSprite = pixelSettings.noOfSprites/ pixelSettings.noOfXPixels;
+	float yStepsPerSprite = pixelSettings.noOfSprites / pixelSettings.noOfYPixels;
 
 }
 
@@ -1115,7 +1113,7 @@ void startPixel()
 {
 	leds = new Leds(pixelSettings.noOfXPixels, pixelSettings.noOfXPixels, show, setPixel);
 
-	frame = new Frame(leds, {0.05,0.05,0.05});
+	frame = new Frame(leds, BLACK_COLOUR, pixelSettings.noOfSprites);
 	frame->on();
 	frame->fadeUp(0.01);
 
@@ -1141,8 +1139,9 @@ void updatePixel()
 
 	if (millisSinceLastUpdate >= MILLIS_BETWEEN_UPDATES)
 	{
-		frame->update();
-		frame->render();
+//		frame->update();
+//		frame->render();
+		updateVirtualPixels(lamps);
 		millisOfLastPixelUpdate = currentMillis;
 	}
 }

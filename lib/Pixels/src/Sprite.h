@@ -39,9 +39,9 @@ public:
 	float opacity;
 	float x;
 	float y;
-    float oldX;
-    float oldY;
     Updater* updater;
+    bool enabled;
+    
 
 	void (*doUpdate)(Sprite* sprite);
 
@@ -63,9 +63,9 @@ public:
 
     void update()
     {
+        if(!enabled)
+            return;
         Updater* addPos = updater;
-        oldX=x;
-        oldY=y;
         while (addPos != NULL) {
             addPos->doUpdate(this);
             addPos = addPos->nextUpdater;
@@ -88,21 +88,32 @@ public:
         }
     }
 
-	Sprite* nextSprite;
-
-    Sprite(Frame* inFrame, Colour inColour, float inBrightness, float inOpacity,
-        float inX, float inY, Updater* updaters)
+    Sprite(Frame * inFrame)
     {
-        frame = inFrame;
+        frame= inFrame;
+        enabled=false;
+    }
+
+    void enable(){
+        enabled=true;
+    }
+
+    void disable()
+    {
+        enabled=false;
+    }
+    
+    void setup(Colour inColour, float inBrightness, float inOpacity,
+        float inX, float inY, bool inEnabled, Updater* updaters)
+    {
         colour = inColour;
         brightness = inBrightness;
         opacity = inOpacity;
         x = inX;
         y = inY;
-        nextSprite = NULL;
+        enabled = inEnabled;
         updater = updaters;
     }
-
 };
 
 class BounceMove : public Updater
@@ -120,7 +131,6 @@ public:
         this->limitX = limitX;
         this->limitY = limitY;
     }
-
 
     void doUpdate(Sprite* sprite)
     {

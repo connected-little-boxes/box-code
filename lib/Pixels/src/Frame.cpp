@@ -3,33 +3,29 @@ class Updater;
 
 #include "Frame.h"
 
-Frame::Frame(Leds * inLeds, Colour inBackground) {
+Frame::Frame(Leds * inLeds, Colour inBackground, int inNoOfSprites) {
 	leds = inLeds;
 	width = inLeds->ledWidth;
 	height = inLeds->ledHeight;
 	background = inBackground;
-	state = OFF;
-	sprites = NULL;
+	noOfSprites = inNoOfSprites;
+	sprites = new Sprite * [noOfSprites];
+	for(int i=0;i<noOfSprites;i++)
+	{
+		sprites[i] = new Sprite(this);
+	}
 }
 
-Sprite * Frame::addSprite(Colour colour, float brightness, float opacity, float x, float y, Updater * updaters)
+bool Frame::setupSprite(int spriteNo, Colour colour, float brightness, float opacity, float x, float y, Updater * updaters)
 {
-	Sprite * newSprite = new Sprite(this, colour, brightness, opacity, x, y, updaters);
+	if(spriteNo >= noOfSprites)
+	{
+		return false;
+	}
 
-	if (sprites == NULL) {
-		// first sprite is the new head
-		sprites = newSprite;
-		return newSprite;
-	}
-	else {
-		// spin down the sprites to find the one at the bottom
-		Sprite* addPos = sprites;
-		while (addPos->nextSprite != NULL) {
-			addPos = addPos->nextSprite;
-		}
-		addPos->nextSprite = newSprite;
-	}
-	return newSprite;
+//	sprites[spriteNo]->setup(colour, brightness, opacity, x, y, updaters);
+
+	return true;
 }
 
 void Frame::render() {
@@ -38,11 +34,9 @@ void Frame::render() {
 
 	leds->clear(background);
 
-	Sprite* currentSprite = sprites;
-
-	while (currentSprite != nullptr) {
-		currentSprite->render();
-		currentSprite = currentSprite->nextSprite;
+	for(int i=0;i<noOfSprites;i++)
+	{
+		sprites[i]->render();
 	}
 
 	leds->display(brightness);
@@ -54,11 +48,9 @@ void Frame::dump() {
 
 	leds->dump();
 
-	Sprite* currentSprite = sprites;
-
-	while (currentSprite != nullptr) {
-		currentSprite->dump();
-		currentSprite = currentSprite->nextSprite;
+	for(int i=0;i<noOfSprites;i++)
+	{
+		sprites[i]->dump();
 	}
 }
 
@@ -66,11 +58,9 @@ void Frame::update() {
 
 	if (state == OFF) return;
 
-	Sprite* currentSprite = sprites;
-
-	while (currentSprite != nullptr) {
-		currentSprite->update();
-		currentSprite = currentSprite->nextSprite;
+	for(int i=0;i<noOfSprites;i++)
+	{
+		sprites[i]->update();
 	}
 
 	switch (state)

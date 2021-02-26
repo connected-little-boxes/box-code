@@ -68,111 +68,142 @@ void Leds::dump()
 	Serial.println();
 }
 
-// use the direction of movement to decide which dot to light up next....
-
-/*
- void Leds::renderDot(float sx, float sy, float oldX, float oldY, Colour colour, float brightness, float opacity)
+void Leds::renderDot(float sx, float sy, Colour colour, float brightness, float opacity)
 {
-	int ledX= (int)sx;
-	int ledY = (int)sy;
+	// find the X and Y coordinates of the square containing the pixel
 
-	float pX = ledX+0.5;
-	float pY = ledY+0.5;
-
-	float dx = ledX-pX;
-	float dy = ledY-pY;
-
-	float dist=sqrt((dx*dx)+(dy*dy));
-	// factor is 1 when the distance is 0 and 0 when distance is 0.707 (half of root 2)
-
-	float distanceBrightness = 0.707-dist;
-
-	float rs = colour.Red * brightness * distanceBrightness;
-	float gs = colour.Green * brightness * distanceBrightness;
-	float bs = colour.Blue * brightness * distanceBrightness;
-
-	leds[ledX][ledY].AddColourValues(rs, gs, bs, opacity);
-
-	if(close_to(sx,oldX)&&close_to(sy,oldY)){
-		return;
-	}
-
-	// now find the 
-
-}
-*/
-
-void Leds::renderDot(float sx, float sy, float oldX, float oldY, Colour colour, float brightness, float opacity)
-{
 	int intX = trunc(sx);
 	int intY = trunc(sy);
 
-	float dx = (sx - intX) / 4.0;
-	float dy = (sy - intY) / 4.0;
+	// set the X and Y coordinates of the LED in that square
+	// Notionally the leds are in the centre and the squares are 1 unit in size
+	float ledX = intX + 0.5;
+	float ledY = intY + 0.5;
 
-	float nx = 0.25 - dx;
-	float ny = 0.25 - dy;
+	// now find the distance from the led for this dot
+	float fx = sx - ledX;
+	float fy = sy - ledY;
+	float dist = sqrt((fx * fx) + (fy * fy));
 
-	int nextX = intX + 1;
-	int nextY = intY + 1;
+//	Serial.printf("sx:%f sy:%f fx:%f fy:%f intX:%d intY:%d ledX:%f ledY:%f dist:%f\n", sx, sy, fx, fy, intX, intY, ledX, ledY, dist);
 
-	// Will sum the X and Y components to get the
-	// final colour level
+	// The further the led is away from the dot, the dimmer it should be
+	// when the dot is 1 or more units away from the led the led should 
+	// not light up. 
 
-	float rs = colour.Red * brightness;
-	float gs = colour.Green * brightness;
-	float bs = colour.Blue * brightness;
-
-#ifdef DUMP_LED_VALUES
-	Serial.printf("x:%f y:%f ix:%d iy:%d nx:%d ny:%d r:%f g:%f b:%f\n",
-				  sx, sy, intX, intY, nextX, nextY, rs, gs, bs);
-	Serial.printf("dx:%f dy:%f nx:%f ny:%f\n", dx, dy, nx, ny);
-#endif
-
-	float r, g, b;
-
-	r = (rs * nx) + (rs * ny);
-	g = (gs * nx) + (gs * ny);
-	b = (bs * nx) + (bs * ny);
-
-	leds[intX][intY].AddColourValues(r, g, b, opacity);
-#ifdef DUMP_LED_VALUES
-	Serial.printf("    ix,iy r:%f g:%f b:%f\n", r, g, b);
-#endif
-
-	if (nextY < ledHeight)
+	if(dist<1)
 	{
-		r = (rs * nx) + (rs * dy);
-		g = (gs * nx) + (gs * dy);
-		b = (bs * nx) + (bs * dy);
-
-		leds[intX][nextY].AddColourValues(r, g, b, opacity);
-#ifdef DUMP_LED_VALUES
-		Serial.printf("    ix,ny r:%f g:%f b:%f\n", r, g, b);
-#endif
+		// we are near enough to light up
+		float factor = 1.0 - dist;
+		float rs = colour.Red * brightness * factor;
+		float gs = colour.Green * brightness * factor;
+		float bs = colour.Blue * brightness * factor;
+		leds[intX][intY].AddColourValues(rs, gs, bs, opacity);
+//		Serial.printf("    factor:%f rs:%f gs:%f bs:%f\n", factor, rs, gs, bs );
 	}
 
-	if ((nextX < ledWidth) && (nextY < ledHeight))
-	{
-		r = (rs * dx) + (rs * dy);
-		g = (gs * dx) + (gs * dy);
-		b = (bs * dx) + (bs * dy);
+	// now we need to find the next nearest led and light that
+	// we need to find the direction to this led
 
-		leds[nextX][nextY].AddColourValues(r, g, b, opacity);
-#ifdef DUMP_LED_VALUES
-		Serial.printf("    nx,iy r:%f g:%f b:%f\n", r, g, b);
-#endif
+	float angleInDegrees = atan2(fx, fy) * 180 / 3.141;
+
+	//                       0
+	//                   -90    90
+	//                      180
+	// Use the angle to decide which square is going to be lit up
+
+	// normalise the angle to make it positive:
+
+	if(angleInDegrees<0) angleInDegrees = angleInDegrees + 360;
+
+	//                       0
+	//                   270    90
+	//                      180
+	// Use the angle to decide which square is going to be lit up
+
+//	Serial.printf("   Angle:%f \n", angleInDegrees);
+
+	// rotate it round 22.5 degrees 
+	angleInDegrees = angleInDegrees + 22.5;
+
+	// cap the value in case it has wrapped round
+	if(angleInDegrees>=360)
+		angleInDegrees = angleInDegrees-360;
+
+	// now map this onto the destination sector and 
+	// get the X and Y locations of the destination
+	
+	int sector = angleInDegrees/45;
+
+//	Serial.printf("sector:%d \n", sector);
+
+	switch(sector)
+	{
+		case 0:
+			// straight up
+			intY++;
+			break;
+		case 1:
+			// up right
+			intX++;
+			intY++;
+			break;
+		case 2:
+			// right
+			intX++;
+			break;
+		case 3:
+			// down right
+			intX++;
+			intY--;
+			break;
+		case 4:
+			// down
+			intY--;
+			break;
+		case 5:
+			// down left
+			intY--;
+			intX++;
+			break;
+		case 6:
+			// left
+			intX--;
+			break;
+		case 7:
+			// left up
+			intX--;
+			intY++;
+			break;
 	}
 
-	if (nextX < ledWidth)
+	// make sure that the destination led is visible
+	if ((intX < ledWidth) && (intY < ledHeight) && (intX >= 0) && (intY >= 0))
 	{
-		r = (rs * dx) + (rs * ny);
-		g = (gs * dx) + (gs * ny);
-		b = (bs * dx) + (bs * ny);
+		ledX = intX+0.5;
+		ledY= intY+0.5;
+		// now find the distance from the led for this dot
+		float fx = sx - ledX;
+		float fy = sy - ledY;
+		float dist = sqrt((fx * fx) + (fy * fy));
 
-		leds[nextX][intY].AddColourValues(r, g, b, opacity);
-#ifdef DUMP_LED_VALUES
-		Serial.printf("    nx,ny r:%f g:%f b:%f\n", r, g, b);
-#endif
+//		Serial.printf("       intX:%d intY:%d ledX:%f ledY:%f dist:%f\n",intX, intY, ledX, ledY, dist);
+
+
+		// set the brightness of the new destination
+		if(dist<1)
+		{
+			// The further the led is away from the dot, the dimmer it should be
+			// when the dot is 1 or more units away from the led the led should 
+			// not light up. 
+			// we are near enough to light up
+			float factor = 1.0 - dist;
+			float rs = colour.Red * brightness * factor;
+			float gs = colour.Green * brightness * factor;
+			float bs = colour.Blue * brightness * factor;
+			leds[intX][intY].AddColourValues(rs, gs, bs, opacity);
+//			Serial.printf("            factor:%f rs:%f gs:%f bs:%f\n", factor, rs, gs, bs );
+		}
 	}
 }
+
