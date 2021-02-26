@@ -38,5 +38,9 @@ public:
 	void fadeUp(float step);
 
 	void fadeDown(float step);
+
+	void fadeToColour(Colour target, int steps);
+	void fadeSpritesToColourCharMask(char * colourMask, int steps);
+
 };
 

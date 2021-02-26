@@ -182,7 +182,10 @@ void updateProcesses()
 
 	while (procPtr != NULL)
 	{
+		unsigned long startMicros = micros();
 		procPtr->udpateProcess();
+		procPtr->activeTime = ulongDiff(micros(), startMicros);
+		procPtr->totalTime = procPtr->totalTime + procPtr->activeTime/1000;
 		procPtr = procPtr->nextActiveProcess;
 	}
 }
@@ -199,19 +202,15 @@ void dumpProcessStatus()
 		{
 			Serial.printf("    %s:", procPtr->processName);
 			procPtr->getStatusMessage(processStatusBuffer, PROCESS_STATUS_BUFFER_SIZE);
-			Serial.printf("%s Active time(microsecs):", processStatusBuffer);
-			Serial.println(procPtr->activeTime);
+			Serial.printf("%s Active time(microsecs): ", processStatusBuffer);
+			Serial.print(procPtr->activeTime);
+			Serial.printf(" Total time(millisecs): ");
+			Serial.println(procPtr->totalTime);
 		}
 		procPtr = procPtr->nextActiveProcess;
 	}
 }
 
-void updateProcess(struct process *process)
-{
-	unsigned long startMicros = micros();
-	process->udpateProcess();
-	process->activeTime = ulongDiff(micros(), startMicros);
-}
 
 void iterateThroughAllProcesses(void (*func)(process *p))
 {

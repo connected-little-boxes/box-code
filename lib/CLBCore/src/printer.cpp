@@ -274,6 +274,7 @@ struct process printerProcess = {
     false,
     0,
     0,
+    0,
     NULL,
     (unsigned char *)&printerSettings, sizeof(PrinterSettings), &printerMessagesSettingItems,
     &PRINTERCommands,

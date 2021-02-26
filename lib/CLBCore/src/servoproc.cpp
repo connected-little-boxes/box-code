@@ -265,6 +265,7 @@ struct process ServoProcess = {
     false,
     0,
     0,
+    0,
     NULL,
     (unsigned char *)&servoSettings, sizeof(servoSettings), &ServoSettingItems,
     &servoCommands,

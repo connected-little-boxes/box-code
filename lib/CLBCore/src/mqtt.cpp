@@ -477,6 +477,7 @@ struct process MQTTProcessDescriptor = {
 	false,
 	0,
 	0,
+	0,
 	NULL,
 	(unsigned char *)&mqttSettings, sizeof(MqttSettings), &mqttSettingItems,
 	NULL,

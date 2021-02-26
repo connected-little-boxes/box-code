@@ -515,7 +515,7 @@ void setupVirtualPixelFactor(VirtualPixel *target, byte factor_number, float fac
 // pixels that are actually in the message
 // Need to change this is the message changes.
 
-void setupWalkingColour(Colour colour)
+void setupWalkingColourOld(Colour colour)
 {
 	if (pixelSettings.noOfXPixels == 0)
 		return;
@@ -784,7 +784,7 @@ int doSetNamedColour(char *destination, unsigned char *settingBase)
 		return publishBufferToMQTTTopic(buffer, destination);
 	}
 
-	struct colourLookup *col;
+	struct colourNameLookup *col;
 
 	char *colourName = (char *)(settingBase + COLOURNAME_PIXEL_COMMAND_OFFSET);
 
@@ -794,7 +794,7 @@ int doSetNamedColour(char *destination, unsigned char *settingBase)
 
 	if (col != NULL)
 	{
-		fadeWalkingColour(col->col, steps);
+		frame->fadeToColour(col->col, steps);
 		return WORKED_OK;
 	}
 	else
@@ -858,11 +858,11 @@ int doSetRandomColour(char *destination, unsigned char *settingBase)
 		seedRandomFromClock();
 	}
 
-	struct colourLookup *randomColour = findRandomColour();
+	struct colourNameLookup *randomColour = findRandomColour();
 
 	int steps = getUnalignedInt(settingBase + SPEED_PIXEL_COMMAND_OFFSET);
 
-	fadeWalkingColour(randomColour->col, steps);
+	frame->fadeToColour(randomColour->col, steps);
 
 	return WORKED_OK;
 }
@@ -904,10 +904,8 @@ int doSetTwinkle(char *destination, unsigned char *settingBase)
 
 	for (int i = 0; i < pixelSettings.noOfSprites; i++)
 	{
-		struct colourLookup *newColour = findRandomColour();
-		startFade(&lamps[i].factors[RED_FACTOR], newColour->col.r, steps);
-		startFade(&lamps[i].factors[GREEN_FACTOR], newColour->col.g, steps);
-		startFade(&lamps[i].factors[BLUE_FACTOR], newColour->col.b, steps);
+		struct colourNameLookup *newColour = findRandomColour();
+		frame->sprites[i]->fadeToColour(newColour->col, steps);
 	}
 
 	return WORKED_OK;
@@ -968,9 +966,8 @@ struct CommandItemCollection pixelCommands =
 Leds *leds;
 Frame *frame;
 
-void setupWalkingColourNew(Colour colour)
+void setupWalkingColour(Colour colour)
 {
-
 	Serial.println("Setting up walking colour");
 
 	float brightness = 1;
@@ -979,6 +976,24 @@ void setupWalkingColourNew(Colour colour)
 
 	float xStepsPerSprite = pixelSettings.noOfSprites/ pixelSettings.noOfXPixels;
 	float yStepsPerSprite = pixelSettings.noOfSprites / pixelSettings.noOfYPixels;
+
+	frame->setupSprite(0,colour,1,1,0.5,0.5,NULL);
+	frame->sprites[0]->fadeToColour(RED_COLOUR, 1000);
+	WrapMove * w = new WrapMove(0.06,0.03, pixelSettings.noOfXPixels, pixelSettings.noOfXPixels);
+	frame->sprites[0]->addUpdater(w);
+
+
+	// // need a command to place sprites at locations - maybe use the 
+
+	// frame->fadeSpritesToColourCharMask("RRRKBBBBGGGKVOMC", 20);
+
+	// WrapMove * w = new WrapMove(0.01,0.005, pixelSettings.noOfXPixels, pixelSettings.noOfXPixels);
+
+	// for(int i=0;i<pixelSettings.noOfSprites;i++)
+	// {
+	// 	frame->sprites[i]->addUpdater(w);
+	// }
+
 
 }
 
@@ -1081,7 +1096,7 @@ void initPixel()
 
 	rasterLookup = new int[noOfPixels];
 
-	int dest = 0;
+	int dest = (pixelSettings.noOfYPixels*pixelSettings.noOfXPixels)-1;
 
 	for (int y = 0; y < pixelSettings.noOfYPixels; y++)
 	{
@@ -1090,7 +1105,7 @@ void initPixel()
 			int rowStart = y * pixelSettings.noOfXPixels;
 			int pos;
 
-			if ((y & 1) == 0)
+			if ((y & 1))
 			{
 				// even row - ascending order
 				pos = rowStart + x;
@@ -1102,7 +1117,7 @@ void initPixel()
 				pos = rowStart + (pixelSettings.noOfXPixels - x - 1);
 			}
 			rasterLookup[dest] = pos;
-			dest++;
+			dest--;
 		}
 	}
 
@@ -1139,9 +1154,9 @@ void updatePixel()
 
 	if (millisSinceLastUpdate >= MILLIS_BETWEEN_UPDATES)
 	{
-//		frame->update();
-//		frame->render();
-		updateVirtualPixels(lamps);
+		frame->update();
+		frame->render();
+//		updateVirtualPixels(lamps);
 		millisOfLastPixelUpdate = currentMillis;
 	}
 }
@@ -1187,6 +1202,7 @@ struct process pixelProcess = {
 	pixelStatusOK,
 	pixelStatusMessage,
 	false,
+	0,
 	0,
 	0,
 	NULL,

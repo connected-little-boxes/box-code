@@ -235,6 +235,7 @@ struct process inputSwitchProcess = {
 	false,
 	0,
 	0,
+	0,
 	NULL,
 	(unsigned char *)&inputSwitchSettings, sizeof(InputSwitchSettings), &inputSwitchSettingItems,
 	NULL,

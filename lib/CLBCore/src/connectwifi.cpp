@@ -472,6 +472,7 @@ struct process WiFiProcessDescriptor = {
 	false,
 	0,
 	0,
+	0,
 	NULL,
 	(unsigned char *)&wifiConnectionSettings, sizeof(WifiConnectionSettings), &wifiConnectionSettingItems,
 	NULL,

@@ -215,7 +215,7 @@ void doColourDisplay(char * commandLine)
 			Serial.read();
 		}
 		Serial.printf("Colour:%s\n", colourNames[i].name);
-		fadeWalkingColour(colourNames[i].col, 5);
+		frame->fadeToColour(colourNames[i].col, 5);
 		do{
 			pixelProcess.udpateProcess();
 			delay(20);
@@ -566,6 +566,7 @@ struct process consoleProcessDescriptor = {
 	false, 
 	0, 
 	0, 
+	0,
 	NULL,
 	(unsigned char*) &consoleSettings, sizeof(consoleSettings), &consoleSettingItems,
 	&consoleCommands,

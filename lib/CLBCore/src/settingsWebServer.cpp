@@ -366,6 +366,7 @@ struct process WebServerProcess = {
 	false, 
 	0, 
 	0, 
+	0,
 	NULL,
 	NULL, 0, NULL, // no settings
 	NULL, // no commands

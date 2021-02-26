@@ -3,7 +3,7 @@
 #include <string.h>
 #include <Arduino.h>
 
-struct colourLookup colourNames[] = {
+struct colourNameLookup colourNames[] = {
 { "black",BLACK_COLOUR },
 { "red",RED_COLOUR },
 { "green",GREEN_COLOUR },
@@ -135,11 +135,27 @@ struct colourLookup colourNames[] = {
 //{ "whitesmoke",WHITE_SMOKE_COLOUR }
 };
 
-int noOfColours = sizeof(colourNames)/sizeof(struct colourLookup);
+struct colourCharLookup colourChars[] = {
+{ 'K',BLACK_COLOUR },
+{ 'R',RED_COLOUR },
+{ 'G',GREEN_COLOUR },
+{ 'B',BLUE_COLOUR },
+{ 'Y',YELLOW_COLOUR },
+{ 'O',ORANGE_COLOUR },
+{ 'M',MAGENTA_COLOUR },
+{ 'C',CYAN_COLOUR },
+{ 'W',WHITE_COLOUR },
+{ 'A',AZURE_COLOUR },
+{ 'V',VIOLET_COLOUR },
+{ 'P',PURPLE_COLOUR },
+{ 'T',TEAL_COLOUR }
+};
 
-struct colourLookup *findColourByName(const char *name)
+int noOfColours = sizeof(colourNames)/sizeof(struct colourNameLookup);
+
+struct colourNameLookup *findColourByName(const char *name)
 {
-	for (unsigned int i = 0; i < sizeof(colourNames) / sizeof(struct colourLookup); i++)
+	for (unsigned int i = 0; i < sizeof(colourNames) / sizeof(struct colourNameLookup); i++)
 	{
 		if (strcasecmp(name, colourNames[i].name) == 0)
 		{
@@ -149,10 +165,23 @@ struct colourLookup *findColourByName(const char *name)
 	return NULL;
 }
 
-struct colourLookup *findRandomColour()
+struct colourCharLookup *findColourByChar(const char ch)
+{
+	for (unsigned int i = 0; i < sizeof(colourChars) / sizeof(struct colourCharLookup); i++)
+	{
+		if (colourChars[i].ch == ch)
+		{
+			return &colourChars[i];
+		}
+	}
+	return NULL;
+}
+
+
+struct colourNameLookup *findRandomColour()
 {
 	// never picks black
-	int pos = random(1, sizeof(colourNames) / sizeof(struct colourLookup));
+	int pos = random(1, sizeof(colourNames) / sizeof(struct colourNameLookup));
 	return &colourNames[pos];
 }
 

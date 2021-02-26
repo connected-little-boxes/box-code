@@ -35,13 +35,22 @@ public:
 	Frame* frame;
     Leds* leds;
 	Colour colour;
+    float redStep, blueStep, greenStep;
+    int colourSteps = 0;
+
 	float brightness;
 	float opacity;
 	float x;
 	float y;
     Updater* updater;
     bool enabled;
-    
+
+    void fadeToColour(Colour target, int noOfSteps){
+        redStep = (target.Red - colour.Red) / noOfSteps;
+        blueStep = (target.Blue - colour.Blue) / noOfSteps;
+        greenStep = (target.Green - colour.Green) / noOfSteps;
+        colourSteps = noOfSteps;
+    }
 
 	void (*doUpdate)(Sprite* sprite);
 
@@ -65,7 +74,17 @@ public:
     {
         if(!enabled)
             return;
+
+        if(colourSteps != 0)
+        {
+            colour.Red = colour.Red + redStep;
+            colour.Blue = colour.Blue + blueStep;
+            colour.Green = colour.Green + greenStep;
+            colourSteps--;
+        }
+
         Updater* addPos = updater;
+
         while (addPos != NULL) {
             addPos->doUpdate(this);
             addPos = addPos->nextUpdater;
@@ -75,9 +94,9 @@ public:
     void render();
 
     void dump() {
-        Serial.printf("r:%f g:%f b:%f bright:%f opacity:%f x:%f y:%f\n",
+        Serial.printf("r:%f g:%f b:%f bright:%f opacity:%f x:%f y:%f enabled:%d\n",
             colour.Red, colour.Green, colour.Blue,
-            brightness, opacity,
+            brightness, opacity,enabled,
             x, y);
 
         Updater* dumpPos = updater;
@@ -91,7 +110,7 @@ public:
     Sprite(Frame * inFrame)
     {
         frame= inFrame;
-        enabled=false;
+        enabled=true;
     }
 
     void enable(){

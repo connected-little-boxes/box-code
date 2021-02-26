@@ -1116,6 +1116,7 @@ struct process controllerProcess = {
 	false,
 	0,
 	0,
+	0,
 	NULL,
 	(unsigned char *)&controllerSettings, sizeof(controllerSettings), &controllerSettingItems,
 	&controllerCommands,

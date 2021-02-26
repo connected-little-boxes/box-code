@@ -809,6 +809,7 @@ struct process max7219MessagesProcess = {
     false,
     0,
     0,
+    0,
     NULL,
     (unsigned char *)&max7219MessagesSettings, sizeof(Max7219MessagesSettings), &max7219MessagesSettingItems,
     &MAX7219Commands,

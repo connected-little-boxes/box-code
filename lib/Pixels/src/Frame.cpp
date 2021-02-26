@@ -23,7 +23,7 @@ bool Frame::setupSprite(int spriteNo, Colour colour, float brightness, float opa
 		return false;
 	}
 
-//	sprites[spriteNo]->setup(colour, brightness, opacity, x, y, updaters);
+	sprites[spriteNo]->setup(colour, brightness, opacity, x, y, true, updaters);
 
 	return true;
 }
@@ -103,4 +103,48 @@ void Frame::fadeDown(float step)
 	brightnessStep = step;
 	state = FADE_DOWN;
 }
+
+void Frame::fadeToColour(Colour target, int steps){
+	for(int i=0;i<noOfSprites;i++)
+	{
+		sprites[i]->fadeToColour(target, steps);
+	}
+}
+
+void Frame::fadeSpritesToColourCharMask(char * colourMask, int steps){
+
+	char * pos = colourMask;
+	int row=0, col=0;
+
+	for(int i=0;i<noOfSprites;i++)
+	{
+		Sprite * sprite = sprites[i];
+
+		sprite->x=row+0.5;
+		sprite->y=col+0.5;
+		sprite->brightness=1.0;
+		sprite->opacity=1.0;
+
+		colourCharLookup * colour = findColourByChar(*pos);
+		
+		if(colour != NULL){
+			sprite->fadeToColour(colour->col, steps);
+		}
+
+		pos++;
+
+		if(*pos==NULL)
+		{
+			pos = colourMask;
+		}
+
+		row++;
+		if(row==width)
+		{
+			row=0;
+			col++;
+		}
+	}
+}
+
 

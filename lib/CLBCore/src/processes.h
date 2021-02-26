@@ -33,6 +33,7 @@ struct process
 	boolean beingUpdated; // true if the process is running
 	int status;			  // zero means OK - any other value is an error state
 	unsigned long activeTime;
+	unsigned long totalTime;
 	void *processDetails;
 	unsigned char *settingsStoreBase;
 	int settingsStoreLength;

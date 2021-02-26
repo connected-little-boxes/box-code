@@ -142,12 +142,20 @@ struct ColourValue {
 	float r, g, b;
 };
 
-struct colourLookup{
+struct colourNameLookup{
 	const char * name;
-	ColourValue col;
+	Colour col;
 };
 
-extern struct colourLookup colourNames[];
+struct colourCharLookup{
+	const char ch;
+	Colour col;
+};
 
-struct colourLookup *findRandomColour();
+extern struct colourNameLookup colourNames[];
+
+struct colourNameLookup *findRandomColour();
+
+struct colourCharLookup *findColourByChar(const char ch);
+struct colourNameLookup *findColourByName(const char *name);
 

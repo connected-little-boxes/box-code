@@ -138,6 +138,7 @@ struct process hullosProcess = {
     false,
     0,
     0,
+    0,
     NULL,
     (unsigned char *)&hullosSettings, sizeof(HullOSSettings), &hullosSettingItems,
     NULL,

@@ -371,6 +371,7 @@ struct process RegistrationProcessDescriptor = {
 	false,
 	0,
 	0,
+	0,
 	NULL,
 	(unsigned char *)&RegistrationSettings, sizeof(RegistrationSettings), &registrationSettingItems,
 	&RegistrationCommands,

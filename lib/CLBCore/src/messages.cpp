@@ -173,6 +173,7 @@ struct process messagesProcess = {
     false, 
     0, 
     0, 
+    0,
     NULL,
 	(unsigned char *)&messagesSettings, sizeof(MessagesSettings), &messagesSettingItems,
     NULL,

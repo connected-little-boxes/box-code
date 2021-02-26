@@ -5,6 +5,8 @@
 #include "controller.h"
 #include "processes.h"
 #include "colour.h"
+#include "Leds.h"
+#include "Frame.h"
 
 #define PIXEL_OK 100
 #define PIXEL_OFF 101
@@ -46,8 +48,11 @@ struct PixelSettings
 	int pixelConfig;
 };
 
+extern Leds *leds;
+extern Frame *frame;
+
 extern struct PixelSettings pixelSettings;
-extern struct colourLookup colourNames[];
+extern struct colourNameLookup colourNames[];
 extern int noOfColours;
 
 extern struct SettingItemCollection pixelSettingItems;
@@ -57,4 +62,4 @@ extern struct process pixelProcess;
 boolean validateColour(void* dest, const char* newValueStr);
 
 void fadeWalkingColour(ColourValue newColour, int noOfSteps);
-struct colourLookup * findColourByName(const char * name);
+struct colourNameLookup * findColourByName(const char * name);

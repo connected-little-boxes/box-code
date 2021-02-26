@@ -257,6 +257,7 @@ struct process statusLedProcess = {
     false,
     0,
     0,
+    0,
     NULL,
     (unsigned char *)&statusLedSettings, sizeof(StatusLedSettings), &statusLedSettingItems,
     NULL,
