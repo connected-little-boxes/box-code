@@ -962,7 +962,6 @@ struct CommandItemCollection pixelCommands =
 		pixelCommandList,
 		sizeof(pixelCommandList) / sizeof(struct Command *)};
 
-
 Leds *leds;
 Frame *frame;
 
@@ -972,18 +971,32 @@ void setupWalkingColour(Colour colour)
 
 	float brightness = 1;
 	float opacity = 1.0;
-	float speed = 0.125;
+	float speed = 0.02;
 
-	float xStepsPerSprite = pixelSettings.noOfSprites/ pixelSettings.noOfXPixels;
+	float xStepsPerSprite = pixelSettings.noOfSprites / pixelSettings.noOfXPixels;
 	float yStepsPerSprite = pixelSettings.noOfSprites / pixelSettings.noOfYPixels;
 
-	frame->setupSprite(0,colour,1,1,0.5,0.5,NULL);
-	frame->sprites[0]->fadeToColour(RED_COLOUR, 1000);
-	WrapMove * w = new WrapMove(0.06,0.03, pixelSettings.noOfXPixels, pixelSettings.noOfXPixels);
-	frame->sprites[0]->addUpdater(w);
+	frame->setupSprite(0, RED_COLOUR, 1, 1, 0, 0.5, NULL);
+	frame->sprites[0]->enable();
+	BounceMove *w1 = new BounceMove(0.02, 0.03, pixelSettings.noOfXPixels, pixelSettings.noOfYPixels);
+	frame->sprites[0]->addUpdater(w1);
 
+	frame->setupSprite(1, BLUE_COLOUR, 1, 1, 1.5, 1.5, NULL);
+	frame->sprites[1]->enable();
+	BounceMove *w2 = new BounceMove(0.03, 0.02, pixelSettings.noOfXPixels, pixelSettings.noOfXPixels);
+	frame->sprites[1]->addUpdater(w2);
 
-	// // need a command to place sprites at locations - maybe use the 
+	frame->setupSprite(2, GREEN_COLOUR, 1, 1, 2.5, 2.5, NULL);
+	frame->sprites[2]->enable();
+	BounceMove *w3 = new BounceMove(0.04, 0.03, pixelSettings.noOfXPixels, pixelSettings.noOfXPixels);
+	frame->sprites[2]->addUpdater(w3);
+
+	frame->setupSprite(3, YELLOW_COLOUR, 1, 1, 3.5, 3.5, NULL);
+	frame->sprites[3]->enable();
+	BounceMove *w4 = new BounceMove(0.03, 0.04, pixelSettings.noOfXPixels, pixelSettings.noOfXPixels);
+	frame->sprites[3]->addUpdater(w4);
+
+	// // need a command to place sprites at locations - maybe use the
 
 	// frame->fadeSpritesToColourCharMask("RRRKBBBBGGGKVOMC", 20);
 
@@ -993,8 +1006,6 @@ void setupWalkingColour(Colour colour)
 	// {
 	// 	frame->sprites[i]->addUpdater(w);
 	// }
-
-
 }
 
 void show()
@@ -1009,6 +1020,7 @@ void setPixel(int no, float r, float g, float b)
 	unsigned char rs = (unsigned char)round(r * 255);
 	unsigned char gs = (unsigned char)round(g * 255);
 	unsigned char bs = (unsigned char)round(b * 255);
+//	Serial.printf("setPixel no:%d raster:%d r:%f g:%f b:%f\n", no, rasterLookup[no], r,g,b);
 	strip->setPixelColor(rasterLookup[no], rs, gs, bs);
 }
 
@@ -1017,7 +1029,7 @@ void setPixel(int no, float r, float g, float b)
 
 int statusPixelNo = 0;
 
-void initialiseStatusDisplay(ColourValue col )
+void initialiseStatusDisplay(ColourValue col)
 {
 	int noOfPixels = pixelSettings.noOfXPixels * pixelSettings.noOfYPixels;
 
@@ -1035,7 +1047,7 @@ void initialiseStatusDisplay(ColourValue col )
 
 void beginStatusDisplay()
 {
-	initialiseStatusDisplay( DARK_SLATE_GRAY_COLOUR);
+	initialiseStatusDisplay(DARK_SLATE_GRAY_COLOUR);
 }
 
 boolean setStatusDisplayPixel(int pixelNumber, boolean statusOK)
@@ -1059,7 +1071,6 @@ boolean setStatusDisplayPixel(int pixelNumber, boolean statusOK)
 
 	return true;
 }
-
 
 void renderStatusDisplay()
 {
@@ -1087,37 +1098,51 @@ boolean addStatusItem(boolean status)
 void initPixel()
 {
 	pixelProcess.status = PIXEL_OFF;
+
 	int noOfPixels = pixelSettings.noOfXPixels * pixelSettings.noOfYPixels;
 
 	if (noOfPixels == 0)
 	{
 		pixelProcess.status = PIXEL_ERROR_NO_PIXELS;
+		return;
 	}
 
 	rasterLookup = new int[noOfPixels];
 
-	int dest = (pixelSettings.noOfYPixels*pixelSettings.noOfXPixels)-1;
+	// if we have a string of pixels just build a flat decode array
 
-	for (int y = 0; y < pixelSettings.noOfYPixels; y++)
+	if (pixelSettings.noOfYPixels == 1)
 	{
-		for (int x = 0; x < pixelSettings.noOfXPixels; x++)
+		for (int i = 0; i < pixelSettings.noOfXPixels; i++)
 		{
-			int rowStart = y * pixelSettings.noOfXPixels;
-			int pos;
+			rasterLookup[i] = i;
+		}
+	}
+	else
+	{
+		int dest = (pixelSettings.noOfYPixels * pixelSettings.noOfXPixels) - 1;
 
-			if ((y & 1))
+		for (int y = 0; y < pixelSettings.noOfYPixels; y++)
+		{
+			for (int x = 0; x < pixelSettings.noOfXPixels; x++)
 			{
-				// even row - ascending order
-				pos = rowStart + x;
+				int rowStart = y * pixelSettings.noOfXPixels;
+				int pos;
+
+				if ((y & 1))
+				{
+					// even row - ascending order
+					pos = rowStart + x;
+					rasterLookup[dest] = pos;
+				}
+				else
+				{
+					// odd row - descending order
+					pos = rowStart + (pixelSettings.noOfXPixels - x - 1);
+				}
 				rasterLookup[dest] = pos;
+				dest--;
 			}
-			else
-			{
-				// odd row - descending order
-				pos = rowStart + (pixelSettings.noOfXPixels - x - 1);
-			}
-			rasterLookup[dest] = pos;
-			dest--;
 		}
 	}
 
@@ -1126,7 +1151,7 @@ void initPixel()
 
 void startPixel()
 {
-	leds = new Leds(pixelSettings.noOfXPixels, pixelSettings.noOfXPixels, show, setPixel);
+	leds = new Leds(pixelSettings.noOfXPixels, pixelSettings.noOfYPixels, show, setPixel);
 
 	frame = new Frame(leds, BLACK_COLOUR, pixelSettings.noOfSprites);
 	frame->on();
@@ -1156,7 +1181,7 @@ void updatePixel()
 	{
 		frame->update();
 		frame->render();
-//		updateVirtualPixels(lamps);
+		//		updateVirtualPixels(lamps);
 		millisOfLastPixelUpdate = currentMillis;
 	}
 }

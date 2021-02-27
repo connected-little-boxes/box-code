@@ -68,6 +68,95 @@ void Leds::dump()
 	Serial.println();
 }
 
+void Leds::renderLight(float sourceX, float sourceY, Colour colour, float brightness, float opacity)
+{
+	//	Serial.printf("RenderLight sourceX:%f sourceY:%f\n", sourceX, sourceY);
+
+	if (ledHeight == 1)
+	{
+//		Serial.printf("Rendering single row at x:%f\n", sourceX);
+		// linear string of leds - only work in the X axis and fix Y at 0
+		// do the leds each side of the draw position
+
+		// this is the led number of the led closest to the light
+
+		int intX = trunc(sourceX);
+
+		for (int xOffset = -1; xOffset <= 1; xOffset++)
+		{
+			int ledX = intX + xOffset;
+//			Serial.printf("    offset:%d ", xOffset);
+
+			float dist = sourceX - (ledX + 0.5);
+//			Serial.printf("dist:%f ", dist);
+
+			// ensure the distance is always positive
+			if(dist<0)
+				dist=dist*-1;
+
+			if (dist < 1)
+			{
+				// we are near enough to light up
+				float factor = 1.0 - dist;
+				float rs = colour.Red * brightness * factor;
+				float gs = colour.Green * brightness * factor;
+				float bs = colour.Blue * brightness * factor;
+//				Serial.printf("  lighting r:%f g:%f b:%f", rs, gs, bs);
+
+				// wrap the X around for strings
+				ledX = ledX % ledWidth;
+				if (ledX < 0)
+					ledX = ledX + ledWidth;
+
+				leds[ledX][0].AddColourValues(rs, gs, bs, opacity);
+			}
+//			Serial.println();
+		}
+	}
+	else
+	{
+		int intX = trunc(sourceX);
+		int intY = trunc(sourceY);
+
+		// do the entire 9 leds around the position
+		for (int xOffset = -1; xOffset <= 1; xOffset++)
+		{
+			for (int yOffset = -1; yOffset <= 1; yOffset++)
+			{
+				int intX = sourceX + xOffset;
+				int intY = sourceY + yOffset;
+				
+				if ((intX >= ledWidth) || (intY >= ledHeight) || (intX < 0) || (intY < 0))
+				{
+					//				Serial.printf("    ignored\n");
+					continue;
+				}
+
+				float ledX = intX + 0.5;
+				float ledY = intY + 0.5;
+				float fx = sourceX - ledX;
+				float fy = sourceY - ledY;
+				float dist = sqrt((fx * fx) + (fy * fy));
+
+				//			Serial.printf(" dist:%f ", dist);
+
+				if (dist < 1)
+				{
+					// we are near enough to light up
+					float factor = 1.0 - dist;
+					float rs = colour.Red * brightness * factor;
+					float gs = colour.Green * brightness * factor;
+					float bs = colour.Blue * brightness * factor;
+					//				Serial.printf("  lighting r:%f g:%f b:%f", rs, gs, bs);
+					leds[intX][intY].AddColourValues(rs, gs, bs, opacity);
+				}
+
+				//			Serial.println();
+			}
+		}
+	}
+}
+
 void Leds::renderDot(float sx, float sy, Colour colour, float brightness, float opacity)
 {
 	// find the X and Y coordinates of the square containing the pixel
@@ -85,13 +174,13 @@ void Leds::renderDot(float sx, float sy, Colour colour, float brightness, float 
 	float fy = sy - ledY;
 	float dist = sqrt((fx * fx) + (fy * fy));
 
-//	Serial.printf("sx:%f sy:%f fx:%f fy:%f intX:%d intY:%d ledX:%f ledY:%f dist:%f\n", sx, sy, fx, fy, intX, intY, ledX, ledY, dist);
+	//	Serial.printf("sx:%f sy:%f fx:%f fy:%f intX:%d intY:%d ledX:%f ledY:%f dist:%f\n", sx, sy, fx, fy, intX, intY, ledX, ledY, dist);
 
 	// The further the led is away from the dot, the dimmer it should be
-	// when the dot is 1 or more units away from the led the led should 
-	// not light up. 
+	// when the dot is 1 or more units away from the led the led should
+	// not light up.
 
-	if(dist<1)
+	if (dist < 1)
 	{
 		// we are near enough to light up
 		float factor = 1.0 - dist;
@@ -99,7 +188,7 @@ void Leds::renderDot(float sx, float sy, Colour colour, float brightness, float 
 		float gs = colour.Green * brightness * factor;
 		float bs = colour.Blue * brightness * factor;
 		leds[intX][intY].AddColourValues(rs, gs, bs, opacity);
-//		Serial.printf("    factor:%f rs:%f gs:%f bs:%f\n", factor, rs, gs, bs );
+		//		Serial.printf("    factor:%f rs:%f gs:%f bs:%f\n", factor, rs, gs, bs );
 	}
 
 	// now we need to find the next nearest led and light that
@@ -114,96 +203,95 @@ void Leds::renderDot(float sx, float sy, Colour colour, float brightness, float 
 
 	// normalise the angle to make it positive:
 
-	if(angleInDegrees<0) angleInDegrees = angleInDegrees + 360;
+	if (angleInDegrees < 0)
+		angleInDegrees = angleInDegrees + 360;
 
 	//                       0
 	//                   270    90
 	//                      180
 	// Use the angle to decide which square is going to be lit up
 
-//	Serial.printf("   Angle:%f \n", angleInDegrees);
+	//	Serial.printf("   Angle:%f \n", angleInDegrees);
 
-	// rotate it round 22.5 degrees 
+	// rotate it round 22.5 degrees
 	angleInDegrees = angleInDegrees + 22.5;
 
 	// cap the value in case it has wrapped round
-	if(angleInDegrees>=360)
-		angleInDegrees = angleInDegrees-360;
+	if (angleInDegrees >= 360)
+		angleInDegrees = angleInDegrees - 360;
 
-	// now map this onto the destination sector and 
+	// now map this onto the destination sector and
 	// get the X and Y locations of the destination
-	
-	int sector = angleInDegrees/45;
 
-//	Serial.printf("sector:%d \n", sector);
+	int sector = angleInDegrees / 45;
 
-	switch(sector)
+	//	Serial.printf("sector:%d \n", sector);
+
+	switch (sector)
 	{
-		case 0:
-			// straight up
-			intY++;
-			break;
-		case 1:
-			// up right
-			intX++;
-			intY++;
-			break;
-		case 2:
-			// right
-			intX++;
-			break;
-		case 3:
-			// down right
-			intX++;
-			intY--;
-			break;
-		case 4:
-			// down
-			intY--;
-			break;
-		case 5:
-			// down left
-			intY--;
-			intX++;
-			break;
-		case 6:
-			// left
-			intX--;
-			break;
-		case 7:
-			// left up
-			intX--;
-			intY++;
-			break;
+	case 0:
+		// straight up
+		intY++;
+		break;
+	case 1:
+		// up right
+		intX++;
+		intY++;
+		break;
+	case 2:
+		// right
+		intX++;
+		break;
+	case 3:
+		// down right
+		intX++;
+		intY--;
+		break;
+	case 4:
+		// down
+		intY--;
+		break;
+	case 5:
+		// down left
+		intY--;
+		intX++;
+		break;
+	case 6:
+		// left
+		intX--;
+		break;
+	case 7:
+		// left up
+		intX--;
+		intY++;
+		break;
 	}
 
 	// make sure that the destination led is visible
 	if ((intX < ledWidth) && (intY < ledHeight) && (intX >= 0) && (intY >= 0))
 	{
-		ledX = intX+0.5;
-		ledY= intY+0.5;
+		ledX = intX + 0.5;
+		ledY = intY + 0.5;
 		// now find the distance from the led for this dot
 		float fx = sx - ledX;
 		float fy = sy - ledY;
 		float dist = sqrt((fx * fx) + (fy * fy));
 
-//		Serial.printf("       intX:%d intY:%d ledX:%f ledY:%f dist:%f\n",intX, intY, ledX, ledY, dist);
-
+		//		Serial.printf("       intX:%d intY:%d ledX:%f ledY:%f dist:%f\n",intX, intY, ledX, ledY, dist);
 
 		// set the brightness of the new destination
-		if(dist<1)
+		if (dist < 1)
 		{
 			// The further the led is away from the dot, the dimmer it should be
-			// when the dot is 1 or more units away from the led the led should 
-			// not light up. 
+			// when the dot is 1 or more units away from the led the led should
+			// not light up.
 			// we are near enough to light up
 			float factor = 1.0 - dist;
 			float rs = colour.Red * brightness * factor;
 			float gs = colour.Green * brightness * factor;
 			float bs = colour.Blue * brightness * factor;
 			leds[intX][intY].AddColourValues(rs, gs, bs, opacity);
-//			Serial.printf("            factor:%f rs:%f gs:%f bs:%f\n", factor, rs, gs, bs );
+			//			Serial.printf("            factor:%f rs:%f gs:%f bs:%f\n", factor, rs, gs, bs );
 		}
 	}
 }
-

@@ -44,6 +44,8 @@ public:
 	float y;
     Updater* updater;
     bool enabled;
+    int prevIntX;
+    int prevIntY;
 
     void fadeToColour(Colour target, int noOfSteps){
         redStep = (target.Red - colour.Red) / noOfSteps;
@@ -110,7 +112,7 @@ public:
     Sprite(Frame * inFrame)
     {
         frame= inFrame;
-        enabled=true;
+        enabled=false;
     }
 
     void enable(){
@@ -130,6 +132,8 @@ public:
         opacity = inOpacity;
         x = inX;
         y = inY;
+        prevIntX=trunc(x);
+        prevIntY=trunc(y);
         enabled = inEnabled;
         updater = updaters;
     }
@@ -168,13 +172,13 @@ public:
             speedY = fabs(speedY);
         }
 
-        if (sprite->x > limitX)
+        if (sprite->x >= limitX)
         {
             sprite->x = limitX;
             speedX = -fabs(speedX);
         }
 
-        if (sprite->y > limitY)
+        if (sprite->y >= limitY)
         {
             sprite->y = limitY;
             speedY = -fabs(speedY);

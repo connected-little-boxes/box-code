@@ -8,5 +8,7 @@ void Sprite::render()
     if (!enabled)
         return;
 
-    frame->leds->renderDot(x, y, colour, brightness, opacity);
+    frame->leds->renderLight(x,y,colour, brightness, opacity );
+
+//    frame->leds->renderDot(x, y, colour, brightness, opacity);
 }

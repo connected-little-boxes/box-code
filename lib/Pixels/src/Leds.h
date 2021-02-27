@@ -25,6 +25,7 @@ public:
 	void display(float brightness);
 	void clear(Colour colour);
 	void renderDot(float sx, float sy, Colour colour, float brightness, float opacity);
+	void renderLight(float sourceX, float sourceY, Colour colour, float brightness, float opacity);
 
 };
 
