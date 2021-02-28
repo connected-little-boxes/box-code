@@ -70,11 +70,8 @@ void Leds::dump()
 
 void Leds::renderLight(float sourceX, float sourceY, Colour colour, float brightness, float opacity)
 {
-	//	Serial.printf("RenderLight sourceX:%f sourceY:%f\n", sourceX, sourceY);
-
 	if (ledHeight == 1)
 	{
-//		Serial.printf("Rendering single row at x:%f\n", sourceX);
 		// linear string of leds - only work in the X axis and fix Y at 0
 		// do the leds each side of the draw position
 
@@ -85,10 +82,8 @@ void Leds::renderLight(float sourceX, float sourceY, Colour colour, float bright
 		for (int xOffset = -1; xOffset <= 1; xOffset++)
 		{
 			int ledX = intX + xOffset;
-//			Serial.printf("    offset:%d ", xOffset);
 
 			float dist = sourceX - (ledX + 0.5);
-//			Serial.printf("dist:%f ", dist);
 
 			// ensure the distance is always positive
 			if(dist<0)
@@ -101,7 +96,6 @@ void Leds::renderLight(float sourceX, float sourceY, Colour colour, float bright
 				float rs = colour.Red * brightness * factor;
 				float gs = colour.Green * brightness * factor;
 				float bs = colour.Blue * brightness * factor;
-//				Serial.printf("  lighting r:%f g:%f b:%f", rs, gs, bs);
 
 				// wrap the X around for strings
 				ledX = ledX % ledWidth;
@@ -110,14 +104,10 @@ void Leds::renderLight(float sourceX, float sourceY, Colour colour, float bright
 
 				leds[ledX][0].AddColourValues(rs, gs, bs, opacity);
 			}
-//			Serial.println();
 		}
 	}
 	else
 	{
-		int intX = trunc(sourceX);
-		int intY = trunc(sourceY);
-
 		// do the entire 9 leds around the position
 		for (int xOffset = -1; xOffset <= 1; xOffset++)
 		{
@@ -138,8 +128,6 @@ void Leds::renderLight(float sourceX, float sourceY, Colour colour, float bright
 				float fy = sourceY - ledY;
 				float dist = sqrt((fx * fx) + (fy * fy));
 
-				//			Serial.printf(" dist:%f ", dist);
-
 				if (dist < 1)
 				{
 					// we are near enough to light up
@@ -147,11 +135,8 @@ void Leds::renderLight(float sourceX, float sourceY, Colour colour, float bright
 					float rs = colour.Red * brightness * factor;
 					float gs = colour.Green * brightness * factor;
 					float bs = colour.Blue * brightness * factor;
-					//				Serial.printf("  lighting r:%f g:%f b:%f", rs, gs, bs);
 					leds[intX][intY].AddColourValues(rs, gs, bs, opacity);
 				}
-
-				//			Serial.println();
 			}
 		}
 	}

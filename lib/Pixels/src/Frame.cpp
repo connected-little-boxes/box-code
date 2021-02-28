@@ -227,7 +227,6 @@ void Frame::fadeSpritesToWalkingColours(char *colours, int steps)
 	char *colourChar = colours;
 
 	float xSpeed = 0.01;
-	float ySpeed = 0.005;
 	float speedStep = 0.01;
 
 	disableAllSprites();
