@@ -138,10 +138,6 @@ struct Colour
 	float Blue;
 };
 
-struct ColourValue {
-	float r, g, b;
-};
-
 struct colourNameLookup{
 	const char * name;
 	Colour col;

@@ -1,36 +1,20 @@
 #pragma once
+
+#include <Arduino.h>
 #include <math.h>
 
-// Forward declaration because Frame uses Sprite
-class Sprite;
-class Updater;
+class Frame;
+class Leds;
 
-#include "Frame.h"
 #include "Colour.h"
-
-#include <HardwareSerial.h>
-
-class Updater {
-public:
-
-    Updater() {
-        nextUpdater = NULL;
-    }
-
-    virtual void doUpdate(Sprite* sprite)
-    {
-    }
-
-    virtual void dump()
-    {
-    }
-
-    Updater* nextUpdater;
-};
 
 class Sprite
 {
 public:
+
+    enum SpriteMovingState {SPRITE_STOPPED, SPRITE_BOUNCE, SPRITE_WRAP, SPRITE_MOVE};
+
+    SpriteMovingState movingState;
 
 	Frame* frame;
     Leds* leds;
@@ -40,12 +24,14 @@ public:
 
 	float brightness;
 	float opacity;
+
 	float x;
 	float y;
-    Updater* updater;
+    float xSpeed;
+    float ySpeed;
+    int moveSteps=0;
+
     bool enabled;
-    int prevIntX;
-    int prevIntY;
 
     void fadeToColour(Colour target, int noOfSteps){
         redStep = (target.Red - colour.Red) / noOfSteps;
@@ -54,22 +40,12 @@ public:
         colourSteps = noOfSteps;
     }
 
-	void (*doUpdate)(Sprite* sprite);
-
-    void addUpdater(Updater* newUpdater)
+    void moveToPosition(float targetX, float targetY, int noOfSteps)
     {
-        if (updater == NULL) {
-            // first sprite is the new head
-            updater = newUpdater;
-        }
-        else {
-            // spin down the updaters to find the one at the bottom
-            Updater* addPos = updater;
-            while (addPos->nextUpdater != NULL) {
-                addPos = addPos->nextUpdater;
-            }
-            addPos->nextUpdater = newUpdater;
-        }
+        xSpeed = (targetX-x) / noOfSteps;
+        ySpeed = (targetY-y) / noOfSteps;
+        moveSteps = noOfSteps;
+        movingState = SPRITE_MOVE;
     }
 
     void update()
@@ -85,27 +61,50 @@ public:
             colourSteps--;
         }
 
-        Updater* addPos = updater;
-
-        while (addPos != NULL) {
-            addPos->doUpdate(this);
-            addPos = addPos->nextUpdater;
+        switch(movingState)
+        {
+            case SPRITE_STOPPED:
+                break;
+            case SPRITE_BOUNCE:
+                bounce();
+                break;
+            case SPRITE_WRAP:
+                wrap();
+                break;
+            case SPRITE_MOVE:
+                move();
+                break;
         }
     }
 
     void render();
 
+    void bounce();
+
+    void wrap();
+
+    void move();
+
     void dump() {
-        Serial.printf("r:%f g:%f b:%f bright:%f opacity:%f x:%f y:%f enabled:%d\n",
+        Serial.printf("r:%f g:%f b:%f bright:%f opacity:%f enabled:%d x:%f y:%f ",
             colour.Red, colour.Green, colour.Blue,
             brightness, opacity,enabled,
             x, y);
 
-        Updater* dumpPos = updater;
-        while (dumpPos != NULL) {
-            Serial.print("    ");
-            dumpPos->dump();
-            dumpPos = dumpPos->nextUpdater;
+        switch(movingState)
+        {
+            case SPRITE_STOPPED:
+                Serial.println(" stopped");
+                break;
+            case SPRITE_BOUNCE:
+                Serial.printf(" bounce -x:%f y:%f\n", xSpeed, ySpeed);
+                break;
+            case SPRITE_WRAP:
+                Serial.printf(" wrap -x:%f y:%f\n", xSpeed, ySpeed);
+                break;
+            case SPRITE_MOVE:
+                Serial.printf(" move -x:%f y:%f steps:%d\n", xSpeed, ySpeed, moveSteps);
+                break;
         }
     }
 
@@ -113,6 +112,10 @@ public:
     {
         frame= inFrame;
         enabled=false;
+        movingState = SPRITE_STOPPED;
+        colour=BLACK_COLOUR;
+        moveSteps=0;
+        colourSteps=0;
     }
 
     void enable(){
@@ -125,123 +128,20 @@ public:
     }
     
     void setup(Colour inColour, float inBrightness, float inOpacity,
-        float inX, float inY, bool inEnabled, Updater* updaters)
+        float inX, float inY, 
+        float inXSpeed, float inYSpeed, SpriteMovingState inMovingState,
+        bool inEnabled)
     {
-        colour = inColour;
+        // set the colour of the sprite using a fast fade so that it looks good
+        // 10 steps means that the new colour is hit in a fifth of a second
+        fadeToColour(inColour,10);
         brightness = inBrightness;
         opacity = inOpacity;
         x = inX;
         y = inY;
-        prevIntX=trunc(x);
-        prevIntY=trunc(y);
+        xSpeed = inXSpeed;
+        ySpeed = inYSpeed;
+        movingState = inMovingState;
         enabled = inEnabled;
-        updater = updaters;
     }
 };
-
-class BounceMove : public Updater
-{
-public:
-    float speedX;
-    float speedY;
-    float limitX;
-    float limitY;
-
-    BounceMove(float speedX, float speedY, float limitX, float limitY)
-    {
-        this->speedX = speedX;
-        this->speedY = speedY;
-        this->limitX = limitX;
-        this->limitY = limitY;
-    }
-
-    void doUpdate(Sprite* sprite)
-    {
-        sprite->x = sprite->x + speedX;
-        sprite->y = sprite->y + speedY;
-
-        if (sprite->x < 0)
-        {
-            sprite->x = 0;
-            speedX = fabs(speedX);
-        }
-
-        if (sprite->y < 0)
-        {
-            sprite->y = 0;
-            speedY = fabs(speedY);
-        }
-
-        if (sprite->x >= limitX)
-        {
-            sprite->x = limitX;
-            speedX = -fabs(speedX);
-        }
-
-        if (sprite->y >= limitY)
-        {
-            sprite->y = limitY;
-            speedY = -fabs(speedY);
-        }
-    }
-
-    void dump()
-    {
-        Serial.printf("BounceMove sx:%f sy:%f lx:%f ly:%f\n",
-            speedX, speedY, limitX, limitY);
-    }
-};
-
-
-class WrapMove : public Updater
-{
-public:
-
-    float speedX;
-    float speedY;
-    float limitX;
-    float limitY;
-
-    WrapMove(float inSpeedX, float inSpeedY, float inLimitX, float inLimitY)
-    {
-        this->speedX = inSpeedX;
-        this->speedY = inSpeedY;
-        this->limitX = inLimitX;
-        this->limitY = inLimitY;
-    }
-
-    void doUpdate(Sprite* sprite)
-    {
-        sprite->x = sprite->x + speedX;
-        sprite->y = sprite->y + speedY;
-
-        if (sprite->x < 0)
-        {
-            sprite->x = limitX-1;
-        }
-
-        if (sprite->y < 0)
-        {
-            sprite->y = limitY-1;
-        }
-
-        if (sprite->x > limitX)
-        {
-            sprite->x = 0;
-        }
-
-        if (sprite->y > limitY)
-        {
-            sprite->y = 0;
-        }
-    }
-
-    void dump()
-    {
-        Serial.printf("WrapMove sx:%f sy:%f lx:%f ly:%f\n",
-            speedX, speedY, limitX, limitY);
-    }
-};
-
-
-

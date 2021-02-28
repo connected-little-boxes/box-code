@@ -122,8 +122,6 @@ void startDevice()
 
 	delay(1000); // show the status for a while
 
-	setupWalkingColour(BLUE_COLOUR);
-
 	Serial.printf("Start complete\n\nType help and press enter for help\n\n");
 }
 

@@ -1,11 +1,9 @@
 #pragma once
 
-// Forward declaration because Sprite uses Frame
-class Frame;
-
 #include "Led.h"
 #include "Leds.h"
-#include "Sprite.h"
+
+class Sprite;
 
 class Frame
 {
@@ -20,11 +18,12 @@ public:
 	int noOfPixels;
 	float brightness;
 	float brightnessStep;
+	int noOfBrightnessSteps;
 	Sprite ** sprites ;
 	int noOfSprites;
 	Frame(Leds* inLeds, Colour inBackground, int noOfSprites); 
 
-	bool setupSprite(int spriteNo, Colour colour, float brightness, float opacity, float x, float y, Updater * updaters);
+	Sprite * getSprite(int spriteNo);
 
 	void render();
 
@@ -35,12 +34,15 @@ public:
 	void on();
 	void off();
 
+	void disableAllSprites();
 	void fadeUp(float step);
 
 	void fadeDown(float step);
 
+	bool fadeToBrightness(float brightNess, int steps);
+
 	void fadeToColour(Colour target, int steps);
 	void fadeSpritesToColourCharMask(char * colourMask, int steps);
-
+	void fadeSpritesToWalkingColours(char * colours,int steps);
 };
 

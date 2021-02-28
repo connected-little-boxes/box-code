@@ -17,7 +17,7 @@
 #define PIXEL_RING_CONFIG NEO_GRB+NEO_KHZ800
 #define PIXEL_STRING_CONFIG NEO_KHZ400+NEO_RGB
 
-#define MAX_NO_OF_SPRITES 20
+#define MAX_NO_OF_SPRITES 25
 
 #define MAX_NO_OF_PIXELS 200
 
@@ -28,16 +28,12 @@
 #define PIXEL_COMMAND_NAME_LENGTH 20
 #define PIXEL_COLOUR_NAME_LENGTH 15
 
-boolean coloursEqual(ColourValue a, ColourValue b);
-
+void addStatusItem(boolean status);
 void beginStatusDisplay();
-boolean addStatusItem(boolean status);
 void renderStatusDisplay();
 void setupWalkingColour(Colour colour);
-void changeWalkingColour(ColourValue colour);
 
 void pixelStatusMessage(struct process * pixelProcess, char * buffer, int bufferLength);
-boolean addStatusItem(boolean status);
 
 struct PixelSettings
 {
@@ -61,5 +57,5 @@ extern struct process pixelProcess;
 
 boolean validateColour(void* dest, const char* newValueStr);
 
-void fadeWalkingColour(ColourValue newColour, int noOfSteps);
+void fadeWalkingColour(Colour newColour, int noOfSteps);
 struct colourNameLookup * findColourByName(const char * name);

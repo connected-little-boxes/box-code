@@ -217,7 +217,6 @@ void sendToBME280SensorListeners(int event,  int sensorNo)
 	while (pos != NULL)
 	{
 		struct sensorListenerConfiguration *config = pos->config;
-		unsigned char *optionBuffer = pos->config->optionBuffer;
 		int configMask = config->sendOptionMask;
 
 		if((configMask & BME280_EVENT_MASK) == event)
