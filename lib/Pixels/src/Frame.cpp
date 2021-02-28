@@ -1,40 +1,41 @@
-class Sprite;
-class Updater;
+#include "Sprite.h"
 
 #include "Frame.h"
 
-Frame::Frame(Leds * inLeds, Colour inBackground, int inNoOfSprites) {
+Frame::Frame(Leds *inLeds, Colour inBackground, int inNoOfSprites)
+{
 	leds = inLeds;
 	width = inLeds->ledWidth;
 	height = inLeds->ledHeight;
 	background = inBackground;
 	noOfSprites = inNoOfSprites;
-	sprites = new Sprite * [noOfSprites];
-	for(int i=0;i<noOfSprites;i++)
+	sprites = new Sprite *[noOfSprites];
+	for (int i = 0; i < noOfSprites; i++)
 	{
 		sprites[i] = new Sprite(this);
 	}
 }
 
-bool Frame::setupSprite(int spriteNo, Colour colour, float brightness, float opacity, float x, float y, Updater * updaters)
+Sprite *Frame::getSprite(int spriteNo)
 {
-	if(spriteNo >= noOfSprites)
+
+	if (spriteNo >= noOfSprites || spriteNo < 0)
 	{
-		return false;
+		return NULL;
 	}
 
-	sprites[spriteNo]->setup(colour, brightness, opacity, x, y, true, updaters);
-
-	return true;
+	return sprites[spriteNo];
 }
 
-void Frame::render() {
+void Frame::render()
+{
 
-	if (state == OFF) return;
+	if (state == OFF)
+		return;
 
 	leds->clear(background);
 
-	for(int i=0;i<noOfSprites;i++)
+	for (int i = 0; i < noOfSprites; i++)
 	{
 		sprites[i]->render();
 	}
@@ -42,23 +43,26 @@ void Frame::render() {
 	leds->display(brightness);
 }
 
-void Frame::dump() {
+void Frame::dump()
+{
 
 	Serial.println("Frame");
 
 	leds->dump();
 
-	for(int i=0;i<noOfSprites;i++)
+	for (int i = 0; i < noOfSprites; i++)
 	{
 		sprites[i]->dump();
 	}
 }
 
-void Frame::update() {
+void Frame::update()
+{
 
-	if (state == OFF) return;
+	if (state == OFF)
+		return;
 
-	for(int i=0;i<noOfSprites;i++)
+	for (int i = 0; i < noOfSprites; i++)
 	{
 		sprites[i]->update();
 	}
@@ -67,27 +71,40 @@ void Frame::update() {
 	{
 	case FADE_UP:
 		brightness += brightnessStep;
-		if (brightness >= 1) {
+		if (brightness >= 1)
+		{
 			brightness = 1;
 			state = ON;
 		}
 		break;
 	case FADE_DOWN:
 		brightness -= brightnessStep;
-		if (brightness <= 0) {
+		if (brightness <= 0)
+		{
 			brightness = 0;
 			state = OFF;
 		}
 		break;
+	case ON:
+		if (noOfBrightnessSteps != 0)
+		{
+			brightness += brightnessStep;
+			noOfBrightnessSteps--;
+		}
+		break;
+	case OFF:
+		break;
 	}
 }
 
-void Frame::on() {
+void Frame::on()
+{
 	brightness = 1;
 	state = ON;
 }
 
-void Frame::off() {
+void Frame::off()
+{
 	brightness = 0;
 	state = OFF;
 }
@@ -104,47 +121,145 @@ void Frame::fadeDown(float step)
 	state = FADE_DOWN;
 }
 
-void Frame::fadeToColour(Colour target, int steps){
-	for(int i=0;i<noOfSprites;i++)
+void Frame::fadeToColour(Colour target, int noOfSteps)
+{
+	for (int i = 0; i < noOfSprites; i++)
 	{
-		sprites[i]->fadeToColour(target, steps);
+		sprites[i]->fadeToColour(target, noOfSteps);
 	}
 }
 
-void Frame::fadeSpritesToColourCharMask(char * colourMask, int steps){
-
-	char * pos = colourMask;
-	int row=0, col=0;
-
-	for(int i=0;i<noOfSprites;i++)
+bool Frame::fadeToBrightness(float targetBrightness, int noOfSteps)
+{
+	if (noOfSteps <= 0 || brightness < 0 || brightness > 1)
 	{
-		Sprite * sprite = sprites[i];
+		return false;
+	}
 
-		sprite->x=row+0.5;
-		sprite->y=col+0.5;
-		sprite->brightness=1.0;
-		sprite->opacity=1.0;
+	brightnessStep = (targetBrightness - brightness) / noOfSteps;
 
-		colourCharLookup * colour = findColourByChar(*pos);
-		
-		if(colour != NULL){
-			sprite->fadeToColour(colour->col, steps);
+	noOfBrightnessSteps = noOfSteps;
+	return true;
+}
+
+void Frame::fadeSpritesToColourCharMask(char *colourMask, int steps)
+{
+	disableAllSprites();
+
+	char *pos = colourMask;
+	int row = 0, col = 0;
+
+	int noOfPixels = width * height;
+	int pixelLimit;
+
+	if (noOfSprites > noOfPixels)
+	{
+		pixelLimit = noOfPixels;
+	}
+	else
+	{
+		pixelLimit = noOfSprites;
+	}
+
+	for (int i = 0; i < pixelLimit; i++)
+	{
+		Sprite *sprite = sprites[i];
+
+		float newX = row + 0.5;
+		float newY = col + 0.5;
+		sprite->moveToPosition(newX, newY, steps);
+		sprite->enabled = true;
+		sprite->brightness = 1.0;
+		sprite->opacity = 1.0;
+
+		if (*pos == '+')
+		{
+			colourNameLookup *colourName = findRandomColour();
+			sprite->fadeToColour(colourName->col, steps);
+		}
+		else
+		{
+			colourCharLookup *colour = findColourByChar(*pos);
+
+			if (colour != NULL)
+			{
+				sprite->fadeToColour(colour->col, steps);
+			}
 		}
 
 		pos++;
 
-		if(*pos==NULL)
+		// loop around the string
+		if (*pos == 0)
 		{
 			pos = colourMask;
 		}
 
 		row++;
-		if(row==width)
+		if (row == width)
 		{
-			row=0;
+			row = 0;
 			col++;
 		}
 	}
 }
 
+void Frame::disableAllSprites()
+{
+	for (int i = 0; i < noOfSprites; i++)
+	{
+		sprites[i]->enabled = false;
+	}
+}
 
+void Frame::fadeSpritesToWalkingColours(char *colours, int steps)
+{
+	if (steps < 0)
+		steps = 10;
+
+	int noOfSpritesToWalk = noOfSprites / 4;
+
+	if (noOfSpritesToWalk > noOfSprites)
+	{
+		noOfSpritesToWalk = noOfSprites;
+	}
+
+	char *colourChar = colours;
+
+	float xSpeed = 0.01;
+	float ySpeed = 0.005;
+	float speedStep = 0.01;
+
+	disableAllSprites();
+
+	for (int i = 0; i < noOfSpritesToWalk; i++)
+	{
+		Sprite *s = sprites[i];
+
+		// first get the target colour
+		// A colour of * means "don't set the colour of this pixel"
+		if (*colourChar != '*')
+		{
+			colourCharLookup *colour = findColourByChar(*colourChar);
+			if (colour != NULL)
+			{
+				s->fadeToColour(colour->col, steps);
+			}
+		}
+
+		s->enabled = true;
+		s->brightness = 1;
+		s->opacity = 1;
+		s->xSpeed = xSpeed + (i * speedStep);
+		s->ySpeed = xSpeed + (i * speedStep);
+		s->enabled = true;
+		s->movingState = Sprite::SPRITE_WRAP;
+
+		colourChar++;
+
+		if (!*colourChar)
+		{
+			colourChar = colours;
+		}
+	}
+}
