@@ -86,15 +86,15 @@ public:
     void move();
 
     void dump() {
-        Serial.printf("r:%f g:%f b:%f bright:%f opacity:%f enabled:%d x:%f y:%f ",
+        Serial.printf("r:%f g:%f b:%f bright:%f opacity:%f enabled:%d x:%f y:%f xspeed:%f yspeed:%f",
             colour.Red, colour.Green, colour.Blue,
             brightness, opacity,enabled,
-            x, y);
+            x, y, xSpeed, ySpeed);
 
         switch(movingState)
         {
             case SPRITE_STOPPED:
-                Serial.println(" stopped");
+                Serial.println(" stopped\n");
                 break;
             case SPRITE_BOUNCE:
                 Serial.printf(" bounce -x:%f y:%f\n", xSpeed, ySpeed);

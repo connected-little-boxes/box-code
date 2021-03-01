@@ -3,6 +3,8 @@
 #include "Led.h"
 #include "Leds.h"
 
+#define MAX_NO_OF_SPRITES 25
+
 class Sprite;
 
 class Frame
@@ -21,7 +23,7 @@ public:
 	int noOfBrightnessSteps;
 	Sprite ** sprites ;
 	int noOfSprites;
-	Frame(Leds* inLeds, Colour inBackground, int noOfSprites); 
+	Frame(Leds* inLeds, Colour inBackground); 
 
 	Sprite * getSprite(int spriteNo);
 
@@ -44,5 +46,8 @@ public:
 	void fadeToColour(Colour target, int steps);
 	void fadeSpritesToColourCharMask(char * colourMask, int steps);
 	void fadeSpritesToWalkingColours(char * colours,int steps);
+	void fadeSpritesToTwinkle(int steps);
+	int getNumberOfActiveSprites();
+
 };
 

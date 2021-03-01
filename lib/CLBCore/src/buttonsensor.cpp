@@ -1,4 +1,4 @@
-#include "buttonSensor.h"
+#include "buttonsensor.h"
 #include "debug.h"
 #include "settings.h"
 #include "controller.h"

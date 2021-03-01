@@ -2,7 +2,7 @@
 #include <SPI.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
-#include <Math.h>
+#include <math.h>
 
 #include "BME280Sensor.h"
 #include "debug.h"

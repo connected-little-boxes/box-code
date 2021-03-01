@@ -67,7 +67,7 @@ void setDefaultNoOfYPixels(void *dest)
 }
 
 struct SettingItem pixelNoOfXPixelsSetting = {"Number of X pixels (0 for pixels not fitted)",
-											  "noofXpixels",
+											  "noofxpixels",
 											  &pixelSettings.noOfXPixels,
 											  NUMBER_INPUT_LENGTH,
 											  integerValue,
@@ -75,7 +75,7 @@ struct SettingItem pixelNoOfXPixelsSetting = {"Number of X pixels (0 for pixels 
 											  validateInt};
 
 struct SettingItem pixelNoOfYPixelsSetting = {"Number of Y pixels (0 for pixels not fitted)",
-											  "noofYpixels",
+											  "noofypixels",
 											  &pixelSettings.noOfYPixels,
 											  NUMBER_INPUT_LENGTH,
 											  integerValue,
@@ -87,39 +87,6 @@ void setDefaultPixelConfig(void *dest)
 	int *destConfig = (int *)dest;
 	*destConfig = 1;
 }
-
-void setDefaultNoOfSprites(void *dest)
-{
-	int *destInt = (int *)dest;
-	*destInt = 3;
-}
-
-boolean validateSpriteConfig(void *dest, const char *newValueStr)
-{
-	int config;
-
-	bool validConfig = validateInt(&config, newValueStr);
-
-	if (!validConfig)
-		return false;
-
-	if (config < 1 || config >= MAX_NO_OF_SPRITES)
-		return false;
-
-	int *intDest = (int *)dest;
-
-	*intDest = config;
-
-	return true;
-}
-
-struct SettingItem pixelNoOfSpritesSetting = {"Number of sprites",
-											  "noofsprites",
-											  &pixelSettings.noOfSprites,
-											  NUMBER_INPUT_LENGTH,
-											  integerValue,
-											  setDefaultNoOfSprites,
-											  validateSpriteConfig};
 
 boolean validatePixelConfig(void *dest, const char *newValueStr)
 {
@@ -153,7 +120,6 @@ struct SettingItem *pixelSettingItemPointers[] =
 		&pixelControlPinSetting,
 		&pixelNoOfXPixelsSetting,
 		&pixelNoOfYPixelsSetting,
-		&pixelNoOfSpritesSetting,
 		&pixelPixelConfig,
 };
 
@@ -489,11 +455,7 @@ int doSetTwinkle(char *destination, unsigned char *settingBase)
 
 	int steps = getUnalignedInt(settingBase + SPEED_PIXEL_COMMAND_OFFSET);
 
-	for (int i = 0; i < pixelSettings.noOfSprites; i++)
-	{
-		struct colourNameLookup *newColour = findRandomColour();
-		frame->sprites[i]->fadeToColour(newColour->col, steps);
-	}
+	frame->fadeSpritesToTwinkle(steps);
 
 	return WORKED_OK;
 }
@@ -528,10 +490,7 @@ int doSetBrightness(char *destination, unsigned char *settingBase)
 
 	int steps = getUnalignedInt(settingBase + SPEED_PIXEL_COMMAND_OFFSET);
 
-	for (int i = 0; i < pixelSettings.noOfSprites; i++)
-	{
-		frame->fadeToBrightness( brightness, steps);
-	}
+	frame->fadeToBrightness( brightness, steps);
 
 	return WORKED_OK;
 }
@@ -758,7 +717,7 @@ void startPixel()
 {
 	leds = new Leds(pixelSettings.noOfXPixels, pixelSettings.noOfYPixels, show, setPixel);
 
-	frame = new Frame(leds, BLACK_COLOUR, pixelSettings.noOfSprites);
+	frame = new Frame(leds, BLACK_COLOUR);
 	frame->on();
 	frame->fadeUp(0.01);
 

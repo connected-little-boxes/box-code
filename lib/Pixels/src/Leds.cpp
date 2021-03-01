@@ -59,7 +59,7 @@ void Leds::dump()
 	{
 		for (int x = 0; x < ledWidth; x++)
 		{
-			Serial.printf("r:%f g:%f b:%f  ",
+			Serial.printf("     r:%f g:%f b:%f\n",
 						  leds[x][y].colour.Red,
 						  leds[x][y].colour.Green,
 						  leds[x][y].colour.Blue);

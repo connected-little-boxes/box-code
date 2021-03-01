@@ -1,14 +1,15 @@
 #include "Sprite.h"
 
 #include "Frame.h"
+#include <math.h>
 
-Frame::Frame(Leds *inLeds, Colour inBackground, int inNoOfSprites)
+Frame::Frame(Leds *inLeds, Colour inBackground)
 {
 	leds = inLeds;
 	width = inLeds->ledWidth;
 	height = inLeds->ledHeight;
 	background = inBackground;
-	noOfSprites = inNoOfSprites;
+	noOfSprites = MAX_NO_OF_SPRITES;
 	sprites = new Sprite *[noOfSprites];
 	for (int i = 0; i < noOfSprites; i++)
 	{
@@ -46,7 +47,7 @@ void Frame::render()
 void Frame::dump()
 {
 
-	Serial.println("Frame");
+	Serial.println("\nFrame");
 
 	leds->dump();
 
@@ -212,17 +213,27 @@ void Frame::disableAllSprites()
 	}
 }
 
+int Frame::getNumberOfActiveSprites()
+{
+	if(noOfPixels < 12)
+		return 3;
+
+	int activeSprites = (int) round(noOfPixels / 4);
+
+	int noOfPixels = width * height;
+
+	if (activeSprites > noOfSprites)
+	{
+		activeSprites = noOfSprites;
+	}
+
+	return activeSprites;
+}
+
 void Frame::fadeSpritesToWalkingColours(char *colours, int steps)
 {
 	if (steps < 0)
 		steps = 10;
-
-	int noOfSpritesToWalk = noOfSprites / 4;
-
-	if (noOfSpritesToWalk > noOfSprites)
-	{
-		noOfSpritesToWalk = noOfSprites;
-	}
 
 	char *colourChar = colours;
 
@@ -230,6 +241,8 @@ void Frame::fadeSpritesToWalkingColours(char *colours, int steps)
 	float speedStep = 0.01;
 
 	disableAllSprites();
+
+	int noOfSpritesToWalk = getNumberOfActiveSprites();
 
 	for (int i = 0; i < noOfSpritesToWalk; i++)
 	{
@@ -262,3 +275,15 @@ void Frame::fadeSpritesToWalkingColours(char *colours, int steps)
 		}
 	}
 }
+
+void Frame::fadeSpritesToTwinkle(int steps)
+{
+	int noOfSpritesToTwinkle = getNumberOfActiveSprites();
+
+	for (int i = 0; i < noOfSpritesToTwinkle; i++)
+	{
+		struct colourNameLookup *newColour = findRandomColour();
+		sprites[i]->fadeToColour(newColour->col, steps);
+	}
+}
+

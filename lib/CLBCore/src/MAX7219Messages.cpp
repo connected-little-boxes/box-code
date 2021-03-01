@@ -2,7 +2,7 @@
 
 #include "utils.h"
 #include "settings.h"
-#include "max7219Messages.h"
+#include "MAX7219Messages.h"
 #include "processes.h"
 #include "mqtt.h"
 #include "errors.h"

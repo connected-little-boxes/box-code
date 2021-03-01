@@ -4,7 +4,7 @@
 #include "settings.h"
 #include "controller.h"
 #include "processes.h"
-#include "colour.h"
+#include "Colour.h"
 #include "Leds.h"
 #include "Frame.h"
 
@@ -16,8 +16,6 @@
 
 #define PIXEL_RING_CONFIG NEO_GRB+NEO_KHZ800
 #define PIXEL_STRING_CONFIG NEO_KHZ400+NEO_RGB
-
-#define MAX_NO_OF_SPRITES 25
 
 #define MAX_NO_OF_PIXELS 200
 
@@ -40,7 +38,6 @@ struct PixelSettings
 	int pixelControlPinNo;
 	int noOfXPixels;
 	int noOfYPixels;
-	int noOfSprites;
 	int pixelConfig;
 };
 

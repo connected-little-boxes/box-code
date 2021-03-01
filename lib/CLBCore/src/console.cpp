@@ -249,6 +249,11 @@ void doHullOS(char * commandLine)
 	performCommand(hullosCommand, HullOSCommands, sizeof(HullOSCommands) / sizeof(struct consoleCommand));
 }
 
+void doDumpSprites(char * commandLine)
+{
+	frame->dump();
+}
+
 struct consoleCommand userCommands[] =
 {
 	{"help", "show all the commands", doHelp},
@@ -258,6 +263,7 @@ struct consoleCommand userCommands[] =
 	{"remote", "show all the remote commands", doShowRemoteCommands},
 	{"save", "save all the setting values", doSaveSettings},
 	{"status", "show the sensor status", doDumpStatus},
+	{"sprites", "show the sprite values", doDumpSprites},
 	{"storage", "show the storage use of sensors and processes", doDumpStorage},
 	{"pirtest", "test the PIR sensor", doTestPIRSensor},
 	{"rotarytest", "test the rotary sensor", doTestRotarySensor},
