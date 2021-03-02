@@ -180,7 +180,7 @@ struct colourCharLookup *findColourByChar(const char ch)
 
 struct colourNameLookup *findRandomColour()
 {
-	// never picks black
+	// never picks black - which is at location 0 in the array
 	int pos = random(1, sizeof(colourNames) / sizeof(struct colourNameLookup));
 	return &colourNames[pos];
 }

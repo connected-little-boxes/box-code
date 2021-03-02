@@ -15,35 +15,93 @@ public:
     enum SpriteMovingState {SPRITE_STOPPED, SPRITE_BOUNCE, SPRITE_WRAP, SPRITE_MOVE};
 
     SpriteMovingState movingState;
+    SpriteMovingState stateWhenMoveCompleted;
 
 	Frame* frame;
     Leds* leds;
 	Colour colour;
+
     float redStep, blueStep, greenStep;
-    int colourSteps = 0;
+    Colour targetColour;
+    int colourSteps;
 
 	float brightness;
+    float targetBrightness;
+    float brightnessStep;
+    int brightnessSteps;
+
 	float opacity;
 
 	float x;
 	float y;
     float xSpeed;
     float ySpeed;
-    int moveSteps=0;
+
+    // we can make the pixels move to a position and then start an action
+    // these are the position update values
+    float positionXSpeed;
+    float positionYSpeed;
+    float destX;
+    float destY;
+    int moveSteps;
 
     bool enabled;
+
+    #define CLOSE_TOLERANCE 0.0001
+
+    bool close_to(float a, float b)
+    {
+        float diff = a - b;
+        if (diff > 0)
+        {
+            if (diff > CLOSE_TOLERANCE)
+                return false;
+            else
+                return true;
+        }
+        else
+        {
+            if (diff < -CLOSE_TOLERANCE)
+                return false;
+            else
+                return true;
+        }
+    }
+
+    boolean coloursEqual(Colour a, Colour b)
+    {
+        if (!close_to(a.Red,b.Red)) return false;
+        if (!close_to(a.Green,b.Green)) return false;
+        if (!close_to(a.Blue,b.Blue)) return false;
+        return true;
+    }
 
     void fadeToColour(Colour target, int noOfSteps){
         redStep = (target.Red - colour.Red) / noOfSteps;
         blueStep = (target.Blue - colour.Blue) / noOfSteps;
         greenStep = (target.Green - colour.Green) / noOfSteps;
+        targetColour = target;
         colourSteps = noOfSteps;
     }
 
-    void moveToPosition(float targetX, float targetY, int noOfSteps)
+    // fade to brightness level. If we fade to black
+    // the sprite is then disabled
+
+    void fadeToBrightness(float target, int noOfSteps){
+        brightnessStep = (target - brightness)/noOfSteps;
+        targetBrightness = target;
+        brightnessSteps = noOfSteps;
+    }
+
+    void moveToPosition(float targetX, float targetY, int noOfSteps, SpriteMovingState inStateWhenMoveCompleted)
     {
-        xSpeed = (targetX-x) / noOfSteps;
-        ySpeed = (targetY-y) / noOfSteps;
+        destX=targetX ;
+        destY=targetY;
+
+        positionXSpeed = (targetX-x) / noOfSteps;
+        positionYSpeed = (targetY-y) / noOfSteps;   
+
+        stateWhenMoveCompleted = inStateWhenMoveCompleted;
         moveSteps = noOfSteps;
         movingState = SPRITE_MOVE;
     }
@@ -53,14 +111,30 @@ public:
         if(!enabled)
             return;
 
-        if(colourSteps != 0)
+        if(brightnessSteps>0)
+        {
+            brightness = brightness + brightnessStep;
+            brightnessSteps--;
+            if(brightnessSteps==0)
+            {
+                brightness = targetBrightness;
+                if(targetBrightness==0){
+                    enabled=false;
+                }
+            }
+        }
+
+        if(colourSteps>0)
         {
             colour.Red = colour.Red + redStep;
             colour.Blue = colour.Blue + blueStep;
             colour.Green = colour.Green + greenStep;
             colourSteps--;
+            if(colourSteps==0){
+                colour=targetColour;
+            }
         }
-
+ 
         switch(movingState)
         {
             case SPRITE_STOPPED:
@@ -86,10 +160,15 @@ public:
     void move();
 
     void dump() {
-        Serial.printf("r:%f g:%f b:%f bright:%f opacity:%f enabled:%d x:%f y:%f xspeed:%f yspeed:%f",
+        if(!enabled)
+        {
+            return;            
+        }
+
+        Serial.printf("r:%f g:%f b:%f bright:%f opacity:%f x:%f y:%f ",
             colour.Red, colour.Green, colour.Blue,
-            brightness, opacity,enabled,
-            x, y, xSpeed, ySpeed);
+            brightness, opacity,
+            x, y);
 
         switch(movingState)
         {
@@ -97,25 +176,39 @@ public:
                 Serial.println(" stopped\n");
                 break;
             case SPRITE_BOUNCE:
-                Serial.printf(" bounce -x:%f y:%f\n", xSpeed, ySpeed);
+                Serial.printf(" bounce -xSpeed:%f ySpeed:%f\n", xSpeed, ySpeed);
                 break;
             case SPRITE_WRAP:
-                Serial.printf(" wrap -x:%f y:%f\n", xSpeed, ySpeed);
+                Serial.printf(" wrap -xSpeed:%f ySpeed:%f\n", xSpeed, ySpeed);
                 break;
             case SPRITE_MOVE:
-                Serial.printf(" move -x:%f y:%f steps:%d\n", xSpeed, ySpeed, moveSteps);
+                Serial.printf(" move -xSpeed:%f ySpeed:%f \n", xSpeed, ySpeed );
                 break;
         }
     }
 
-    Sprite(Frame * inFrame)
+    void reset()
     {
-        frame= inFrame;
         enabled=false;
         movingState = SPRITE_STOPPED;
         colour=BLACK_COLOUR;
         moveSteps=0;
         colourSteps=0;
+        brightnessSteps=0;
+        x=0;
+        y=0;
+        xSpeed=0;
+        ySpeed=0;
+        redStep=0;
+        greenStep=0;
+        blueStep=0;
+        brightnessStep=0;
+    }
+
+    Sprite(Frame * inFrame)
+    {
+        frame= inFrame;
+        reset();
     }
 
     void enable(){

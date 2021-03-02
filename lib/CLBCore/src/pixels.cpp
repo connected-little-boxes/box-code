@@ -537,7 +537,7 @@ int doSetPattern(char *destination, unsigned char *settingBase)
 
 	int steps = getUnalignedInt(settingBase + SPEED_PIXEL_COMMAND_OFFSET);
 
-	Serial.printf("Got new pattern:%d %s \n", pattern, colourMask);
+	Serial.printf("Got new pattern:%d %s %d\n", pattern, colourMask, steps);
 
 	switch(pattern)
 	{
@@ -718,13 +718,12 @@ void startPixel()
 	leds = new Leds(pixelSettings.noOfXPixels, pixelSettings.noOfYPixels, show, setPixel);
 
 	frame = new Frame(leds, BLACK_COLOUR);
-	frame->on();
-	frame->fadeUp(0.01);
+	frame->fadeUp(1000);
 
 	millisOfLastPixelUpdate = millis();
 	pixelProcess.status = PIXEL_OK;
 
-	frame->fadeSpritesToWalkingColours("RGBYMC", 50);
+	frame->fadeSpritesToWalkingColours("RGBYMC", 100);
 }
 
 void showDeviceStatus();	   // declared in control.h

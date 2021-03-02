@@ -6,12 +6,16 @@
 Frame::Frame(Leds *inLeds, Colour inBackground)
 {
 	leds = inLeds;
+
 	width = inLeds->ledWidth;
 	height = inLeds->ledHeight;
+	noOfPixels = width * height;
+
 	background = inBackground;
-	noOfSprites = MAX_NO_OF_SPRITES;
-	sprites = new Sprite *[noOfSprites];
-	for (int i = 0; i < noOfSprites; i++)
+	noOfBrightnessSteps = 0;
+	brightness = 0;
+
+	for (int i = 0; i < MAX_NO_OF_SPRITES; i++)
 	{
 		sprites[i] = new Sprite(this);
 	}
@@ -20,7 +24,7 @@ Frame::Frame(Leds *inLeds, Colour inBackground)
 Sprite *Frame::getSprite(int spriteNo)
 {
 
-	if (spriteNo >= noOfSprites || spriteNo < 0)
+	if (spriteNo >= MAX_NO_OF_SPRITES || spriteNo < 0)
 	{
 		return NULL;
 	}
@@ -30,13 +34,9 @@ Sprite *Frame::getSprite(int spriteNo)
 
 void Frame::render()
 {
-
-	if (state == OFF)
-		return;
-
 	leds->clear(background);
 
-	for (int i = 0; i < noOfSprites; i++)
+	for (int i = 0; i < MAX_NO_OF_SPRITES; i++)
 	{
 		sprites[i]->render();
 	}
@@ -51,7 +51,7 @@ void Frame::dump()
 
 	leds->dump();
 
-	for (int i = 0; i < noOfSprites; i++)
+	for (int i = 0; i < MAX_NO_OF_SPRITES; i++)
 	{
 		sprites[i]->dump();
 	}
@@ -59,107 +59,90 @@ void Frame::dump()
 
 void Frame::update()
 {
-
-	if (state == OFF)
-		return;
-
-	for (int i = 0; i < noOfSprites; i++)
+	for (int i = 0; i < MAX_NO_OF_SPRITES; i++)
 	{
 		sprites[i]->update();
 	}
 
-	switch (state)
+	if (noOfBrightnessSteps != 0)
 	{
-	case FADE_UP:
 		brightness += brightnessStep;
-		if (brightness >= 1)
+		noOfBrightnessSteps--;
+		if (noOfBrightnessSteps == 0)
 		{
-			brightness = 1;
-			state = ON;
+			brightness = targetBrightness;
 		}
-		break;
-	case FADE_DOWN:
-		brightness -= brightnessStep;
-		if (brightness <= 0)
-		{
-			brightness = 0;
-			state = OFF;
-		}
-		break;
-	case ON:
-		if (noOfBrightnessSteps != 0)
-		{
-			brightness += brightnessStep;
-			noOfBrightnessSteps--;
-		}
-		break;
-	case OFF:
-		break;
 	}
 }
 
-void Frame::on()
+void Frame::fadeUp(int noOfSteps)
 {
-	brightness = 1;
-	state = ON;
+	fadeToBrightness(1, noOfSteps);
 }
 
-void Frame::off()
+void Frame::fadeDown(int noOfSteps)
 {
-	brightness = 0;
-	state = OFF;
-}
-
-void Frame::fadeUp(float step)
-{
-	brightnessStep = step;
-	state = FADE_UP;
-}
-
-void Frame::fadeDown(float step)
-{
-	brightnessStep = step;
-	state = FADE_DOWN;
+	fadeToBrightness(0, noOfSteps);
 }
 
 void Frame::fadeToColour(Colour target, int noOfSteps)
 {
-	for (int i = 0; i < noOfSprites; i++)
+	if (noOfSteps <= 0)
+	{
+		noOfSteps = 10;
+	}
+
+	for (int i = 0; i < MAX_NO_OF_SPRITES; i++)
 	{
 		sprites[i]->fadeToColour(target, noOfSteps);
 	}
 }
 
-bool Frame::fadeToBrightness(float targetBrightness, int noOfSteps)
+void Frame::fadeToBrightness(float inTargetBrightness, int noOfSteps)
 {
-	if (noOfSteps <= 0 || brightness < 0 || brightness > 1)
+	if (noOfSteps <= 0)
 	{
-		return false;
+		noOfSteps = 10;
 	}
 
-	brightnessStep = (targetBrightness - brightness) / noOfSteps;
+	if (inTargetBrightness < 0)
+	{
+		inTargetBrightness = 0;
+	}
+
+	if (inTargetBrightness > 1)
+	{
+		inTargetBrightness = 1;
+	}
+
+	brightnessStep = (inTargetBrightness - brightness) / noOfSteps;
+
+	targetBrightness = inTargetBrightness;
 
 	noOfBrightnessSteps = noOfSteps;
-	return true;
 }
 
 void Frame::fadeSpritesToColourCharMask(char *colourMask, int steps)
 {
+	if (steps <= 0)
+	{
+		steps = 10;
+	}
+
 	disableAllSprites();
 
 	char *pos = colourMask;
 	int row = 0, col = 0;
 
-	int noOfPixels = width * height;
 	int pixelLimit;
 
-	if (noOfSprites > noOfPixels)
+	if (MAX_NO_OF_SPRITES > noOfPixels)
 	{
 		pixelLimit = noOfPixels;
 	}
 	else
 	{
-		pixelLimit = noOfSprites;
+		pixelLimit = MAX_NO_OF_SPRITES;
 	}
 
 	for (int i = 0; i < pixelLimit; i++)
@@ -168,25 +151,13 @@ void Frame::fadeSpritesToColourCharMask(char *colourMask, int steps)
 
 		float newX = row + 0.5;
 		float newY = col + 0.5;
-		sprite->moveToPosition(newX, newY, steps);
+		// move to the specified position and then stop
+		sprite->moveToPosition(newX, newY, steps, Sprite::SPRITE_STOPPED);
 		sprite->enabled = true;
-		sprite->brightness = 1.0;
+		sprite->fadeToBrightness(1, steps);
 		sprite->opacity = 1.0;
 
-		if (*pos == '+')
-		{
-			colourNameLookup *colourName = findRandomColour();
-			sprite->fadeToColour(colourName->col, steps);
-		}
-		else
-		{
-			colourCharLookup *colour = findColourByChar(*pos);
-
-			if (colour != NULL)
-			{
-				sprite->fadeToColour(colour->col, steps);
-			}
-		}
+		setTargetColour(*pos, sprite, steps);
 
 		pos++;
 
@@ -207,7 +178,7 @@ void Frame::fadeSpritesToColourCharMask(char *colourMask, int steps)
 
 void Frame::disableAllSprites()
 {
-	for (int i = 0; i < noOfSprites; i++)
+	for (int i = 0; i < MAX_NO_OF_SPRITES; i++)
 	{
 		sprites[i]->enabled = false;
 	}
@@ -215,20 +186,49 @@ void Frame::disableAllSprites()
 
 int Frame::getNumberOfActiveSprites()
 {
-	if(noOfPixels < 12)
-		return 3;
-
-	int activeSprites = (int) round(noOfPixels / 4);
-
 	int noOfPixels = width * height;
 
-	if (activeSprites > noOfSprites)
+	if (noOfPixels < 12)
+		return 3;
+
+	int activeSprites = (int)round(noOfPixels / 4) + 1;
+
+	Serial.printf("Number of pixels:%d activeSprites:%d\n", noOfPixels, activeSprites);
+
+	if (activeSprites > MAX_NO_OF_SPRITES)
 	{
-		activeSprites = noOfSprites;
+		activeSprites = MAX_NO_OF_SPRITES;
 	}
 
 	return activeSprites;
 }
+
+void Frame::setTargetColour(char ch, Sprite *s, int steps)
+{
+	switch (ch)
+	{
+	case '*':
+		// A colour of * means "set a random colour for this sprite"
+		{
+			struct colourNameLookup *newColour = findRandomColour();
+			s->fadeToColour(newColour->col, steps);
+		}
+		break;
+	case '+':
+		// A colour of + means "don't set the colour of this sprite"
+		break;
+	default:
+		// Any other character, look up the colour and use it
+		colourCharLookup *colour = findColourByChar(ch);
+		if (colour != NULL)
+		{
+			s->fadeToColour(colour->col, steps);
+		}
+		break;
+	}
+}
+
+
 
 void Frame::fadeSpritesToWalkingColours(char *colours, int steps)
 {
@@ -237,35 +237,49 @@ void Frame::fadeSpritesToWalkingColours(char *colours, int steps)
 
 	char *colourChar = colours;
 
-	float xSpeed = 0.01;
-	float speedStep = 0.01;
+	int noOfSprites = getNumberOfActiveSprites();
 
-	disableAllSprites();
-
-	int noOfSpritesToWalk = getNumberOfActiveSprites();
-
-	for (int i = 0; i < noOfSpritesToWalk; i++)
+	// fade out and disable all the sprites we aren't using
+	for(int i=noOfSprites; i< MAX_NO_OF_SPRITES; i++)
 	{
+		sprites[i]->fadeToBrightness(0,steps);
+	}
+
+	float pixelSpaceBetweenSprites = noOfPixels / noOfSprites;
+
+	Serial.printf("noOfSprites:%d noOfPixels:%d space between sprites:%f\n", noOfSprites, noOfPixels, pixelSpaceBetweenSprites);
+
+	float dist = 0;
+	int x = 0;
+	int y = 0;
+	float minSpeed = 0.005;
+	float maxSpeed = 0.015;
+	float speedStep = (maxSpeed - minSpeed) / (noOfSprites * 2);
+	float speed = minSpeed;
+
+	for (int i = 0; i < noOfSprites; i++)
+	{
+		Serial.printf("  Sprite at %d,%d\n", x, y);
 		Sprite *s = sprites[i];
-
-		// first get the target colour
-		// A colour of * means "don't set the colour of this pixel"
-		if (*colourChar != '*')
-		{
-			colourCharLookup *colour = findColourByChar(*colourChar);
-			if (colour != NULL)
-			{
-				s->fadeToColour(colour->col, steps);
-			}
-		}
-
+		// s->x=x;
+		// s->y=y;
+		// s->movingState=Sprite::SPRITE_WRAP;
+		s->moveToPosition(x + 0.5, y + 0.5, steps, Sprite::SPRITE_WRAP);
+		if(random(0,2)==1)
+			s->xSpeed = speed;
+		else
+			s->xSpeed = -speed;
+		speed = speed + speedStep;
+		if(random(0,2)==1)
+			s->ySpeed = speed;
+		else
+			s->ySpeed = -speed;
+		speed = speed + speedStep;
 		s->enabled = true;
-		s->brightness = 1;
+		s->fadeToBrightness(1,steps);
 		s->opacity = 1;
-		s->xSpeed = xSpeed + (i * speedStep);
-		s->ySpeed = xSpeed + (i * speedStep);
-		s->enabled = true;
-		s->movingState = Sprite::SPRITE_WRAP;
+
+		setTargetColour(*colourChar, s, steps);
 
 		colourChar++;
 
@@ -273,17 +287,25 @@ void Frame::fadeSpritesToWalkingColours(char *colours, int steps)
 		{
 			colourChar = colours;
 		}
+
+		dist = dist + pixelSpaceBetweenSprites;
+
+		while (dist >= width)
+		{
+			dist = dist - width;
+			y = y + 1;
+		}
+		x = int(dist);
 	}
 }
 
 void Frame::fadeSpritesToTwinkle(int steps)
 {
-	int noOfSpritesToTwinkle = getNumberOfActiveSprites();
+	int MAX_NO_OF_SPRITESToTwinkle = getNumberOfActiveSprites();
 
-	for (int i = 0; i < noOfSpritesToTwinkle; i++)
+	for (int i = 0; i < MAX_NO_OF_SPRITESToTwinkle; i++)
 	{
 		struct colourNameLookup *newColour = findRandomColour();
 		sprites[i]->fadeToColour(newColour->col, steps);
 	}
 }
-

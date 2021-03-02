@@ -11,18 +11,17 @@ class Frame
 {
 public:
 
-	enum FrameState {ON, OFF, FADE_UP, FADE_DOWN};
-	FrameState state;
 	int width;
 	int height;
+	int noOfPixels;
 	Colour background;
 	Leds * leds;
-	int noOfPixels;
 	float brightness;
 	float brightnessStep;
 	int noOfBrightnessSteps;
-	Sprite ** sprites ;
-	int noOfSprites;
+	float targetBrightness;
+
+	Sprite * sprites [MAX_NO_OF_SPRITES];
 	Frame(Leds* inLeds, Colour inBackground); 
 
 	Sprite * getSprite(int spriteNo);
@@ -33,16 +32,14 @@ public:
 
 	void dump();
 
-	void on();
-	void off();
-
 	void disableAllSprites();
-	void fadeUp(float step);
 
-	void fadeDown(float step);
+	void fadeUp(int noOfSteps);
 
-	bool fadeToBrightness(float brightNess, int steps);
+	void fadeDown(int noOfSteps);
 
+	void fadeToBrightness(float brightness, int steps);
+	void setTargetColour(char ch, Sprite * s, int steps);
 	void fadeToColour(Colour target, int steps);
 	void fadeSpritesToColourCharMask(char * colourMask, int steps);
 	void fadeSpritesToWalkingColours(char * colours,int steps);

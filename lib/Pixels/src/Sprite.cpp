@@ -45,41 +45,35 @@ void Sprite::bounce()
 
 void Sprite::wrap()
 {
+    
     x = x + xSpeed;
     y = y + ySpeed;
 
-    if (x < 0)
-    {
-        x = frame->width - 1;
-    }
+    while(x<0)
+        x=x+frame->width;
 
-    if (y < 0)
-    {
-        y = frame->height - 1;
-    }
+    while(x>frame->width)
+        x=x-frame->width;
 
-    if (x > frame->width)
-    {
-        x = 0;
-    }
+    while(y<0)
+        y=y+frame->height;
 
-    if (y > frame->height)
-    {
-        y = 0;
-    }
+    while(y>frame->height)
+        y=y-frame->height;
+
 }
 
 void Sprite::move()
 {
-    if(moveSteps != 0)
+    x = x + positionXSpeed;
+    y = y + positionYSpeed;
+
+    moveSteps--;
+    if(moveSteps==0)
     {
-        x = x + xSpeed;
-        y = y + ySpeed;
-        moveSteps--;
-        if(moveSteps == 0)
-        {
-            movingState = SPRITE_STOPPED;
-        }
+        x=destX;
+        y=destY;
+        movingState = stateWhenMoveCompleted;
     }
 }
 
