@@ -193,8 +193,6 @@ int Frame::getNumberOfActiveSprites()
 
 	int activeSprites = (int)round(noOfPixels / 4) + 1;
 
-	Serial.printf("Number of pixels:%d activeSprites:%d\n", noOfPixels, activeSprites);
-
 	if (activeSprites > MAX_NO_OF_SPRITES)
 	{
 		activeSprites = MAX_NO_OF_SPRITES;
@@ -247,8 +245,6 @@ void Frame::fadeSpritesToWalkingColours(char *colours, int steps)
 
 	float pixelSpaceBetweenSprites = noOfPixels / noOfSprites;
 
-	Serial.printf("noOfSprites:%d noOfPixels:%d space between sprites:%f\n", noOfSprites, noOfPixels, pixelSpaceBetweenSprites);
-
 	float dist = 0;
 	int x = 0;
 	int y = 0;
@@ -259,11 +255,7 @@ void Frame::fadeSpritesToWalkingColours(char *colours, int steps)
 
 	for (int i = 0; i < noOfSprites; i++)
 	{
-		Serial.printf("  Sprite at %d,%d\n", x, y);
 		Sprite *s = sprites[i];
-		// s->x=x;
-		// s->y=y;
-		// s->movingState=Sprite::SPRITE_WRAP;
 		s->moveToPosition(x + 0.5, y + 0.5, steps, Sprite::SPRITE_WRAP);
 		if(random(0,2)==1)
 			s->xSpeed = speed;

@@ -459,7 +459,7 @@ void iterateThroughSensorListeners(struct sensor *sensor, void (*func)(struct se
 	}
 }
  
-void fireSensorListenersOnMaskBit(struct sensor *sensor, int mask)
+void fireSensorListenersOnTrigger(struct sensor *sensor, int trigger)
 {
 	struct sensorListener *pos = sensor->listeners;
 
@@ -468,7 +468,7 @@ void fireSensorListenersOnMaskBit(struct sensor *sensor, int mask)
 	while (pos != NULL)
 	{
 		//Serial.printf("        Listener:%s sendoption:%d\n", pos->config->listenerName, pos->config->sendOptionMask);
-		if ((pos->config->sendOptionMask & mask) != 0)
+		if (pos->config->sendOptionMask == trigger)
 		{
 			//Serial.println("Got a match");
 			// dumpCommand(pos->config->commandProcess, pos->config->commandName, pos->config->optionBuffer);

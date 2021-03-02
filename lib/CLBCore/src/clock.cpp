@@ -317,7 +317,7 @@ void initialiseAlarm(clockAlarmDescriptor *alarmDesc, struct clockReading *readi
 		if (pastAlarmTime(alarmDesc->alarm, reading))
 		{
 			alarmDesc->alarm->triggered = true;
-			fireSensorListenersOnMaskBit(&clockSensor, alarmDesc->alarmMask);
+			fireSensorListenersOnTrigger(&clockSensor, alarmDesc->alarmMask);
 		}
 	}
 }
@@ -376,7 +376,7 @@ void checkAlarm(clockAlarmDescriptor *alarmDesc, struct clockReading *reading)
 			return;
 		}
 		alarmDetails->triggered = true;
-		fireSensorListenersOnMaskBit(&clockSensor, alarmDesc->alarmMask);
+		fireSensorListenersOnTrigger(&clockSensor, alarmDesc->alarmMask);
 	}
 	else {
 		alarmDetails->triggered = false;
@@ -429,7 +429,7 @@ void checkTimer(clockTimerDescriptor *timerDesc, struct clockReading *reading)
 
 		timer->triggered = true;
 
-		fireSensorListenersOnMaskBit(&clockSensor, timerDesc->timerMask);
+		fireSensorListenersOnTrigger(&clockSensor, timerDesc->timerMask);
 
 		if(timer->singleShot)
 		{
@@ -474,9 +474,10 @@ void checkClock(struct clockReading *reading)
 	{
 		char * messageBuffer = (char *) pos->config->optionBuffer + MESSAGE_START_POSITION;
 
-		if ((pos->config->sendOptionMask & CLOCK_SECOND_TICK) != 0)
+		if (pos->config->sendOptionMask == CLOCK_SECOND_TICK)
 		{
 			//TRACELN("Second Tick");
+			Serial.println("second tick");
 			snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%02d:%02d:%02d",
 			reading->hour,
 			reading->minute,
@@ -484,7 +485,7 @@ void checkClock(struct clockReading *reading)
 			pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
 		}
 
-		if ((pos->config->sendOptionMask & CLOCK_MINUTE_TICK) != 0)
+		if (pos->config->sendOptionMask ==CLOCK_MINUTE_TICK)
 		{
 			if(lastClockMinute != reading->minute){
 				TRACELN("Minute Tick");
@@ -494,7 +495,7 @@ void checkClock(struct clockReading *reading)
 			}
 		}
 
-		if ((pos->config->sendOptionMask & CLOCK_HOUR_TICK) != 0)
+		if (pos->config->sendOptionMask == CLOCK_HOUR_TICK)
 		{
 			if(lastClockHour != reading->hour){
 				TRACELN("Hour Tick");
@@ -504,7 +505,7 @@ void checkClock(struct clockReading *reading)
 			}
 		}
 
-		if ((pos->config->sendOptionMask & CLOCK_DAY_TICK) != 0)
+		if (pos->config->sendOptionMask == CLOCK_DAY_TICK)
 		{
 			if(lastClockDay != reading->day){
 				TRACELN("Day Tick");

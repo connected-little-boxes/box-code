@@ -1,8 +1,6 @@
 #include "Leds.h"
 bool close_to(float a, float b);
 
-//#define DUMP_LED_VALUES
-
 Leds::Leds(int inWidth, int inHeight, 
 			void (*inShow)(),
 			void (*inSetPixel)(int no, float r, float g, float b))

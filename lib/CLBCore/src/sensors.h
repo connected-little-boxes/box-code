@@ -90,7 +90,7 @@ void resetSensorsToDefaultSettings();
 SettingItem* FindSensorSettingByFormName(const char* settingName);
 void addMessageListenerToSensor(struct sensor *sensor, struct sensorListener * listener);
 void iterateThroughSensorListeners(struct sensor * sensor, void (*func) (struct sensorListener * listener));
-void fireSensorListenersOnMaskBit(struct sensor *sensor, int mask);
+void fireSensorListenersOnTrigger(struct sensor *sensor, int mask);
 struct sensorEventBinder *findSensorListenerByName(struct sensor *s, const char *name);
 struct sensorEventBinder * findSensorEventBinderByTrigger(struct sensor * s, int mask);
 
