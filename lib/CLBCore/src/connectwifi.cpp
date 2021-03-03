@@ -328,7 +328,7 @@ void startWiFiConfigWebsite()
 {
 	if (startHostingConfigWebsite())
 	{
-		Serial.printf("   Hosting at 192.168.4.1 on %s\n", settings.name);
+		Serial.printf("   Hosting at 192.168.4.1 on %s\n", CONFIG_ACCESS_POINT_SSID);
 		WiFiProcessDescriptor.status = WIFI_CONFIG_HOSTING_WEBSITE;
 	}
 	else

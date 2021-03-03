@@ -17,18 +17,7 @@ char * webPageBuffer = NULL;
 
 WebServer * webServer;
 
-const char oldhomePageHeader[] =
-"<html>"
-"<head>"
-//"<style>input {font-size: 1.2em; width: 100%; max-width: 360px; display: block; margin: 5px auto; } </style>"
-"<style>input {margin: 5px auto; } </style>"
-"</head>"
-"<body>"
-"<h1>Connected Little Boxes</h1>"
-"<h3>Version %s</h3>" // version  goes here;
-"<h1>Settings</h1>";
-
-const char oldhomePageFooter[] =
+const char fullSettingsPageFooter[] =
 "<p> Select the link to the settings page that you want to edit.</p>"
 "<p> Select the reset link below to reset the sensor when you have finished.</p>"
 "<a href=""reset"">reset</a>"
@@ -95,7 +84,7 @@ void buildCollectionSettingsPage(SettingItemCollection * settingCollection, cons
 void buildHomePage()
 {
 	buildCollectionSettingsPage(&QuickSettingItems, homePageHeader, homePageFooter);
-	Serial.println(webPageBuffer);
+//	Serial.println(webPageBuffer);
 }
 
 void buildFullSettingsHomePage()
@@ -107,9 +96,9 @@ void buildFullSettingsHomePage()
 	iterateThroughSensorSettingCollections(addItem);
 
 	snprintf(webPageBuffer, WEB_PAGE_BUFFER_SIZE, "%s %s",
-		webPageBuffer, homePageFooter);
+		webPageBuffer, fullSettingsPageFooter);
 
-	Serial.println(webPageBuffer);
+//	Serial.println(webPageBuffer);
 }
 
 const char settingsPageHeader[] =
@@ -361,7 +350,7 @@ void startWebServer()
 
 bool startHostingConfigWebsite()
 {
-	Serial.printf("Starting host %d\n", WebServerProcess.status);
+//	Serial.printf("Starting host %d\n", WebServerProcess.status);
 
 	if(WebServerProcess.status == WEBSERVER_OFF)
 	{
@@ -373,7 +362,7 @@ bool startHostingConfigWebsite()
 		return true;
 	}
 
-	Serial.println("Starting web server");
+//	Serial.println("Starting web server");
 
 	if(webPageBuffer==NULL)
 	{
