@@ -149,8 +149,6 @@ boolean validateFloat0to1(void *dest, const char *newValueStr)
 	return true;
 }
 
-
-
 void dump_hex(uint8_t *pos, int length)
 {
 	while (length > 0)
@@ -579,7 +577,7 @@ void PrintSettingCollectionFiltered(SettingItemCollection *settingCollection)
 
 void PrintSystemDetails()
 {
-	Serial.printf("   device:%s Version %s\n", settings.name, Version);
+	Serial.printf("   device:%s\n", settings.name);
 }
 
 void PrintAllSettings()

@@ -7,7 +7,7 @@
 
 #define WEB_PAGE_BUFFER_SIZE 3000
 
-char webPageBuffer [WEB_PAGE_BUFFER_SIZE+1];
+char * webPageBuffer = NULL;
 
 // not proud of this - but it will work
 
@@ -17,7 +17,7 @@ char webPageBuffer [WEB_PAGE_BUFFER_SIZE+1];
 
 WebServer * webServer;
 
-const char homePageHeader[] =
+const char oldhomePageHeader[] =
 "<html>"
 "<head>"
 //"<style>input {font-size: 1.2em; width: 100%; max-width: 360px; display: block; margin: 5px auto; } </style>"
@@ -28,9 +28,30 @@ const char homePageHeader[] =
 "<h3>Version %s</h3>" // version  goes here;
 "<h1>Settings</h1>";
 
-const char homePageFooter[] =
+const char oldhomePageFooter[] =
 "<p> Select the link to the settings page that you want to edit.</p>"
 "<p> Select the reset link below to reset the sensor when you have finished.</p>"
+"<a href=""reset"">reset</a>"
+"</body>"
+"</html>";
+
+const char homePageHeader[] =
+"<html>"
+"<head>"
+"<style>input {margin: 5px auto; } </style>"
+"</head>"
+"<h1>Connected Little Boxes</h1>"
+"<h2>%s</h2>" // configuration description goes here
+"<form id='form' action='/%s' method='post'>"; // configuration short name goes here
+
+const char homePageFooter[] =
+"%s"// entire page goes here
+"<input type='submit' value='Update'>"
+"</form>"
+"<p> Enter your settings and select Update to write them into the device.</p>"
+"<p> Select the full settings page link below to view all the settings in the device.</p>"
+"<a href=""full"">full settings</a>"
+"<p> Select the reset link below to reset the device when you have finished.</p>"
 "<a href=""reset"">reset</a>"
 "</body>"
 "</html>";
@@ -43,7 +64,41 @@ void addItem(SettingItemCollection * settings)
 		settings->collectionDescription);
 }
 
+extern struct SettingItem wifi1SSIDSetting;
+extern struct SettingItem wifi1PWDSetting;
+extern struct SettingItem mqttServerSetting;
+extern struct SettingItem mqttPortSetting;
+extern struct SettingItem mqttSecureSocketsSetting;
+extern struct SettingItem mqttUserSetting;
+extern struct SettingItem mqttPasswordSetting;
+
+
+struct SettingItem * quickSettingPointers[] = {
+
+		&wifi1SSIDSetting,
+		&wifi1PWDSetting,
+		&mqttServerSetting,
+		&mqttPortSetting,
+		&mqttSecureSocketsSetting,
+		&mqttUserSetting,
+		&mqttPasswordSetting
+};
+
+struct SettingItemCollection QuickSettingItems = {
+	"Quick Settings",
+	"WiFi and MQTT configuration",
+	quickSettingPointers,
+	sizeof(quickSettingPointers) / sizeof(struct SettingItem *)};
+
+void buildCollectionSettingsPage(SettingItemCollection * settingCollection, const char * settingsPageHeader, const char * settingsPageFooter);
+
 void buildHomePage()
+{
+	buildCollectionSettingsPage(&QuickSettingItems, homePageHeader, homePageFooter);
+	Serial.println(webPageBuffer);
+}
+
+void buildFullSettingsHomePage()
 {
 	snprintf(webPageBuffer, WEB_PAGE_BUFFER_SIZE, homePageHeader, Version);
 
@@ -74,7 +129,7 @@ const char settingsPageFooter[] =
 "</body>"
 "</html>";
 
-void buildCollectionSettingsPage(SettingItemCollection * settingCollection)
+void buildCollectionSettingsPage(SettingItemCollection * settingCollection, const char * settingsPageHeader, const char * settingsPageFooter)
 {
 	int * valuePointer;
 	float * floatPointer;
@@ -232,12 +287,12 @@ const char sensorResetMessage[] =
 
 void pageNotFound(WebServer *webServer)
 {
-	Serial.println("Not found hit");
-
 	String uriString = webServer->uri();
 
 	const char * uriChars = uriString.c_str();
 	const char * pageNameStart = uriChars + 1;
+
+	Serial.printf("Not found hit:%s\n", uriChars);
 
 	if(strcasecmp(pageNameStart, "reset")==0)
 	{
@@ -249,7 +304,23 @@ void pageNotFound(WebServer *webServer)
 		ESP.restart();
 	}
 
-	SettingItemCollection * items = findSettingItemCollectionByName(pageNameStart);
+	if(strcasecmp(pageNameStart, "full")==0)
+	{
+		buildFullSettingsHomePage();
+		webServer->sendHeader("Content-Length", String(strlen(webPageBuffer)));
+		webServer->send(200, "text/html", webPageBuffer);
+	}
+
+	SettingItemCollection * items = NULL;
+
+	if(strcasecmp("Quick\%20Settings",pageNameStart)==0)
+	{
+		items = &QuickSettingItems;
+	}
+	else 
+	{
+		items = findSettingItemCollectionByName(pageNameStart);
+	}
 
 	if (items != NULL)
 	{
@@ -258,7 +329,7 @@ void pageNotFound(WebServer *webServer)
 		{
 			// Not a post - just serve out the settings form
 			//Serial.printf("Got settings request for %s\n", items->collectionName);
-			buildCollectionSettingsPage(items);
+			buildCollectionSettingsPage(items,settingsPageHeader,settingsPageFooter);
 		}
 		else
 		{
@@ -303,6 +374,11 @@ bool startHostingConfigWebsite()
 	}
 
 	Serial.println("Starting web server");
+
+	if(webPageBuffer==NULL)
+	{
+		webPageBuffer = new char [WEB_PAGE_BUFFER_SIZE+1];
+	}
 
 	buildHomePage();
 

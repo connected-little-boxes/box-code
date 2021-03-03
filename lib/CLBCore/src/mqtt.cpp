@@ -87,16 +87,8 @@ boolean validateMQTTDeviceName(void *dest, const char *newValueStr)
 struct SettingItem mqttDeviceNameSetting = {
 	"MQTT Device name", "mqttdevicename", mqttSettings.mqttDeviceName, DEVICE_NAME_LENGTH, text, setDefaultMQTTDeviceName, validateMQTTDeviceName};
 
-#ifdef DEFAULTS_ON 
-
 struct SettingItem mqttOnOffSetting = {
 	"MQTT Active (yes or no)", "mqttactive", &mqttSettings.mqtt_enabled, ONOFF_INPUT_LENGTH, yesNo, setTrue, validateYesNo};
-
-#else
-struct SettingItem mqttOnOffSetting = {
-	"MQTT Active (yes or no)", "mqttactive", &mqttSettings.mqtt_enabled, ONOFF_INPUT_LENGTH, yesNo, setFalse, validateYesNo};
-
-#endif
 
 struct SettingItem mqttServerSetting = {
 	"MQTT Host", "mqtthost", mqttSettings.mqttServer, SERVER_NAME_LENGTH, text, setDefaultMQTThost, validateServerName};

@@ -200,10 +200,14 @@ void doDumpStorage(char * commandLine)
 	PrintStorage();
 }
 
+#ifdef OTA_UPDATE_ON
+
 void doOTAUpdate(char * commandLine)
 {
 	performOTAUpdate();
 }
+
+#endif
 
 void doColourDisplay(char * commandLine)
 {
@@ -268,7 +272,9 @@ struct consoleCommand userCommands[] =
 	{"clearlisteners", "clear the command listeners (also restarts the device)", doClearListeners},
 	{"restart", "restart the device", doRestart},
 	{"hullos", "HullOS commands", doHullOS},
+#ifdef OTA_UPDATE_ON
 	{"otaupdate", "start an over-the-air firmware update", doOTAUpdate},
+#endif
 	{"clear", "clear all seeings and restart the device", doClear}
 };
 

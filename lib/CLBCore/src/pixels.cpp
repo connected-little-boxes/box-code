@@ -537,7 +537,8 @@ int doSetPattern(char *destination, unsigned char *settingBase)
 
 	int steps = getUnalignedInt(settingBase + SPEED_PIXEL_COMMAND_OFFSET);
 
-	Serial.printf("Got new pattern:%d %s %d\n", pattern, colourMask, steps);
+	TRACE("Got new pattern:");
+	TRACE(pattern);
 
 	switch(pattern)
 	{

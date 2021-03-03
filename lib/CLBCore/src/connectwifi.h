@@ -6,6 +6,8 @@
 #include "settings.h"
 #include "messages.h"
 
+#define CONFIG_ACCESS_POINT_SSID "CLB"
+
 #define WIFI_CONNECT_TIMEOUT_MILLIS 20000
 
 #define WIFI_OK 600

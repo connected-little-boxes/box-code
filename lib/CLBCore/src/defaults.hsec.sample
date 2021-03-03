@@ -4,3 +4,5 @@
 #define DEFAULT_MQTT_HOST "Your MQTT Host"
 #define DEFAULT_MQTT_USER "Your MQTT user"
 #define DEFAULT_MQTT_PWD "Your MQTT password"
+#define OTA_PRODUCT_KEY "Your OTADrive product key"
+

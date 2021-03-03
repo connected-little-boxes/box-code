@@ -17,17 +17,8 @@ boolean validateWifiPWD(void *dest, const char *newValueStr)
 
 struct WifiConnectionSettings wifiConnectionSettings;
 
-#ifdef DEFAULTS_ON
-
 struct SettingItem wifiOnOff = {
 	"Wifi on", "wifiactive", &wifiConnectionSettings.wiFiOn, YESNO_INPUT_LENGTH, yesNo, setTrue, validateYesNo};
-
-#else
-
-struct SettingItem wifiOnOff = {
-	"Wifi on", "wifiactive", &wifiConnectionSettings.wiFiOn, YESNO_INPUT_LENGTH, yesNo, setFalse, validateYesNo};
-
-#endif
 
 void setDefaultWiFi1SSID(void *dest)
 {
@@ -320,13 +311,13 @@ void stopWiFi()
 
 void startWiFiConfigAP()
 {
-	Serial.printf("Starting config access point at %s: ", settings.name);
+	Serial.printf("Starting config access point at %s: ", CONFIG_ACCESS_POINT_SSID);
 
 	WiFi.mode(WIFI_AP);
 
 	delay(100);
 
-	WiFi.softAP(settings.name);
+	WiFi.softAP(CONFIG_ACCESS_POINT_SSID);
 
 	delay(500);
 
@@ -451,6 +442,9 @@ void wifiStatusMessage(char *buffer, int bufferLength)
 		break;
 	case WIFI_RECONNECT_TIMER:
 		snprintf(buffer, bufferLength, "WiFi connection waiting to retry");
+		break;
+	case WIFI_CONFIG_STARTING_AP:
+		snprintf(buffer, bufferLength, "WiFi connection starting AP");
 		break;
 	case WIFI_CONFIG_HOSTING_WEBSITE:
 		snprintf(buffer, bufferLength, "WiFi connection hosting AP");

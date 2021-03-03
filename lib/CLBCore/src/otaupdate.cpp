@@ -1,3 +1,4 @@
+#ifdef OTA_UPDATE_ON
 
 #include "utils.h"
 #include "processes.h"
@@ -5,7 +6,6 @@
 #include "pixels.h"
 #include "otaupdate.h"
 
-#define ProductKey "efc8b1da-4927-48aa-95d1-c52a6cda8099"
 #define MakeFirmwareInfo(k, v) "&_FirmwareInfo&k=" k "&v=" v "&FirmwareInfo_&"
 
 #define USE_SERIAL Serial
@@ -45,7 +45,7 @@ void update_error(int err) {
 
 void performOTAUpdate()
 {
-	String url = "http://otadrive.com/DeviceApi/GetEsp8266Update?";
+	String url = "http://otadrive.com/DeviceApi/Update?";
 	WiFiClient client;
 
 	ota_update_init = true;
@@ -53,7 +53,7 @@ void performOTAUpdate()
 #if defined(ARDUINO_ARCH_ESP8266)
 
 	url += "&s=" + String(PROC_ID);
-	url += MakeFirmwareInfo(ProductKey, Version);
+	url += MakeFirmwareInfo(OTA_PRODUCT_KEY, Version);
 
 	Serial.println("Get firmware from url:");
 	Serial.println(url);
@@ -69,7 +69,7 @@ void performOTAUpdate()
 #if defined(ARDUINO_ARCH_ESP32)
 
 	url += "&s=" + String(PROC_ID);
-	url += MakeFirmwareInfo(ProductKey, Version);
+	url += MakeFirmwareInfo(OTA_PRODUCT_KEY, Version);
 
 	Serial.println("Get firmware from url:");
 	Serial.println(url);
@@ -97,5 +97,5 @@ void performOTAUpdate()
 	}
 }
 
-
+#endif
 
