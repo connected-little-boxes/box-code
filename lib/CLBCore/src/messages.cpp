@@ -110,9 +110,6 @@ int messageSeverityToFlashLengthMillis(MessageLevel severity)
     return result;
 }
 
-
-
-
 void displayMessage(int messageNumber, MessageLevel severity, char* messageText)
 {
     for (int i = 0; i < noOfMessageHandlers; i++)

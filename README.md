@@ -1,11 +1,24 @@
-# box-code
+![Configuration host address](images/smallLogo.png)
+
+# Connected Little Boxes - box-code
 This is the repository for all the code that runs inside the connected box. This code provides the interface to the sensors, settings managment, MQTT connection, a configuration web site and terminal connection. 
 
-# Getting Started
-## Building the code
+The box code is common to all the different kinds of boxes. You configure the settings in the code to enable different configurations.
 
+You can create your own code for sensors and outputs and the framework will manage all the settings storage and management. There is also a flexible command language based on JSON that is used to tell the boxes what to do. Any box can send a message to any other box (as the name of the project implies). 
+
+While you can write programs to tell the boxes what to do it is possible to create networks of connected devices without writing any code. 
+# Get started
 The code can run on either an ESP8266 or ESP32. You can select the build target in the platformio.ini file.There are also build options for M5Stack and M5Stick devices. To build and deploy to a device connect it to your computer and perform a deploy from Platform IO. The default device configuration is for the Wemos D1 Mini.
-## Configuring the device using your phone
+
+The first thing you will need to do is deploy the software to a device and then you can start telling your connected little box what to do.
+
+1. Install Visual Studio Code on your development device (Windows PC, Mac or Raspberry Pi).
+1. Install the PlatformIO plugin for Visual Studio Code.
+1. Clone this code repository onto your computer.
+1. Build the framework for your chosen platform (ESP32 or ESP8266)
+
+# Configure the device using your phone
 When a new device is first powered up it detects that there are no WiFi settings configured and it starts an access point called **CLB**. You can connect to this access point with your phone or laptop. If your phone can use the camera configure a WiFi connection you can connect to the device using the following QR code:
 
 
@@ -28,7 +41,7 @@ If you do not have an MQTT server of your own you can use a free open one, for e
 **Note that if you use an open MQTT server any messages that you send will be visible to all users on that server and anyone else on the server could send messages addressed to your device. You should only use an open server for testing. If you only want to use your Connected Little Boxes around your house you can use a Raspberry Pi running Mosquitto as an MQTT server for your home netowrk.**
 
 When you have entered your settings press the Update button to store them in your device. When your settigns have been saved you can select the **reset** link to reset the device. It will then connect to the network using the credentials that you have entered. 
-## Configiring the device using your computer
+# Configure the device using your computer
 Another way to configure a device once you have deployed the code is to use the PlatformIO terminal program. You can start this by clicking the serial connection icon you can find at the bottom left hand side of Visual Studio:
 
 ![Terminal Icon](images/PlatformIOTerminal.png)
@@ -38,7 +51,6 @@ Another way to configure a device once you have deployed the code is to use the 
 The terminal should automatically connect to your device and open a window at the bottom of the Visual Studio Code display. 
 
 ![Terminal Icon](images/PlatformIOTerminalWindow.png)
-
 
 The terminal connection to the device will echo the keys that you enter and you can use the backspace key to move back down the line if you mis-type anything. Press the Enter key to submit the command to the device. When the device is restarted it will go through the startup sequence shown below. This device has automatically started a WiFi access point for configuration. 
 ```
@@ -95,7 +107,7 @@ mqttuser=your MQTT username
 mqttpwd=your MQTT password
 ```
 Each value that you enter is stored in the device for future use. You can view the contents of any setting just by entering the setting name and pressing Enter.
-### The dump command
+## Viewing settings
 The dump command shows you the content of multiple settings. If you just enter the command "dump" you will see all the setting values. The dump command can also be followed by a filter so that only settings containing the filter string will be displayed:
 
 ```
@@ -116,7 +128,7 @@ wifipwd5=******
 ```
 The command above shows the WiFi settings. Note that the password values are not displayed using the Terminal. 
 
-### More commands
+## More commands
 To see what other commands are availalbe type in the command **help**  and press enter. 
 ```
 These are all the available commands.
@@ -134,17 +146,18 @@ These are all the available commands.
     pottest - test the pot sensor
     colours - step through all the colours
     listeners - list the command listeners
-    clearlisteners - clear the command listeners (also restarts the device)
+    clearlisteners - clear the command listeners 
     restart - restart the device
     otaupdate - update firmware over the air
     clear - clear all seeings and restart the device
 ```
 For full command descriptions consult the device manual.
 
-## Set default connection defaults into code
-If you are happy using the Platform.ini file you can configure it to put connection defaults for WiFi and MQTT connections into your devices when they are built. These will be stored in the device the first time that runs. 
+# Set connection settings the device
+If you are happy editing the Platform.ini file you can configure it to put connection defaults for WiFi and MQTT connections into your devices when they are built. These will be stored in the device so that no further configuration is required when it is deployed.
 
-Set the default values by entering them in the file **defaults.hsec** which is in the **lib\clb\src** folder. There is a sample file there called **defaults.hsec.sample** which you can use to get started. Fill in your details and  rename the file to defaults.hsec before building the solution.
+Set the default values by entering them in the file **defaults.hsec** which is in the **lib\clb\src** folder. There is a sample file there called **defaults.hsec.sample** which you can use to get started. Fill in your details and  rename the file to defaults.hsec before building the solution. Note that there is a gitignore entrey so that files with the languge extension .hsec are not stored on GitHub when the file is stored on a server.
+
 ```
 #define DEFAULT_WIFI1_SSID "Your SSID"
 #define DEFAULT_WIFI1_PWD "Your password"
@@ -152,3 +165,11 @@ Set the default values by entering them in the file **defaults.hsec** which is i
 #define DEFAULT_MQTT_USER "Your MQTT user"
 #define DEFAULT_MQTT_PWD "Your MQTT password"
 ```
+Once you have configured your settings you need to tell Platform IO to use these default values. Open the Platform.ini file and find the settings for the ESP device that you are presently using. At the top of the settings you'll find a **build_flags** entry. Add the entry -DDEFAULTS_ON to this as shown below.
+
+```
+[env:Wemos D1 Mini ESP8266]
+board = d1_mini
+build_flags = -DWEMOSD1MINI -DDEFAULTS_ON 
+```
+Now, when you build the software the settings that you have selected are "baked in" to the program itself. This means that you can just fire up the device and use it without any further  configuration. 

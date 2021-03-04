@@ -269,7 +269,7 @@ struct consoleCommand userCommands[] =
 	{"pottest", "test the pot sensor", doTestPotSensor},
 	{"colours", "step through all the colours", doColourDisplay},
 	{"listeners", "list the command listeners", doDumpListeners},
-	{"clearlisteners", "clear the command listeners (also restarts the device)", doClearListeners},
+	{"clearlisteners", "clear the command listeners", doClearListeners},
 	{"restart", "restart the device", doRestart},
 	{"hullos", "HullOS commands", doHullOS},
 #ifdef OTA_UPDATE_ON
