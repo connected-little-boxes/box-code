@@ -21,25 +21,6 @@ struct PixelSettings pixelSettings;
 Leds *leds;
 Frame *frame;
 
-boolean validateColour(void *dest, const char *newValueStr)
-{
-	int value;
-
-	if (sscanf(newValueStr, "%d", &value) == 1)
-	{
-		*(int *)dest = value;
-		return true;
-	}
-
-	if (value < 0)
-		return false;
-
-	if (value > 255)
-		return false;
-
-	return true;
-}
-
 void setDefaultPixelControlPinNo(void *dest)
 {
 	int *destInt = (int *)dest;
@@ -82,6 +63,44 @@ struct SettingItem pixelNoOfYPixelsSetting = {"Number of Y pixels (0 for pixels 
 											  setDefaultNoOfYPixels,
 											  validateInt};
 
+
+void setDefaultPixelBrightness(void *dest)
+{
+	float *destFloat = (float *)dest;
+	*destFloat = 1;
+}
+
+
+boolean validatePixelBrightness(void *dest, const char *newValueStr)
+{
+    float value;
+
+    if (!validateFloat0to1(&value, newValueStr))
+    {
+        return false;
+    }
+
+    *(float *)dest = value;
+
+    if(frame != NULL)
+	{
+		frame->fadeToBrightness(value, 10);
+	}
+
+    return true;
+}
+
+
+
+struct SettingItem pixelBrightnessSetting = {"Default pixel brightness",
+											  "pixelbrightness",
+											  &pixelSettings.brightness,
+											  NUMBER_INPUT_LENGTH,
+											  floatValue,
+											  setDefaultPixelBrightness,
+											  validatePixelBrightness};
+
+
 void setDefaultPixelConfig(void *dest)
 {
 	int *destConfig = (int *)dest;
@@ -121,6 +140,7 @@ struct SettingItem *pixelSettingItemPointers[] =
 		&pixelNoOfXPixelsSetting,
 		&pixelNoOfYPixelsSetting,
 		&pixelPixelConfig,
+		&pixelBrightnessSetting
 };
 
 struct SettingItemCollection pixelSettingItems = {
@@ -724,7 +744,8 @@ void startPixel()
 	millisOfLastPixelUpdate = millis();
 	pixelProcess.status = PIXEL_OK;
 
-	frame->fadeSpritesToWalkingColours("RGBYMC", 100);
+	frame->fadeSpritesToWalkingColours("RGBYMC", 10);
+	frame->fadeToBrightness(pixelSettings.brightness,10);
 }
 
 void showDeviceStatus();	   // declared in control.h

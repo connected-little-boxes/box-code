@@ -39,6 +39,7 @@ struct PixelSettings
 	int noOfXPixels;
 	int noOfYPixels;
 	int pixelConfig;
+	float brightness;
 };
 
 extern Leds *leds;
@@ -51,8 +52,6 @@ extern int noOfColours;
 extern struct SettingItemCollection pixelSettingItems;
 
 extern struct process pixelProcess;
-
-boolean validateColour(void* dest, const char* newValueStr);
 
 void fadeWalkingColour(Colour newColour, int noOfSteps);
 struct colourNameLookup * findColourByName(const char * name);

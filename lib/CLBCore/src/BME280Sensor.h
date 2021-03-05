@@ -10,8 +10,8 @@
 
 
 //                   543210
-//                       XX    sensor number (0x00-0x03) mask 0000 0011 0x03
-//                  YYYYY      trigger (0x04-0x20) mask 0111 1100 0x3C
+//                      XXX    sensor number (0x00-0x07) mask 0000 0011 0x03
+//                  YYYY       trigger (0x08-0x30) mask 0111 1100 0x3C
 
 #define BME280_SENSOR_MASK 0x07 
 #define BME280_EVENT_MASK 0x78
