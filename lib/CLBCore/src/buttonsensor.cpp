@@ -126,7 +126,7 @@ bool updateButtonSensor()
 
 	while (pos != NULL)
 	{
-		if (pos->config->sendOptionMask & BUTTONSENSOR_SEND_ON_CHANGE)
+		if (pos->config->sendOptionMask == BUTTONSENSOR_SEND_ON_CHANGE)
 		{
 			// send on change - so send for this listener
 			pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
@@ -136,7 +136,7 @@ bool updateButtonSensor()
 			continue;
 		}
 
-		if (pos->config->sendOptionMask & BUTTONSENSOR_BUTTON_PRESSED)
+		if (pos->config->sendOptionMask == BUTTONSENSOR_BUTTON_PRESSED)
 		{
 			// send on pressed - is the button pressed now?
 			if (buttonSensoractiveReading->pressed)
@@ -149,7 +149,7 @@ bool updateButtonSensor()
 			}
 		}
 
-		if (pos->config->sendOptionMask & BUTTONSENSOR_BUTTON_RELEASED)
+		if (pos->config->sendOptionMask == BUTTONSENSOR_BUTTON_RELEASED)
 		{
 			// send on pressed - is the button pressed now?
 			if (!buttonSensoractiveReading->pressed)

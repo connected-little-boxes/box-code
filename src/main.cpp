@@ -125,11 +125,6 @@ void startDevice()
 	Serial.printf("Start complete\n\nType help and press enter for help\n\n");
 }
 
-void setup()
-{
-	startDevice();
-}
-
 uint32_t oldHeap = 0;
 
 #define HEAP_PRINT_INTERVAL 500
@@ -150,9 +145,17 @@ void heapMonitor()
 	}
 }
 
+
+
+
+
+void setup()
+{
+	startDevice();
+}
+
 void loop()
 {
-	// heapMonitor();
 	updateSensors();
 	updateProcesses();
 	delay(1);

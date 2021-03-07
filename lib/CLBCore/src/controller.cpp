@@ -425,7 +425,7 @@ void startSensorListener(struct sensorListenerConfiguration *commandItem)
 
 char command_reply_buffer[COMMAND_REPLY_BUFFER_SIZE];
 
-StaticJsonBuffer<600> jsonBuffer;
+StaticJsonBuffer<1000> jsonBuffer;
 
 void build_command_reply(int errorNo, JsonObject &root, char *resultBuffer)
 {
@@ -582,9 +582,10 @@ void appendCommandDescriptionToJson(Command * command, char * buffer, int buffer
 		}
 		CommandItem * item = command->items[i];
 
-		snprintf(buffer, bufferSize, "%s{\"name\":\"%s\",\"desc\":\"%s\",\"type\":\"",
+		snprintf(buffer, bufferSize, "%s{\"name\":\"%s\",\"optional\":%d,\"desc\":\"%s\",\"type\":\"",
 		buffer,
 		item->name,
+		item->setDefaultValue!=noDefaultAvailable,
 		item->description);
 		appendCommandItemType(item, buffer, bufferSize);
 		snprintf(buffer, bufferSize, "%s\"}", buffer);

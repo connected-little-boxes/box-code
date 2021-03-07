@@ -176,6 +176,41 @@ void doShowRemoteCommands(char * commandLine)
 	iterateThroughAllProcesses(printCommands);
 }
 
+void appendSensorDescriptionToJson(sensor * s, char * buffer, int bufferSize)
+{
+	snprintf(buffer, bufferSize,"%s{\"name\":\"%s\",\"version\":\"%s\",\"triggers\":[",
+		buffer, s->sensorName, Version);
+
+	for(int i=0;i<s->noOfSensorListenerFunctions;i++)
+	{
+		if(i>0){
+			snprintf(buffer, bufferSize,"%s,",buffer);
+		}
+
+		sensorEventBinder * binder = &s->sensorListenerFunctions[i];
+		snprintf(buffer, bufferSize, "%s{\"name\":\"%s\"}",buffer,
+		binder->listenerName);
+	}
+	
+	snprintf(buffer, bufferSize, "%s]}", buffer);
+}
+
+void printSensorTriggers(sensor * s)
+{
+	if(s->noOfSensorListenerFunctions==0)
+		return;
+
+	snprintf(consoleMessageBuffer, CONSOLE_MESSAGE_SIZE, "Sensor: %s\n     ", s->sensorName);
+	appendSensorDescriptionToJson(s, consoleMessageBuffer, CONSOLE_MESSAGE_SIZE);
+	Serial.printf("%s\n", consoleMessageBuffer);
+}
+
+void doShowSensors(char * commandLine)
+{
+	Serial.println();
+	iterateThroughSensors(printSensorTriggers);
+}
+
 void act_onJson_message(const char *json, void (*deliverResult)(char *resultText));
 
 void showRemoteCommandResult(char * resultText)
@@ -260,8 +295,9 @@ struct consoleCommand userCommands[] =
 	{"host", "start the configuration web host", doStartWebServer},
 	{"settings", "show all the setting values", doShowSettings},
 	{"dump", "dump all the setting values", doDumpSettings},
-	{"remote", "show all the remote commands", doShowRemoteCommands},
+	{"commands", "show all the remote commands", doShowRemoteCommands},
 	{"save", "save all the setting values", doSaveSettings},
+	{"sensors","list all the sensor triggers", doShowSensors},
 	{"status", "show the sensor status", doDumpStatus},
 	{"storage", "show the storage use of sensors and processes", doDumpStorage},
 	{"pirtest", "test the PIR sensor", doTestPIRSensor},

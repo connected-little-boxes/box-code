@@ -225,6 +225,12 @@ void restartMQTT()
 	messagesSent = 0;
 	clearIncomingMQTTMessage();
 
+	if (mqttSettings.mqttServer[0]==0)
+	{
+		MQTTProcessDescriptor.status = MQTT_ERROR_NOT_CONFIGURED;
+		return;
+	}
+
 	if (WiFiProcessDescriptor.status != WIFI_OK)
 	{
 		MQTTProcessDescriptor.status = MQTT_ERROR_NO_WIFI;
@@ -376,6 +382,13 @@ void updateMQTT()
 		restartMQTT();
 		break;
 
+	case MQTT_ERROR_NOT_CONFIGURED:
+		if (mqttSettings.mqttServer[0]!=0)
+		{
+			MQTTProcessDescriptor.status = MQTT_STARTING;
+			return;
+		}
+
 	case MQTT_ERROR_NO_WIFI:
 		if (WiFiProcessDescriptor.status == WIFI_OK)
 		{
@@ -418,6 +431,9 @@ void mqttStatusMessage(char *buffer, int bufferLength)
 		break;
 	case MQTT_STARTING:
 		snprintf(buffer, bufferLength, "MQTT Starting");
+		break;
+	case MQTT_ERROR_NOT_CONFIGURED:
+		snprintf(buffer, bufferLength, "MQTT not configured");
 		break;
 	case MQTT_OFF:
 		snprintf(buffer, bufferLength, "MQTT OFF");
