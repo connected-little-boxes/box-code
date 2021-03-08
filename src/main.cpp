@@ -65,11 +65,11 @@ void populateSensorList()
 	addSensorToActiveSensorsList(&bme280Sensor);
 }
 
-void displayControlMessage(int messageNumber, MessageLevel severity, char *messageText)
+void displayControlMessage(int messageNumber, ledFlashBehaviour severity, char *messageText)
 {
 	char buffer[20];
 
-	messageSeverityToString(severity, buffer, 20);
+	ledFlashBehaviourToString(severity, buffer, 20);
 
 	Serial.printf("%s: %d %s\n", buffer, messageNumber, messageText);
 }

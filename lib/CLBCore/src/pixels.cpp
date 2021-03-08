@@ -599,7 +599,8 @@ void setPixel(int no, float r, float g, float b)
 	unsigned char rs = (unsigned char)round(r * 255);
 	unsigned char gs = (unsigned char)round(g * 255);
 	unsigned char bs = (unsigned char)round(b * 255);
-//	Serial.printf("setPixel no:%d raster:%d r:%f g:%f b:%f\n", no, rasterLookup[no], r,g,b);
+	if(rs>255 || gs>255 || bs>255)
+		Serial.printf("setPixel no:%d raster:%d r:%f g:%f b:%f\n", no, rasterLookup[no], r,g,b);
 	strip->setPixelColor(rasterLookup[no], rs, gs, bs);
 }
 

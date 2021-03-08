@@ -263,7 +263,7 @@ void restartMQTT()
 	{
 		Serial.printf("Bad MQTT client state %d\n", mqttPubSubClient->state());
 
-		displayMessage(MQTT_STATUS_BAD_STATE_MESSAGE_NUMBER, messageSeverityAlert, MQTT_STATUS_BAD_STATE_MESSAGE_TEXT);
+		displayMessage(MQTT_STATUS_BAD_STATE_MESSAGE_NUMBER, ledFlashAlertState, MQTT_STATUS_BAD_STATE_MESSAGE_TEXT);
 
 		switch (mqttPubSubClient->state())
 		{
@@ -309,33 +309,44 @@ void restartMQTT()
 	//	return MQTT_ERROR_CONNECT_MESSAGE_FAILED;
 	//}
 
-	displayMessage(MQTT_STATUS_OK_MESSAGE_NUMBER, messageSeverityOk, MQTT_STATUS_OK_MESSAGE_TEXT);
+	displayMessage(MQTT_STATUS_OK_MESSAGE_NUMBER, ledFlashNormalState, MQTT_STATUS_OK_MESSAGE_TEXT);
 
 	MQTTProcessDescriptor.status = MQTT_OK;
 }
 
 int mqttRetries = 0;
 
-boolean publishBufferToMQTTTopic(char *buffer, char *topic)
+int publishBufferToMQTTTopic(char *buffer, char *topic)
 {
 
 	if (MQTTProcessDescriptor.status == MQTT_OK)
 	{
 		messagesSent++;
-		Serial.printf("Publishing %s to %s\n", buffer, topic);
+		Serial.printf("Publishing %s to %s", buffer, topic);
 		boolean result = mqttPubSubClient->publish(topic, buffer);
 
-		displayMessage(MQTT_STATUS_TRANSMIT_OK_MESSAGE_NUMBER, messageSeverityOk, MQTT_STATUS_TRANSMIT_OK_MESSAGE_TEXT);
-
-		return result;
+		if(result)
+		{
+			Serial.println();
+			displayMessage(MQTT_STATUS_TRANSMIT_OK_MESSAGE_NUMBER, ledFlashNormalState, MQTT_STATUS_TRANSMIT_OK_MESSAGE_TEXT);
+			return MQTT_STATUS_TRANSMIT_OK_MESSAGE_NUMBER;
+		}
+		else
+		{
+			Serial.println(" - Failed");
+			displayMessage(MQTT_STATUS_PUBLISH_FAILED_MESSAGE_NUMBER, ledFlashAlertState, MQTT_STATUS_PUBLISH_FAILED_MESSAGE_TEXT);
+			return MQTT_STATUS_PUBLISH_FAILED_MESSAGE_NUMBER;
+		}
 	}
 
 	Serial.println("Not publishing message");
 
-	return false;
+	displayMessage(MQTT_STATUS_MESSAGE_CANT_SEND_MESSAGE_NUMBER, ledFlashAlertState, MQTT_STATUS_MESSAGE_CANT_SEND_MESSAGE_TEXT);
+
+	return MQTT_STATUS_MESSAGE_CANT_SEND_MESSAGE_NUMBER;
 }
 
-boolean publishBufferToMQTT(char *buffer)
+int publishBufferToMQTT(char *buffer)
 {
 	return publishBufferToMQTTTopic(buffer, mqttSettings.mqttPublishTopic);
 }

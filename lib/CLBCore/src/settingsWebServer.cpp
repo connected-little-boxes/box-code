@@ -56,21 +56,20 @@ void addItem(SettingItemCollection * settings)
 extern struct SettingItem wifi1SSIDSetting;
 extern struct SettingItem wifi1PWDSetting;
 extern struct SettingItem mqttServerSetting;
-extern struct SettingItem mqttPortSetting;
-extern struct SettingItem mqttSecureSocketsSetting;
 extern struct SettingItem mqttUserSetting;
 extern struct SettingItem mqttPasswordSetting;
-
+extern struct SettingItem mqttPublishTopicSetting;
+extern struct SettingItem mqttSubscribeTopicSetting;
 
 struct SettingItem * quickSettingPointers[] = {
 
 		&wifi1SSIDSetting,
 		&wifi1PWDSetting,
 		&mqttServerSetting,
-		&mqttPortSetting,
-		&mqttSecureSocketsSetting,
 		&mqttUserSetting,
-		&mqttPasswordSetting
+		&mqttPasswordSetting,
+		&mqttPublishTopicSetting,
+		&mqttSubscribeTopicSetting
 };
 
 struct SettingItemCollection QuickSettingItems = {

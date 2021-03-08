@@ -45,6 +45,10 @@
 #define WIFI_STATUS_CONNECT_ABANDONED_MESSAGE_NUMBER 14
 #define WIFI_STATUS_CONNECT_ABANDONED_MESSAGE_TEXT "Wifi connection abandoned"
 
+#define WIFI_STATUS_HOSTING_AP_MESSAGE_NUMBER 15
+#define WIFI_STATUS_HOSTING_AP_MESSAGE_TEXT "Wifi hosting access point"
+
+
 struct WifiConnectionSettings
 {
 	boolean wiFiOn;

@@ -1056,20 +1056,6 @@ void showLocalPublishCommandResult(char *resultText)
 	Serial.println(resultText);
 }
 
-bool publishCommand(char *buffer, char *destination)
-{
-	if (*destination == 0)
-	{
-		// empty destination string - perform the command locally
-		act_onJson_message(buffer, showLocalPublishCommandResult);
-		return true;
-	}
-	else
-	{
-		return publishBufferToMQTTTopic(buffer, destination);
-	}
-}
-
 void initcontroller()
 {
 	controllerProcess.status = CONTROLLER_STOPPED;

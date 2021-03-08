@@ -48,6 +48,8 @@ void Frame::dump()
 {
 
 	Serial.println("\nFrame");
+	Serial.printf("Width:%d Height:%d brightness:%f brightness change:%f brightnessSteps:%d\n",
+	width, height, brightness, brightnessStep, noOfBrightnessSteps);
 
 	leds->dump();
 
@@ -257,6 +259,7 @@ void Frame::fadeSpritesToWalkingColours(char *colours, int steps)
 	{
 		Sprite *s = sprites[i];
 		s->moveToPosition(x + 0.5, y + 0.5, steps, Sprite::SPRITE_WRAP);
+
 		if(random(0,2)==1)
 			s->xSpeed = speed;
 		else
@@ -268,6 +271,7 @@ void Frame::fadeSpritesToWalkingColours(char *colours, int steps)
 			s->ySpeed = -speed;
 		speed = speed + speedStep;
 		s->enabled = true;
+		
 		s->fadeToBrightness(1,steps);
 		s->opacity = 1;
 

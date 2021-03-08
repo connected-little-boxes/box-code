@@ -30,18 +30,22 @@
 #define MQTT_NO_OF_RETRIES 3
 
 #define MQTT_STATUS_OK_MESSAGE_NUMBER 2
-#define MQTT_STATUS_OK_MESSAGE_TEXT "Mqtt OK"
+#define MQTT_STATUS_OK_MESSAGE_TEXT "MQTT OK"
 
 #define MQTT_STATUS_TRANSMIT_OK_MESSAGE_NUMBER 21
-#define MQTT_STATUS_TRANSMIT_OK_MESSAGE_TEXT "Mqtt transmit OK"
+#define MQTT_STATUS_TRANSMIT_OK_MESSAGE_TEXT "MQTT transmit OK"
 
 #define MQTT_STATUS_TRANSMIT_TIMOUT_MESSAGE_NUMBER 22
-#define MQTT_STATUS_TRANSMIT_TIMEOUT_MESSAGE_TEXT "Mqtt transmit timeout"
+#define MQTT_STATUS_TRANSMIT_TIMEOUT_MESSAGE_TEXT "MQTT transmit timeout"
 
 #define MQTT_STATUS_BAD_STATE_MESSAGE_NUMBER 23
-#define MQTT_STATUS_BAD_STATE_MESSAGE_TEXT "Mqtt bad state"
+#define MQTT_STATUS_BAD_STATE_MESSAGE_TEXT "MQTT bad state"
 
+#define MQTT_STATUS_MESSAGE_CANT_SEND_MESSAGE_NUMBER 24
+#define MQTT_STATUS_MESSAGE_CANT_SEND_MESSAGE_TEXT "MQTT not in a state to send"
 
+#define MQTT_STATUS_PUBLISH_FAILED_MESSAGE_NUMBER 25
+#define MQTT_STATUS_PUBLISH_FAILED_MESSAGE_TEXT "MQTT publish failed"
 
 #define MQTT_BUFFER_SIZE_MAX 1000
 
@@ -66,8 +70,8 @@ extern struct MqttSettings mqttSettings;
 
 extern struct SettingItemCollection mqttSettingItems;
 
-boolean publishBufferToMQTT(char * buffer);
-boolean publishBufferToMQTTTopic(char *buffer, char * topic);
+int publishBufferToMQTT(char * buffer);
+int publishBufferToMQTTTopic(char *buffer, char * topic);
 
 boolean validateMQTTtopic(void *dest, const char *newValueStr);
 

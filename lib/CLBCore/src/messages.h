@@ -7,15 +7,14 @@ struct MessagesSettings {
 	bool messagesEnabled;
 };
 
-enum MessageLevel { messageSeverityStarting, messageSeverityOk, 
-	messageSeverityWarning, messageSeverityAlert};
+enum ledFlashBehaviour { ledFlashOn, ledFlashNormalState, 
+	ledFlashConfigState, ledFlashAlertState};
 
-void displayMessage(int messageNumber, MessageLevel severity, char * messageText);
+void displayMessage(int messageNumber, ledFlashBehaviour flashBehaviour, char * messageText);
 
-void messageSeverityToString(MessageLevel severity, char * dest, int length);
-int messageSeverityToFlashLengthMillis(MessageLevel severity);
+void ledFlashBehaviourToString(ledFlashBehaviour severity, char * dest, int length);
 
-bool bindMessageHandler(void(*newHandler)(int messageNumber, MessageLevel severity, char* messageText));
+bool bindMessageHandler(void(*newHandler)(int messageNumber, ledFlashBehaviour severity, char* messageText));
 
 void messagesOff();
 

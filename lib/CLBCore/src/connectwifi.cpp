@@ -178,6 +178,13 @@ void handleConnectFailure()
 	}
 }
 
+void handleFailedWiFiScan()
+{
+	TRACELN("No networks found that match stored network names");
+	displayMessage(WIFI_STATUS_NO_MATCHING_NETWORKS_MESSAGE_NUMBER, ledFlashAlertState, WIFI_STATUS_NO_MATCHING_NETWORKS_MESSAGE_TEXT);
+	startReconnectTimer();
+}
+
 void checkWiFiScanResult()
 {
 	int noOfNetworks = WiFi.scanComplete();
@@ -217,9 +224,7 @@ void checkWiFiScanResult()
 
 	// if we get here we didn't find a matching network
 
-	TRACELN("No networks found that match stored network names");
-	displayMessage(WIFI_STATUS_NO_MATCHING_NETWORKS_MESSAGE_NUMBER, messageSeverityAlert, WIFI_STATUS_NO_MATCHING_NETWORKS_MESSAGE_TEXT);
-	WiFiProcessDescriptor.status = WIFI_RECONNECT_TIMER;
+	handleFailedWiFiScan();
 }
 
 void checkWiFiConnectResult()
@@ -245,7 +250,7 @@ void checkWiFiConnectResult()
 		WiFiProcessDescriptor.status = WIFI_OK;
 		char messageBuffer[WIFI_MESSAGE_BUFFER_SIZE];
 		snprintf(messageBuffer, WIFI_MESSAGE_BUFFER_SIZE, "%s %s", WIFI_STATUS_OK_MESSAGE_TEXT, WiFi.localIP().toString().c_str());
-		displayMessage(WIFI_STATUS_OK_MESSAGE_NUMBER, messageSeverityOk, messageBuffer);
+		displayMessage(WIFI_STATUS_OK_MESSAGE_NUMBER, ledFlashNormalState, messageBuffer);
 		wifiConnectAttempts = 0;
 		WiFiProcessDescriptor.status = WIFI_OK;
 		return;
@@ -253,8 +258,8 @@ void checkWiFiConnectResult()
 
 	TRACE("Fail status:");
 	TRACE_HEXLN(wifiError);
-	WiFiProcessDescriptor.status = WIFI_RECONNECT_TIMER;
-	displayMessage(WIFI_STATUS_CONNECT_FAILED_MESSAGE_NUMBER, messageSeverityAlert, WIFI_STATUS_CONNECT_FAILED_MESSAGE_TEXT);
+	displayMessage(WIFI_STATUS_CONNECT_FAILED_MESSAGE_NUMBER, ledFlashAlertState, WIFI_STATUS_CONNECT_FAILED_MESSAGE_TEXT);
+	startReconnectTimer();
 }
 
 void displayWiFiStatus(int status)
@@ -313,6 +318,7 @@ void startWiFiConfigAP()
 {
 	Serial.printf("Starting config access point at %s: ", CONFIG_ACCESS_POINT_SSID);
 
+
 	WiFi.mode(WIFI_AP);
 
 	delay(100);
@@ -328,6 +334,7 @@ void startWiFiConfigWebsite()
 {
 	if (startHostingConfigWebsite())
 	{
+		displayMessage(WIFI_STATUS_HOSTING_AP_MESSAGE_NUMBER, ledFlashConfigState, WIFI_STATUS_HOSTING_AP_MESSAGE_TEXT);
 		Serial.printf("   Hosting at 192.168.4.1 on %s\n", CONFIG_ACCESS_POINT_SSID);
 		WiFiProcessDescriptor.status = WIFI_CONFIG_HOSTING_WEBSITE;
 	}

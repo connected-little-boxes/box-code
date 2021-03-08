@@ -51,7 +51,6 @@ struct CommandItemCollection
 };
 
 void act_onJson_message(const char *json, void (*deliverResult)(char *resultText));
-bool publishCommand(char *buffer, char * destination);
 
 bool setDefaultEmptyString(void * dest);
 bool noDefaultAvailable(void * dest);

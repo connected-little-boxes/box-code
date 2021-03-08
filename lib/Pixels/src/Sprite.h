@@ -165,10 +165,10 @@ public:
             return;            
         }
 
-        Serial.printf("r:%f g:%f b:%f bright:%f opacity:%f x:%f y:%f ",
+        Serial.printf("r:%f g:%f b:%f bright:%f opacity:%f x:%f y:%f moveSteps:%d colourSteps:%d ",
             colour.Red, colour.Green, colour.Blue,
             brightness, opacity,
-            x, y);
+            x, y, moveSteps, colourSteps);
 
         switch(movingState)
         {

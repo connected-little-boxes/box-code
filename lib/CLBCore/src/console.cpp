@@ -288,6 +288,10 @@ void doHullOS(char * commandLine)
 	performCommand(hullosCommand, HullOSCommands, sizeof(HullOSCommands) / sizeof(struct consoleCommand));
 }
 
+void doDumpSprites(char * commandLine)
+{
+	frame->dump();
+}
 
 struct consoleCommand userCommands[] =
 {
@@ -308,6 +312,7 @@ struct consoleCommand userCommands[] =
 	{"clearlisteners", "clear the command listeners", doClearListeners},
 	{"restart", "restart the device", doRestart},
 	{"hullos", "HullOS commands", doHullOS},
+	{"sprites", "dump sprite data", doDumpSprites},
 #ifdef OTA_UPDATE_ON
 	{"otaupdate", "start an over-the-air firmware update", doOTAUpdate},
 #endif

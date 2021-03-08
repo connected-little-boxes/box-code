@@ -161,16 +161,38 @@ void setFlashLength(int flashLength)
     statusLedOn();
 }
 
-void displayMessageOnStatusLed(int messageNumber, MessageLevel severity, char *messageText)
+void displayMessageOnStatusLed(int messageNumber, ledFlashBehaviour severity, char *messageText)
 {
-    int length = messageSeverityToFlashLengthMillis(severity);
+    int length;
+
+    switch(severity)
+    {
+        case ledFlashOn:
+        length = 5000;
+        break;
+
+        case ledFlashNormalState:
+        length = 1000;
+        break;
+
+        case ledFlashConfigState:
+        length = 500;
+        break;
+
+        case ledFlashAlertState:
+        length = 100;
+        break;
+
+        default:
+        length = 100;
+        break;
+    }
+
     setFlashLength(length);
 }
 
 void initStatusLed()
 {
-
-
     // When the device starts we light the status led while
     // everything initializes
     if (statusLedSettings.statusLedEnabled)

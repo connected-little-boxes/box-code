@@ -40,11 +40,11 @@ void messagesOn()
 
 // enought room for four message handlers
 
-void (*messageHandlerList[])(int messageNumber, MessageLevel severity, char* messageText) = { NULL,NULL,NULL,NULL };
+void (*messageHandlerList[])(int messageNumber, ledFlashBehaviour severity, char* messageText) = { NULL,NULL,NULL,NULL };
 
 int noOfMessageHandlers = sizeof(messageHandlerList) / sizeof(int(*)(int,char*));
 
-bool bindMessageHandler(void(*newHandler)(int messageNumber, MessageLevel severity, char* messageText))
+bool bindMessageHandler(void(*newHandler)(int messageNumber, ledFlashBehaviour severity, char* messageText))
 {
     for(int i=0;i< noOfMessageHandlers;i++)
         if (messageHandlerList[i] == NULL)
@@ -55,23 +55,23 @@ bool bindMessageHandler(void(*newHandler)(int messageNumber, MessageLevel severi
     return false;
 }
 
-void messageSeverityToString(MessageLevel severity, char * dest, int length)
+void ledFlashBehaviourToString(ledFlashBehaviour severity, char * dest, int length)
 {
     switch(severity)
     {
-        case messageSeverityStarting:
+        case ledFlashOn:
         snprintf(dest,length,"Starting");
         break;
 
-        case messageSeverityOk:
+        case ledFlashNormalState:
         snprintf(dest,length,"OK");
         break;
 
-        case messageSeverityWarning:
-        snprintf(dest,length,"Warning");
+        case ledFlashConfigState:
+        snprintf(dest,length,"Config");
         break;
 
-        case messageSeverityAlert:
+        case ledFlashAlertState:
         snprintf(dest,length,"Alert");
         break;
 
@@ -81,36 +81,7 @@ void messageSeverityToString(MessageLevel severity, char * dest, int length)
     }
 }
 
-int messageSeverityToFlashLengthMillis(MessageLevel severity)
-{
-    int result;
-
-    switch(severity)
-    {
-        case messageSeverityStarting:
-        result = 2000;
-        break;
-
-        case messageSeverityOk:
-        result = 1000;
-        break;
-
-        case messageSeverityWarning:
-        result = 500;
-        break;
-
-        case messageSeverityAlert:
-        result = 100;
-        break;
-
-        default:
-        result = 100;
-        break;
-    }
-    return result;
-}
-
-void displayMessage(int messageNumber, MessageLevel severity, char* messageText)
+void displayMessage(int messageNumber, ledFlashBehaviour severity, char* messageText)
 {
     for (int i = 0; i < noOfMessageHandlers; i++)
     {
