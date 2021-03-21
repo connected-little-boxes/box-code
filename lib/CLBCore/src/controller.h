@@ -69,5 +69,6 @@ void createJSONfromSettings(char * processName, struct Command * command,  char 
 void dumpCommand(const char * processName,const char * commandName, unsigned char * commandParameterBuffer);
 
 void appendCommandDescriptionToJson(Command * command, char * buffer, int bufferSize);
+void appendCommandDescriptionToText(Command * command, char * buffer, int bufferSize);
 void appendCommandItemType(CommandItem * item, char * buffer, int bufferSize);
 void clearAllListeners();

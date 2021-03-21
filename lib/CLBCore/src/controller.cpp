@@ -594,6 +594,45 @@ void appendCommandDescriptionToJson(Command * command, char * buffer, int buffer
 	snprintf(buffer, bufferSize, "%s]}", buffer);
 }
 
+void appendCommandDescriptionToText(Command * command, char * buffer, int bufferSize)
+{
+	snprintf(buffer, bufferSize,"%s    %s - %s\n",
+		buffer, command->name, command->description);
+
+	for(int i=0;i<command->noOfItems;i++)
+	{
+		CommandItem * item = command->items[i];
+		snprintf(buffer, bufferSize, "%s        %s - %s : ",buffer, item->name,item->description);
+		appendCommandItemType(item, buffer, bufferSize);
+		if(item->setDefaultValue!=noDefaultAvailable)
+		{
+			snprintf(buffer, bufferSize, "%s (optional)",
+			buffer);
+		}
+		snprintf(buffer, bufferSize, "%s\n", buffer);
+		continue;
+		
+		if(item->setDefaultValue==noDefaultAvailable)
+		{
+			snprintf(buffer, bufferSize, "      %s%s  - %s:",
+			buffer,
+			item->name,
+			item->description);
+		}
+		else
+		{
+			snprintf(buffer, bufferSize, "     %s%s* - %s:",
+			buffer,
+			item->name,
+			item->description);
+		}
+		appendCommandItemType(item, buffer, bufferSize);
+		snprintf(buffer, bufferSize, "%s", buffer);
+	}
+}
+
+
+
 void dumpCommand(const char *processName, const char *commandName, unsigned char *commandParameterBuffer)
 {
 	Command *command = FindCommandByName(processName, commandName);

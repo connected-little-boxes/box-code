@@ -146,7 +146,7 @@ void doDumpListeners(char * commandline)
 	printControllerListeners();
 }
 
-void printCommands(process *p) {
+void printCommandsJson(process *p) {
 
 	if(p->commands == NULL)
 	{
@@ -170,10 +170,40 @@ void printCommands(process *p) {
 	}
 }
 
-void doShowRemoteCommands(char * commandLine)
+void doShowRemoteCommandsJson(char * commandLine)
 {
 	Serial.println();
-	iterateThroughAllProcesses(printCommands);
+	iterateThroughAllProcesses(printCommandsJson);
+}
+
+void printCommandsText(process *p) {
+
+	if(p->commands == NULL)
+	{
+		return;
+	}
+
+	struct CommandItemCollection * c = p->commands;
+	
+	if(c->noOfCommands>0){
+		// have got some commands in the collection
+
+		Serial.printf("Process:%s commands:%s\n", p->processName, c->description);
+		
+		for(int i=0;i<c->noOfCommands;i++)
+		{
+			Command * com = c->commands[i];
+			consoleMessageBuffer[0]=0;
+			appendCommandDescriptionToText(com, consoleMessageBuffer, CONSOLE_MESSAGE_SIZE);
+			Serial.println(consoleMessageBuffer);
+		}
+	}
+}
+
+void doShowRemoteCommandsText(char * commandLine)
+{
+	Serial.println();
+	iterateThroughAllProcesses(printCommandsText);
 }
 
 void appendSensorDescriptionToJson(sensor * s, char * buffer, int bufferSize)
@@ -299,7 +329,8 @@ struct consoleCommand userCommands[] =
 	{"host", "start the configuration web host", doStartWebServer},
 	{"settings", "show all the setting values", doShowSettings},
 	{"dump", "dump all the setting values", doDumpSettings},
-	{"commands", "show all the remote commands", doShowRemoteCommands},
+	{"commands", "show all the remote commands", doShowRemoteCommandsText},
+	{"commandsjson", "show all the remote commands in json", doShowRemoteCommandsJson},
 	{"save", "save all the setting values", doSaveSettings},
 	{"sensors","list all the sensor triggers", doShowSensors},
 	{"status", "show the sensor status", doDumpStatus},
