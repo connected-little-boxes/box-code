@@ -627,7 +627,7 @@ void DumpSettingCollection(SettingItemCollection *settingCollection)
 	}
 }
 
-void maxDumpSettingCollectionFiltered(SettingItemCollection *settingCollection)
+void DumpSettingCollectionFiltered(SettingItemCollection *settingCollection)
 {
 	bool gotSetting = false;
 

@@ -146,7 +146,7 @@ struct CommandItem printerPostText = {
 struct CommandItem *PrintTextCommandItems[] =
     {
         &PrinterMessageText,
-        &PrinterCommandOptionName,
+//        &PrinterCommandOptionName, no options for print at the moment
         &printerPreText,
         &printerPostText};
 
