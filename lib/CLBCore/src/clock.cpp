@@ -222,8 +222,7 @@ struct SettingItem *clockSettingItemPointers[] =
 		&interval1SingleShot,
 		&interval2,
 		&interval2Enabled,
-		&interval2SingleShot
-};
+		&interval2SingleShot};
 
 struct SettingItemCollection clockSensorSettingItems = {
 	"clock",
@@ -324,27 +323,27 @@ void initialiseAlarm(clockAlarmDescriptor *alarmDesc, struct clockReading *readi
 
 void initialiseTimer(clockTimerDescriptor *timerDesc, struct clockReading *reading)
 {
-	ClockTimer * timer = timerDesc->timer;
+	ClockTimer *timer = timerDesc->timer;
 
 	timer->prevEnabled = timer->enabled;
 
-	if(timer->enabled)
+	if (timer->enabled)
 	{
 		// need to set the time for the timer to fire to the time in the future
 		int min, hour;
 		min = reading->minute + timer->interval;
 		hour = reading->hour;
-		while(min >= 60)
+		while (min >= 60)
 		{
 			min = min - 60;
 			hour = hour + 1;
-			if(hour==24)
+			if (hour == 24)
 			{
-				hour=0;
+				hour = 0;
 			}
 		}
-		timer->nextMinute= min; 
-		timer->nextHour=hour;
+		timer->nextMinute = min;
+		timer->nextHour = hour;
 		timer->triggered = false;
 	}
 }
@@ -371,14 +370,15 @@ void checkAlarm(clockAlarmDescriptor *alarmDesc, struct clockReading *reading)
 
 	if (atAlarmTime(alarmDesc->alarm, reading))
 	{
-		if(alarmDetails->triggered)
+		if (alarmDetails->triggered)
 		{
 			return;
 		}
 		alarmDetails->triggered = true;
 		fireSensorListenersOnTrigger(&clockSensor, alarmDesc->alarmMask);
 	}
-	else {
+	else
+	{
 		alarmDetails->triggered = false;
 	}
 }
@@ -391,14 +391,14 @@ void checkAlarms(struct clockReading *reading)
 	}
 }
 
-bool timerExpired(struct ClockTimer * timer, struct clockReading * reading)
+bool timerExpired(struct ClockTimer *timer, struct clockReading *reading)
 {
-	if(timer->nextMinute != reading->minute)
+	if (timer->nextMinute != reading->minute)
 	{
 		return false;
 	}
 
-	if(timer->nextHour != reading->hour)
+	if (timer->nextHour != reading->hour)
 	{
 		return false;
 	}
@@ -408,21 +408,21 @@ bool timerExpired(struct ClockTimer * timer, struct clockReading * reading)
 
 void checkTimer(clockTimerDescriptor *timerDesc, struct clockReading *reading)
 {
-	struct ClockTimer * timer = timerDesc->timer;
+	struct ClockTimer *timer = timerDesc->timer;
 
-	if(timer->prevEnabled != timer->enabled)
+	if (timer->prevEnabled != timer->enabled)
 	{
 		// timer has changed state - may need to initalise it
-		if(timer->enabled)
+		if (timer->enabled)
 		{
-			initialiseTimer(timerDesc, reading);			
+			initialiseTimer(timerDesc, reading);
 		}
 		timer->prevEnabled = timer->enabled;
 	}
 
-	if(timerExpired(timer, reading))
+	if (timerExpired(timer, reading))
 	{
-		if(timer->triggered)
+		if (timer->triggered)
 		{
 			return;
 		}
@@ -431,11 +431,12 @@ void checkTimer(clockTimerDescriptor *timerDesc, struct clockReading *reading)
 
 		fireSensorListenersOnTrigger(&clockSensor, timerDesc->timerMask);
 
-		if(timer->singleShot)
+		if (timer->singleShot)
 		{
 			timer->enabled = false;
 		}
-		else {
+		else
+		{
 			initialiseTimer(timerDesc, reading);
 		}
 	}
@@ -457,12 +458,13 @@ void checkTimers(struct clockReading *reading)
 
 void checkClock(struct clockReading *reading)
 {
-	static int lastClockSecond =-1;
+	static int lastClockSecond = -1;
 	static int lastClockMinute = -1;
 	static int lastClockHour = -1;
 	static int lastClockDay = -1;
 
-	if(lastClockSecond == reading->second){
+	if (lastClockSecond == reading->second)
+	{
 		return;
 	}
 
@@ -472,23 +474,24 @@ void checkClock(struct clockReading *reading)
 
 	while (pos != NULL)
 	{
-		char * messageBuffer = (char *) pos->config->optionBuffer + MESSAGE_START_POSITION;
+		char *messageBuffer = (char *)pos->config->optionBuffer + MESSAGE_START_POSITION;
 
 		if (pos->config->sendOptionMask == CLOCK_SECOND_TICK)
 		{
 			TRACELN("Second Tick");
 			snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%02d:%02d:%02d",
-			reading->hour,
-			reading->minute,
-			reading->second);
+					 reading->hour,
+					 reading->minute,
+					 reading->second);
 			pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
 		}
 
-		if (pos->config->sendOptionMask ==CLOCK_MINUTE_TICK)
+		if (pos->config->sendOptionMask == CLOCK_MINUTE_TICK)
 		{
-			if(lastClockMinute != reading->minute){
+			if (lastClockMinute != reading->minute)
+			{
 				TRACELN("Minute Tick");
-				snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%02d:%02d",reading->hour,reading->minute);
+				snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%02d:%02d", reading->hour, reading->minute);
 				pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
 				lastClockMinute = reading->minute;
 			}
@@ -496,9 +499,10 @@ void checkClock(struct clockReading *reading)
 
 		if (pos->config->sendOptionMask == CLOCK_HOUR_TICK)
 		{
-			if(lastClockHour != reading->hour){
+			if (lastClockHour != reading->hour)
+			{
 				TRACELN("Hour Tick");
-				snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%02d:%02d",reading->hour,reading->minute);
+				snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%02d:%02d", reading->hour, reading->minute);
 				pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
 				lastClockHour = reading->hour;
 			}
@@ -506,9 +510,10 @@ void checkClock(struct clockReading *reading)
 
 		if (pos->config->sendOptionMask == CLOCK_DAY_TICK)
 		{
-			if(lastClockDay != reading->day){
+			if (lastClockDay != reading->day)
+			{
 				TRACELN("Day Tick");
-				snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%02d:%02d:%02d",reading->day,reading->month,reading->year);
+				snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%02d:%02d:%02d", reading->day, reading->month, reading->year);
 				pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
 				lastClockDay = reading->day;
 			}
@@ -526,9 +531,8 @@ struct sensorEventBinder ClockSensorListenerFunctions[] = {
 	{"timer2", TIMER2_TRIGGER},
 	{"second", CLOCK_SECOND_TICK},
 	{"minute", CLOCK_MINUTE_TICK},
-	{"hour",   CLOCK_HOUR_TICK},
-	{"day",    CLOCK_DAY_TICK}
-	};
+	{"hour", CLOCK_HOUR_TICK},
+	{"day", CLOCK_DAY_TICK}};
 
 Timezone homeTimezone;
 
@@ -686,6 +690,28 @@ void addClockSensorReading(char *jsonBuffer, int jsonBufferSize)
 				 jsonBuffer,
 				 UTC.dateTime(RFC3339).c_str());
 	}
+}
+
+bool getDateAndTime(char *buffer, int bufferLength)
+{
+	if (clockSensor.status == SENSOR_OK)
+	{
+		Serial.println("Got the data and time");
+		struct clockReading *clockActiveReading;
+		clockActiveReading =
+			(struct clockReading *)clockSensor.activeReading;
+
+		snprintf(buffer, bufferLength, "%s %s %d %d %02d:%02d:%02d ",
+				 dayNames[clockActiveReading->dayOfWeek],
+				 monthNames[clockActiveReading->month],
+				 clockActiveReading->day,
+				 clockActiveReading->year,
+				 clockActiveReading->hour,
+				 clockActiveReading->minute,
+				 clockActiveReading->second);
+		return true;
+	}
+	return false;
 }
 
 void clockSensorStatusMessage(char *buffer, int bufferLength)

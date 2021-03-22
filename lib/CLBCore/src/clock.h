@@ -80,3 +80,5 @@ extern char * dayNames[] ;
 extern char * monthNames[] ;
 
 extern struct sensor clockSensor;
+
+bool getDateAndTime(char * buffer, int bufferLength);

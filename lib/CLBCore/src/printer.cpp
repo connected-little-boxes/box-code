@@ -6,6 +6,7 @@
 #include "processes.h"
 #include "mqtt.h"
 #include "errors.h"
+#include "clock.h"
 
 struct PrinterSettings printerSettings;
 
@@ -75,12 +76,30 @@ void printerMessagesOn()
     saveSettings();
 }
 
-void printMessage(char *messageText, const char *option)
+void printMessage(char *messageText, char *option)
 {
+    TRACE("Printing message:");
+    TRACE(messageText);
+    TRACE(" with option ");
+    TRACELN(option);
+
     if (option != NULL)
     {
-        if (strcasecmp(option, "sameline") == 0)
+        TRACELN("  Got options");
+
+        if (strContains(option, "datestamp"))
         {
+            TRACELN("    Got datestamp");
+            if(getDateAndTime(PRINTERMessageBuffer,PRINTERMESSAGE_LENGTH ))
+            {
+                TRACELN("      printing datestamp");
+                Serial1.println(PRINTERMessageBuffer);
+            }
+        }
+
+        if (strContains(option, "sameline"))
+        {
+            TRACELN("    Got sameline");
             snprintf(PRINTERMessageBuffer, PRINTERMESSAGE_LENGTH, messageText);
         }
         else
@@ -91,6 +110,7 @@ void printMessage(char *messageText, const char *option)
     else {
         snprintf(PRINTERMessageBuffer, PRINTERMESSAGE_LENGTH, "%s\n", messageText);
     }
+    TRACELN("Print complete");
     Serial1.print(PRINTERMessageBuffer);
 }
 
@@ -112,7 +132,7 @@ boolean validatePRINTERMessageString(void *dest, const char *newValueStr)
 
 struct CommandItem PrinterCommandOptionName = {
     "option",
-    "printer message option",
+    "printer option(sameline,datestamp)",
     PRINTER_OPTION_OFFSET,
     textCommand,
     validatePrinterOptionString,
@@ -146,7 +166,7 @@ struct CommandItem printerPostText = {
 struct CommandItem *PrintTextCommandItems[] =
     {
         &PrinterMessageText,
-//        &PrinterCommandOptionName, no options for print at the moment
+        &PrinterCommandOptionName,
         &printerPreText,
         &printerPostText};
 
@@ -179,12 +199,12 @@ int doPrintText(char *destination, unsigned char *settingBase)
     char *message = (char *)(settingBase + PRINTER_MESSAGE_OFFSET);
     char *post = (char *)(settingBase +PRINTER_POST_TEXT_OFFSET);
     char *pre = (char *)(settingBase + PRINTER_PRE_TEXT_OFFSET);
-    const char *options = (const char *)(settingBase + PRINTER_OPTION_OFFSET);
-
+    char *options = (char *)(settingBase + PRINTER_OPTION_OFFSET);
     char buffer[MAX_MESSAGE_LENGTH];
 
     snprintf(buffer, MAX_MESSAGE_LENGTH, "%s%s%s", pre, message, post);
     printMessage(buffer, options);
+
     TRACE("Printing: ");
     TRACELN(buffer);
 
