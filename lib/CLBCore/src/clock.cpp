@@ -476,8 +476,7 @@ void checkClock(struct clockReading *reading)
 
 		if (pos->config->sendOptionMask == CLOCK_SECOND_TICK)
 		{
-			//TRACELN("Second Tick");
-			Serial.println("second tick");
+			TRACELN("Second Tick");
 			snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%02d:%02d:%02d",
 			reading->hour,
 			reading->minute,

@@ -10,7 +10,7 @@
 
 #define PIXEL_OK 100
 #define PIXEL_OFF 101
-#define PIXEL_ERROR_NO_PIXELS 102
+#define PIXEL_NO_PIXELS 102
 
 #include <Adafruit_NeoPixel.h>
 

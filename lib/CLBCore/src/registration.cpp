@@ -24,6 +24,7 @@ struct SettingItemCollection registrationSettingItems = {
 	"Serial console configuration",
 	RegistrationSettingItemPointers,
 	sizeof(RegistrationSettingItemPointers) / sizeof(struct SettingItem *)};
+
 struct RegistrationCommand
 {
 	char *name;
@@ -241,6 +242,8 @@ int doRemoteRegistrationCommand(char *destination, unsigned char *settingBase)
 		createJSONfromSettings("registration", &performRegistrationCommnad, destination, settingBase, buffer, JSON_BUFFER_SIZE);
 		return publishBufferToMQTTTopic(buffer, destination);
 	}
+
+	Serial.println("\nPerforming remote registration\n");
 
 	saveSettings();
 	return WORKED_OK;

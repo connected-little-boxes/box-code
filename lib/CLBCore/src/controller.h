@@ -1,6 +1,5 @@
 #pragma once
 
-
 #define CONTROLLER_OK 800
 #define CONTROLLER_STOPPED 801
 
@@ -72,3 +71,4 @@ void appendCommandDescriptionToJson(Command * command, char * buffer, int buffer
 void appendCommandDescriptionToText(Command * command, char * buffer, int bufferSize);
 void appendCommandItemType(CommandItem * item, char * buffer, int bufferSize);
 void clearAllListeners();
+bool clearSensorNameListeners(char * sensorName);

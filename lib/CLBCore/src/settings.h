@@ -17,7 +17,7 @@
 #endif
 
 #include "utils.h"
-#define Version "1.0.0.11"
+#define Version "1.0.0.20"
 
 // Sensor settings
 #define UNKNOWN_SENSOR 0

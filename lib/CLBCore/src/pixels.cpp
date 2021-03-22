@@ -63,43 +63,38 @@ struct SettingItem pixelNoOfYPixelsSetting = {"Number of Y pixels (0 for pixels 
 											  setDefaultNoOfYPixels,
 											  validateInt};
 
-
 void setDefaultPixelBrightness(void *dest)
 {
 	float *destFloat = (float *)dest;
 	*destFloat = 1;
 }
 
-
 boolean validatePixelBrightness(void *dest, const char *newValueStr)
 {
-    float value;
+	float value;
 
-    if (!validateFloat0to1(&value, newValueStr))
-    {
-        return false;
-    }
+	if (!validateFloat0to1(&value, newValueStr))
+	{
+		return false;
+	}
 
-    *(float *)dest = value;
+	*(float *)dest = value;
 
-    if(frame != NULL)
+	if (frame != NULL)
 	{
 		frame->fadeToBrightness(value, 10);
 	}
 
-    return true;
+	return true;
 }
 
-
-
 struct SettingItem pixelBrightnessSetting = {"Default pixel brightness",
-											  "pixelbrightness",
-											  &pixelSettings.brightness,
-											  NUMBER_INPUT_LENGTH,
-											  floatValue,
-											  setDefaultPixelBrightness,
-											  validatePixelBrightness};
-
+											 "pixelbrightness",
+											 &pixelSettings.brightness,
+											 NUMBER_INPUT_LENGTH,
+											 floatValue,
+											 setDefaultPixelBrightness,
+											 validatePixelBrightness};
 
 void setDefaultPixelConfig(void *dest)
 {
@@ -140,15 +135,13 @@ struct SettingItem *pixelSettingItemPointers[] =
 		&pixelNoOfXPixelsSetting,
 		&pixelNoOfYPixelsSetting,
 		&pixelPixelConfig,
-		&pixelBrightnessSetting
-};
+		&pixelBrightnessSetting};
 
 struct SettingItemCollection pixelSettingItems = {
 	"pixel",
 	"Pixel hardware and display properties",
 	pixelSettingItemPointers,
 	sizeof(pixelSettingItemPointers) / sizeof(struct SettingItem *)};
-
 
 unsigned long millisOfLastPixelUpdate;
 
@@ -202,7 +195,7 @@ boolean validatePixelCommandString(void *dest, const char *newValueStr)
 #define COMMAND_PIXEL_COMMAND_OFFSET (SPEED_PIXEL_COMMAND_OFFSET + sizeof(int))
 #define COLOURNAME_PIXEL_COMMAND_OFFSET (COMMAND_PIXEL_COMMAND_OFFSET + PIXEL_COMMAND_NAME_LENGTH)
 #define COMMAND_PIXEL_OPTION_OFFSET (COLOURNAME_PIXEL_COMMAND_OFFSET + PIXEL_COMMAND_NAME_LENGTH)
-#define COMMAND_PIXEL_SELECTION_OFFSET (COMMAND_PIXEL_OPTION_OFFSET + PIXEL_COMMAND_NAME_LENGTH)
+#define COMMAND_PIXEL_PATTERN_OFFSET (COMMAND_PIXEL_OPTION_OFFSET + PIXEL_COMMAND_NAME_LENGTH)
 
 struct CommandItem redCommandItem = {
 	"red",
@@ -283,12 +276,41 @@ struct CommandItem floatValueItem = {
 	validateFloat0to1,
 	noDefaultAvailable};
 
-struct CommandItem selctionValueItem = {
-	"selection",
-	"chosen selection number",
-	COMMAND_PIXEL_SELECTION_OFFSET,
-	integerCommand,
-	validateInt,
+char *pixelDisplaySelections[] = {"walking", "mask"};
+
+boolean validateSelectionCommandString(void *dest, const char *newValueStr)
+{
+	char buffer[PIXEL_COMMAND_NAME_LENGTH];
+
+	bool commandOK = validateString(buffer, newValueStr, PIXEL_COMMAND_NAME_LENGTH);
+
+	if (!commandOK)
+		return false;
+
+	commandOK = false;
+
+	for (int i = 0; i < sizeof(pixelDisplaySelections) / sizeof(char *); i++)
+	{
+		if (strcasecmp(buffer, pixelDisplaySelections[i]) == 0)
+		{
+			commandOK = true;
+		}
+	}
+
+	if (commandOK)
+	{
+		strcpy((char *)dest, buffer);
+	}
+
+	return commandOK;
+}
+
+struct CommandItem pixelPatternSelectionItem = {
+	"pattern",
+	"chosen pattern (walking,mask)",
+	COMMAND_PIXEL_PATTERN_OFFSET,
+	textCommand,
+	validateSelectionCommandString,
 	noDefaultAvailable};
 
 struct CommandItem *setColourItems[] =
@@ -386,7 +408,7 @@ int doSetRandomColour(char *destination, unsigned char *settingBase);
 struct Command setPixelsToRandomColour
 {
 	"setrandomcolour",
-		"Sets the pixels to a random colour",
+		"Sets all the pixels to a random colour",
 		setRandomPixelColourItems,
 		sizeof(setRandomPixelColourItems) / sizeof(struct CommandItem *),
 		doSetRandomColour
@@ -510,18 +532,16 @@ int doSetBrightness(char *destination, unsigned char *settingBase)
 
 	int steps = getUnalignedInt(settingBase + SPEED_PIXEL_COMMAND_OFFSET);
 
-	frame->fadeToBrightness( brightness, steps);
+	frame->fadeToBrightness(brightness, steps);
 
 	return WORKED_OK;
 }
 
 struct CommandItem *setPixelPatternItems[] =
 	{
-		&selctionValueItem,
+		&pixelPatternSelectionItem,
 		&pixelChangeStepsCommandItem,
-		&colourCommandMask,
-		&colourCommandOptionItem
-		};
+		&colourCommandMask};
 
 int doSetPattern(char *destination, unsigned char *settingBase);
 
@@ -545,31 +565,21 @@ int doSetPattern(char *destination, unsigned char *settingBase)
 	}
 
 	char *colourMask = (char *)(settingBase + COLOURNAME_PIXEL_COMMAND_OFFSET);
-
-	char *option = (char *)(settingBase + COMMAND_PIXEL_OPTION_OFFSET);
-
-	if (strcasecmp(option, "timed") == 0)
-	{
-		seedRandomFromClock();
-	}
-
-	int pattern = getUnalignedInt(settingBase + COMMAND_PIXEL_SELECTION_OFFSET);
-
+	char *pattern = (char *)(settingBase + COMMAND_PIXEL_PATTERN_OFFSET);
 	int steps = getUnalignedInt(settingBase + SPEED_PIXEL_COMMAND_OFFSET);
 
 	TRACE("Got new pattern:");
 	TRACE(pattern);
 
-	switch(pattern)
+	if (strcasecmp(pattern, "walking") == 0)
 	{
-		case 1: // walking colours
-			frame->fadeSpritesToWalkingColours(colourMask, steps);
-			break;
-		case 2: // Mask pattern
-			frame->fadeSpritesToColourCharMask(colourMask, steps);
-			break;
+		frame->fadeSpritesToWalkingColours(colourMask, steps);
 	}
 
+	if (strcasecmp(pattern, "mask") == 0)
+	{
+		frame->fadeSpritesToColourCharMask(colourMask, steps);
+	}
 	return WORKED_OK;
 }
 
@@ -599,8 +609,8 @@ void setPixel(int no, float r, float g, float b)
 	unsigned char rs = (unsigned char)round(r * 255);
 	unsigned char gs = (unsigned char)round(g * 255);
 	unsigned char bs = (unsigned char)round(b * 255);
-	if(rs>255 || gs>255 || bs>255)
-		Serial.printf("setPixel no:%d raster:%d r:%f g:%f b:%f\n", no, rasterLookup[no], r,g,b);
+	if (rs > 255 || gs > 255 || bs > 255)
+		Serial.printf("setPixel no:%d raster:%d r:%f g:%f b:%f\n", no, rasterLookup[no], r, g, b);
 	strip->setPixelColor(rasterLookup[no], rs, gs, bs);
 }
 
@@ -609,7 +619,10 @@ void setPixel(int no, float r, float g, float b)
 
 int statusPixelNo = 0;
 
-#define STATUS_DISPLAY_BACKGROUND {0.01,0.01,0.01}
+#define STATUS_DISPLAY_BACKGROUND \
+	{                             \
+		0.01, 0.01, 0.01          \
+	}
 
 void resetStatusDisplay()
 {
@@ -689,7 +702,7 @@ void initPixel()
 
 	if (noOfPixels == 0)
 	{
-		pixelProcess.status = PIXEL_ERROR_NO_PIXELS;
+		pixelProcess.status = PIXEL_NO_PIXELS;
 		return;
 	}
 
@@ -737,6 +750,14 @@ void initPixel()
 
 void startPixel()
 {
+	int noOfPixels = pixelSettings.noOfXPixels * pixelSettings.noOfYPixels;
+
+	if (noOfPixels == 0)
+	{
+		pixelProcess.status = PIXEL_NO_PIXELS;
+		return;
+	}
+
 	leds = new Leds(pixelSettings.noOfXPixels, pixelSettings.noOfYPixels, show, setPixel);
 
 	frame = new Frame(leds, BLACK_COLOUR);
@@ -746,7 +767,7 @@ void startPixel()
 	pixelProcess.status = PIXEL_OK;
 
 	frame->fadeSpritesToWalkingColours("RGBYMC", 10);
-	frame->fadeToBrightness(pixelSettings.brightness,10);
+	frame->fadeToBrightness(pixelSettings.brightness, 10);
 }
 
 void showDeviceStatus();	   // declared in control.h
@@ -754,9 +775,6 @@ boolean getInputSwitchValue(); // declared in inputswitch.h
 
 void updatePixel()
 {
-	if (pixelSettings.noOfXPixels == 0)
-		return;
-
 	if (pixelProcess.status != PIXEL_OK)
 	{
 		return;
@@ -785,14 +803,11 @@ bool pixelStatusOK()
 
 void pixelStatusMessage(char *buffer, int bufferLength)
 {
-	if (pixelSettings.noOfXPixels == 0)
-	{
-		snprintf(buffer, bufferLength, "No pixels connected");
-		return;
-	}
-
 	switch (pixelProcess.status)
 	{
+	case PIXEL_NO_PIXELS:
+		snprintf(buffer, bufferLength, "No pixels connected");
+		break;
 	case PIXEL_OK:
 		snprintf(buffer, bufferLength, "PIXEL OK");
 		break;

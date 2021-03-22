@@ -6,7 +6,7 @@
 
 struct ServoSettings {
 	int ServoOutputPin;
-	double ServoInitialPosition;
+	float ServoInitialPosition;
 	bool ServoEnabled;
 };
 

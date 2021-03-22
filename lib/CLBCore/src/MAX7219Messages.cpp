@@ -123,6 +123,9 @@ int MAX7219FrameDelay;
 
 int scrollDelayMS = 0;
 
+bool MAX7219displayingStickyMessage = false;
+unsigned long stickyMessageStart;
+
 void MAX7219setScrollDelay()
 {
     MAX7219FrameDelay = (int)max7219MessagesSettings.maxFrameTimeMS *
@@ -204,6 +207,45 @@ struct SettingItem MAX7219YDevices = {
     setDefaultMAXY219YDevices,
     validateInt};
 
+void setDefaultMAXY219StickyMessageDuration(void *dest)
+{
+    int *destInt = (int *)dest;
+    *destInt = MAX7219_DEFAULT_STICKY_MESSAGE_DURATION;
+}
+
+boolean validateMAX7219StickyMessageDuration(void *dest, const char *newValueStr)
+{
+    int value;
+
+    if (!validateInt(&value, newValueStr))
+    {
+        return false;
+    }
+
+    if (value < 0)
+    {
+        return false;
+    }
+
+    if (value > MAX7219_MAXIMUM_STICKY_MESSAGE_DURATION)
+    {
+        return false;
+    }
+
+    *(int *)dest = value;
+
+    return true;
+}
+
+struct SettingItem MAX7219StickyMessageDurationMS = {
+    "MAX7219 sticky message duration (millis)",
+    "max7219stickymessageMS",
+    &max7219MessagesSettings.stickyMessageDurationMS,
+    NUMBER_INPUT_LENGTH,
+    integerValue,
+    setDefaultMAXY219StickyMessageDuration,
+    validateMAX7219StickyMessageDuration};
+
 void setDefaultMAXY219MaxFrameTime(void *dest)
 {
     int *destInt = (int *)dest;
@@ -238,7 +280,7 @@ boolean validateMAX7219MaxFrameTime(void *dest, const char *newValueStr)
 
 struct SettingItem MAX7219MaxFrameTimeMS = {
     "MAX7219 maximum frame time (millis)",
-    "max7219frametime",
+    "max7219frametimeMS",
     &max7219MessagesSettings.maxFrameTimeMS,
     NUMBER_INPUT_LENGTH,
     integerValue,
@@ -307,14 +349,14 @@ void setDefaultMax7219Message(void *dest)
 
 boolean validateMax7219Message(void *dest, const char *source)
 {
-    return validateString((char *)dest,source, MAX_MESSAGE_LENGTH);
+    return validateString((char *)dest,source, MAX7219MAX_MESSAGE_LENGTH);
 }
 
 struct SettingItem max7219defaultMessage = {
     "Text displayed at powerup",
     "max7219defaultMessage",
     &max7219MessagesSettings.max7219DefaultMessage,
-    MAX_MESSAGE_LENGTH,
+    MAX7219MAX_MESSAGE_LENGTH,
     text,
     setDefaultMax7219Message,
     validateMax7219Message};
@@ -328,6 +370,7 @@ struct SettingItem *max7219MessagesSettingItemPointers[] =
         &MAX7219ClockPinNo,
         &MAX7219XDevices,
         &MAX7219YDevices,
+        &MAX7219StickyMessageDurationMS,
         &MAX7219MaxFrameTimeMS,
         &MAX7219FrameTimeFraction,
         &MAX7219BrightnessFraction};
@@ -376,23 +419,63 @@ void stopMAX7219MessageScroll()
 
 void displayMAX7219Message(char *messageText, char * options)
 {
+    TRACELN("Displaying MAX7219 message");
+
+    if (strContains(options, "sticky"))
+    {
+        TRACELN("  Setting a sticky message");
+        // sticky messages are always displayed - even if it means overwriting 
+        // an existing sticky message
+        // start the sticky message timer
+        MAX7219displayingStickyMessage = true;
+        stickyMessageStart = millis();
+    }
+    else
+    {
+        TRACELN("  Not sticky message");
+        // if a sticky message is not being displayed we need to see if this one
+        // is allowed to overwrite it
+        if(MAX7219displayingStickyMessage)
+        {
+            TRACELN("    Currently displaying a sticky message");
+            // check to see if the sticky message has timed out yet
+            unsigned long stickyTime = ulongDiff(millis(),stickyMessageStart);
+            if(stickyTime>=max7219MessagesSettings.stickyMessageDurationMS)
+            {
+                // can overwite the sticky message
+                TRACELN("     Sticky message timed out");
+                MAX7219displayingStickyMessage = false;
+            }
+            else
+            {
+                // sticky message takes priority - ignore this message
+                TRACELN("     Message ignored sticky message being displayed");
+                return;
+            }
+        }
+    }
+
     snprintf(MAX7219MessageBuffer, MAX_MESSAGE_LENGTH, messageText);
 
     if (strContains(options, "scroll"))
     {
+        TRACELN("  Scrolling message");
         startMAX7219MessageScroll();
     }
     else
     {
+        TRACELN("  Not scrolling message");
         stopMAX7219MessageScroll();
     }
 
     if(strContains(options,"small"))
     {
+        TRACELN("  Small text");
         mp->setFont(_Fixed_5x3);
     }
     else
     {
+        TRACELN("  Large text");
         mp->setFont(_sysfont);
     }
 
@@ -405,22 +488,33 @@ void displayMAX7219Message(char *messageText, char * options)
     mp->drawText(0, mp->getYMax(), MAX7219MessageBuffer, MD_MAXPanel::ROT_0);
 
     mp->update();
+    TRACELN("Done displaying MAX7219 message");
 }
 
 #define MAX7219_FLOAT_VALUE_OFFSET 0
 #define MAX7219_MESSAGE_OFFSET (MAX7219_FLOAT_VALUE_OFFSET + sizeof(float))
-#define MAX7219_OPTION_OFFSET (MAX7219_MESSAGE_OFFSET + MAX_MESSAGE_LENGTH)
-#define MAX7219_PRE_TEXT_OFFSET (MAX7219_OPTION_OFFSET + MAX7219MESSAGE_COMMAND_LENGTH)
-#define MAX7219_POST_TEXT_OFFSET (MAX7219_PRE_TEXT_OFFSET + MAX7219MESSAGE_COMMAND_LENGTH)
+#define MAX7219_OPTION_OFFSET (MAX7219_MESSAGE_OFFSET + MAX7219MAX_MESSAGE_LENGTH)
+#define MAX7219_PRE_TEXT_OFFSET (MAX7219_OPTION_OFFSET + MAX7219MAX_OPTION_LENGTH)
+#define MAX7219_POST_TEXT_OFFSET (MAX7219_PRE_TEXT_OFFSET + MAX7219PRE_MESSAGE_LENGTH)
 
 boolean validateMAX7219OptionString(void *dest, const char *newValueStr)
 {
-    return (validateString((char *)dest, newValueStr, MAX7219MESSAGE_COMMAND_LENGTH));
+    return (validateString((char *)dest, newValueStr, MAX7219MAX_OPTION_LENGTH));
 }
 
 boolean validateMAX7219MessageString(void *dest, const char *newValueStr)
 {
-    return (validateString((char *)dest, newValueStr, MAX_MESSAGE_LENGTH));
+    return (validateString((char *)dest, newValueStr, MAX7219MAX_MESSAGE_LENGTH));
+}
+
+boolean validateMAX7219PreString(void *dest, const char *newValueStr)
+{
+    return (validateString((char *)dest, newValueStr, MAX7219PRE_MESSAGE_LENGTH));
+}
+
+boolean validateMAX7219PostString(void *dest, const char *newValueStr)
+{
+    return (validateString((char *)dest, newValueStr, MAX7219POST_MESSAGE_LENGTH));
 }
 
 struct CommandItem MAX7219floatValueItem = {
@@ -433,7 +527,7 @@ struct CommandItem MAX7219floatValueItem = {
 
 struct CommandItem MAX7219CommandOptionName = {
     "options",
-    "max7219 message options (small,scroll)",
+    "max7219 message options (small,scroll,sticky)",
     MAX7219_OPTION_OFFSET,
     textCommand,
     validateMAX7219OptionString,
@@ -452,7 +546,7 @@ struct CommandItem MAX7219PreText = {
     "max7219 pre text",
     MAX7219_PRE_TEXT_OFFSET,
     textCommand,
-    validateMAX7219MessageString,
+    validateMAX7219PreString,
     setDefaultEmptyString};
 
 struct CommandItem MAX7219PostText = {
@@ -460,7 +554,7 @@ struct CommandItem MAX7219PostText = {
     "max7219 post text",
     MAX7219_POST_TEXT_OFFSET,
     textCommand,
-    validateMAX7219MessageString,
+    validateMAX7219PostString,
     setDefaultEmptyString};
 
 struct CommandItem *MAX7219DisplayMessageCommandItems[] =
@@ -483,6 +577,8 @@ struct Command setMAX7219Message
 
 int doSetMAX7219Message(char *destination, unsigned char *settingBase)
 {
+    TRACELN("Doing MAX7219 display");
+
     if (*destination != 0)
     {
         // we have a destination for the command. Build the string
@@ -508,6 +604,7 @@ int doSetMAX7219Message(char *destination, unsigned char *settingBase)
 
     displayMAX7219Message(buffer, options);
 
+    TRACELN("Done MAX7219 display");
     return WORKED_OK;
 }
 
@@ -724,6 +821,7 @@ void initMAX7219Messages()
             max7219MessagesProcess.status = MAX7219MESSAGES_OK;
 
             MAX7219scrolling = false;
+            MAX7219displayingStickyMessage = false;
         }
     }
 }

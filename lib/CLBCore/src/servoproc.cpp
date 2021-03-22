@@ -71,7 +71,7 @@ struct SettingItemCollection ServoSettingItems = {
     ServoSettingItemPointers,
     sizeof(ServoSettingItemPointers) / sizeof(struct SettingItem *)};
 
-int servoPosition;
+float servoPosition;
 
 int validateServoPosition(float position)
 {
@@ -99,8 +99,9 @@ int setServoPosition(float position)
 
     if (result == WORKED_OK)
     {
-        servoPosition =(int)(position*180);
-        servo->write(servoPosition);
+        int servoDriveValue =(int)(position*180);
+        servoPosition = position;
+        servo->write(servoDriveValue);
     }
     return result;
 }
@@ -222,8 +223,8 @@ void startServo()
         {
             servo = new Servo();
             servo->attach(servoSettings.ServoOutputPin);
-            setServoPosition(servoSettings.ServoInitialPosition);
             ServoProcess.status = SERVO_OK;
+            setServoPosition(servoSettings.ServoInitialPosition);
         }
     }
     else
@@ -249,7 +250,7 @@ bool servoStatusOK()
 void ServoStatusMessage(char *buffer, int bufferLength)
 {
     if (ServoProcess.status == SERVO_OK)
-        snprintf(buffer, bufferLength, "Servo angle: %d", servoPosition);
+        snprintf(buffer, bufferLength, "Servo angle: %f", servoPosition);
     else
         snprintf(buffer, bufferLength, "Servo off");
 }

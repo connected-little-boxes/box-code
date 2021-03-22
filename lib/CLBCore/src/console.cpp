@@ -254,10 +254,24 @@ void performRemoteCommand(char * commandLine)
 }
 
 
-void doClearListeners(char * commandLine)
+void doClearAllListeners(char * commandLine)
 {
 	Serial.println("\nClearing all the listeners\n");
 	clearAllListeners();
+}
+
+void doClearSensorListeners(char * commandLine)
+{
+	char * sensorName = skipCommand(commandLine);
+
+	if(clearSensorNameListeners(sensorName))
+	{
+		Serial.println("Sensor listeners cleared");
+	}
+	else
+	{
+		Serial.println("Sensor not found");
+	}
 }
 
 void doDumpStorage(char * commandLine)
@@ -340,7 +354,8 @@ struct consoleCommand userCommands[] =
 	{"pottest", "test the pot sensor", doTestPotSensor},
 	{"colours", "step through all the colours", doColourDisplay},
 	{"listeners", "list the command listeners", doDumpListeners},
-	{"clearlisteners", "clear the command listeners", doClearListeners},
+	{"clearalllisteners", "clear all the command listeners", doClearAllListeners},
+	{"clearsensorlisteners", "clear the command listeners for a sensor", doClearSensorListeners},
 	{"restart", "restart the device", doRestart},
 	{"hullos", "HullOS commands", doHullOS},
 	{"sprites", "dump sprite data", doDumpSprites},
@@ -385,7 +400,7 @@ boolean findCommandName(consoleCommand * com, char * name)
 
 	for (int i = 0; i < commandNameLength; i++)
 	{
-		if (tolower(name[i] != com->name[i]))
+		if (tolower(name[i]) != tolower(com->name[i]))
 			return false;
 	}
 
@@ -579,8 +594,8 @@ boolean validateConsoleCommandString(void *dest, const char *newValueStr)
 #define COMMANDNAME_CONSOLE_COMMAND_OFFSET 0
 
 struct CommandItem consoleCommandName = {
-	"concom",	
-	"console command",
+	"commandtext",	
+	"console command text",
 	COMMANDNAME_CONSOLE_COMMAND_OFFSET,
 	textCommand,
 	validateConsoleCommandString,
