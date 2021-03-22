@@ -298,92 +298,10 @@ sensorListener *makeSensorListenerFromConfiguration(struct sensorListenerConfigu
 	return result;
 }
 
-#define CONTROLLER_OPTION_OFFSET (MESSAGE_START_POSITION + MAX_MESSAGE_LENGTH)
-
-struct CommandItem ControllerfloatValueItem = {
-    "value",
-    "value",
-    VALUE_START_POSITION,
-    floatCommand,
-    validateFloat,
-    noDefaultAvailable};
-
-struct CommandItem ControllerCommandSensorName = {
-    "clearsensor",
-    "sensor to act on",
-    CONTROLLER_OPTION_OFFSET,
-    textCommand,
-    validateControllerOptionString,
-    noDefaultAvailable};
-
-struct CommandItem *ControllerClearAllListenersCommandItems[] =
-    {
-    };
-
-int doControllerClearAllListeners(char *destination, unsigned char *settingBase);
-
-struct Command ControllerClearAllListenersCommand
+bool clearSensorListeners(sensor * s)
 {
-    "clearlisteners",
-        "Clears all the event listeners",
-        ControllerClearAllListenersCommandItems,
-        sizeof(ControllerClearAllListenersCommandItems) / sizeof(struct CommandItem *),
-        doControllerClearAllListeners
-};
-
-int doControllerClearAllListeners(char *destination, unsigned char *settingBase)
-{
-    if (*destination != 0)
-    {
-        // we have a destination for the command. Build the string
-        char buffer[JSON_BUFFER_SIZE];
-        createJSONfromSettings("controller", &ControllerClearAllListenersCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-        return publishBufferToMQTTTopic(buffer, destination);
-    }
-
-	clearAllListeners();
-
-    return WORKED_OK;
-}
-
-struct CommandItem *ControllerClearSensorListenersCommandItems[] =
-    {
-		&ControllerCommandSensorName
-    };
-
-int doControllerClearSensorListeners(char *destination, unsigned char *settingBase);
-
-struct Command ControllerClearSensorListenersCommand
-{
-    "clearsensorlisteners",
-        "Clears the event listeners for a sensor",
-        ControllerClearSensorListenersCommandItems,
-        sizeof(ControllerClearSensorListenersCommandItems) / sizeof(struct CommandItem *),
-        doControllerClearSensorListeners
-};
-
-int doControllerClearSensorListeners(char *destination, unsigned char *settingBase)
-{
-    if (*destination != 0)
-    {
-        // we have a destination for the command. Build the string
-        char buffer[JSON_BUFFER_SIZE];
-        createJSONfromSettings("controller", &ControllerClearSensorListenersCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-        return publishBufferToMQTTTopic(buffer, destination);
-    }
-
-	char * sensorName = (char *) settingBase + CONTROLLER_OPTION_OFFSET;
-
-	TRACE("Clearing listeners for sensor:");
-	TRACELN(sensorName);
-
-	sensor * s = findSensorByName(sensorName);
-
 	if(s==NULL)
-	{
-		TRACELN("    Sensor not found");
-		return JSON_MESSAGE_SENSOR_NOT_FOUND_FOR_LISTENER_DELETE;
-	}
+		return false;
 
 	removeAllMessageListenersFromSensor(s);
 
@@ -391,20 +309,18 @@ int doControllerClearSensorListeners(char *destination, unsigned char *settingBa
 
 	saveSettings();
 
-    return WORKED_OK;
+	return true;
 }
 
+bool clearSensorNameListeners(char * sensorName)
+{
+	TRACE("Clearing listeners for sensor:");
+	TRACELN(sensorName);
 
-struct Command *controllerCommandList[] = {
-	&ControllerClearAllListenersCommand,
-	&ControllerClearSensorListenersCommand
-};
+	sensor * s = findSensorByName(sensorName);
+	return clearSensorListeners(s);
+}
 
-struct CommandItemCollection controllerCommands =
-	{
-		"Configure the message controller",
-		controllerCommandList,
-		sizeof(controllerCommandList) / sizeof(struct Command *)};
 
 void startSensorListener(struct sensorListenerConfiguration *commandItem)
 {
@@ -631,8 +547,6 @@ void appendCommandDescriptionToText(Command * command, char * buffer, int buffer
 	}
 }
 
-
-
 void dumpCommand(const char *processName, const char *commandName, unsigned char *commandParameterBuffer)
 {
 	Command *command = FindCommandByName(processName, commandName);
@@ -827,12 +741,15 @@ int decodeCommand(process *process, Command *command,
 			
 			if (item->setDefaultValue(parameterBuffer + item->commandSettingOffset))
 			{
-				TRACE("Found a default option");
+				TRACE("Found a default option for ");
+				TRACELN(item->name);
 				// set OK - move on to the next one
 				continue;
 			}
 			else
 			{
+				TRACE("Failed to find command item for ");
+				TRACELN(item->name);
 				return JSON_MESSAGE_COMMAND_ITEM_NOT_FOUND;
 			}
 		}
@@ -841,10 +758,13 @@ int decodeCommand(process *process, Command *command,
 
 		if (root[item->name].is<int>())
 		{
-			TRACELN("Got an int");
+			TRACE("Got an int:");
 			// need to convert the input value into a string
 			// as our value parser uses strings as inputs
 			int iv = root[item->name];
+			TRACE(iv);
+			TRACE(" for ");
+			TRACELN(item->name);
 			snprintf(buffer, 120, "%d", iv);
 			inputSource = buffer;
 		}
@@ -852,10 +772,13 @@ int decodeCommand(process *process, Command *command,
 		{
 			if (root[item->name].is<float>())
 			{
-				TRACELN("Got a float");
+				TRACELN("Got a float:");
 				// need to convert the input value into a string
 				// as our value parser uses strings as inputs
 				float fv = root[item->name];
+				TRACE(fv);
+				TRACE(" for ");
+				TRACELN(item->name);
 				snprintf(buffer, 120, "%f", fv);
 				inputSource = buffer;
 			}
@@ -864,9 +787,15 @@ int decodeCommand(process *process, Command *command,
 				if (root[item->name].is<char *>())
 				{
 					inputSource = root[item->name];
+					TRACE("Got a string:");
+					TRACE(inputSource);
+					TRACE(" for ");
+					TRACELN(item->name);
 				}
 				else
 				{
+					TRACE("Command item invalid:");
+					TRACELN(item->name);
 					return JSON_MESSAGE_COMMAND_ITEM_INVALID;
 				}
 			}
@@ -935,11 +864,14 @@ int decodeCommand(process *process, Command *command,
 		return CreateSensorListener(s, process, command, binder, destination, commandParameterBuffer);
 	}
 
+	TRACELN("Done decoding");
+
 	return command->performCommand(destination, parameterBuffer);
 }
 
 void do_Json_command(JsonObject &root, void (*deliverResult)(char *resultText))
 {
+	TRACE("Doing JSON command");
 	const char *processName = root["process"];
 	Command *command = NULL;
 	struct process *process = NULL;
@@ -992,6 +924,8 @@ void do_Json_command(JsonObject &root, void (*deliverResult)(char *resultText))
 	strcat(command_reply_buffer, "}");
 
 	deliverResult(command_reply_buffer);
+
+	TRACE("Done JSON command");
 }
 
 void act_onJson_message(const char *json, void (*deliverResult)(char *resultText))
@@ -1145,7 +1079,7 @@ struct process controllerProcess = {
 	0,
 	NULL,
 	(unsigned char *)&controllerSettings, sizeof(controllerSettings), &controllerSettingItems,
-	&controllerCommands,
+	NULL,
 	BOOT_PROCESS + ACTIVE_PROCESS,
 	NULL,
 	NULL,

@@ -627,7 +627,7 @@ void DumpSettingCollection(SettingItemCollection *settingCollection)
 	}
 }
 
-void DumpSettingCollectionFiltered(SettingItemCollection *settingCollection)
+void maxDumpSettingCollectionFiltered(SettingItemCollection *settingCollection)
 {
 	bool gotSetting = false;
 
@@ -856,7 +856,7 @@ boolean matchSettingCollectionName(SettingItemCollection *settingCollection, con
 
 	for (int i = 0; i < settingNameLength; i++)
 	{
-		if (tolower(name[i] != settingCollection->collectionName[i]))
+		if (tolower(name[i]) != tolower(settingCollection->collectionName[i]))
 			return false;
 	}
 
@@ -888,7 +888,7 @@ boolean matchSettingName(SettingItem *setting, const char *name)
 
 	for (int i = 0; i < settingNameLength; i++)
 	{
-		if (tolower(name[i] != setting->formName[i]))
+		if (tolower(name[i]) != tolower(setting->formName[i]))
 			return false;
 	}
 
