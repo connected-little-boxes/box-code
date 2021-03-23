@@ -225,7 +225,7 @@ void appendSensorDescriptionToJson(sensor * s, char * buffer, int bufferSize)
 	snprintf(buffer, bufferSize, "%s]}", buffer);
 }
 
-void printSensorTriggers(sensor * s)
+void printSensorTriggersJson(sensor * s)
 {
 	if(s->noOfSensorListenerFunctions==0)
 		return;
@@ -235,10 +235,40 @@ void printSensorTriggers(sensor * s)
 	Serial.printf("%s\n", consoleMessageBuffer);
 }
 
-void doShowSensors(char * commandLine)
+void doShowSensorsJson(char * commandLine)
 {
 	Serial.println();
-	iterateThroughSensors(printSensorTriggers);
+	iterateThroughSensors(printSensorTriggersJson);
+}
+
+void appendSensorDescriptionToText(sensor * s, char * buffer, int bufferSize)
+{
+	snprintf(buffer, bufferSize,"%sSensor name %s\n",
+		buffer, s->sensorName);
+
+	for(int i=0;i<s->noOfSensorListenerFunctions;i++)
+	{
+		sensorEventBinder * binder = &s->sensorListenerFunctions[i];
+		snprintf(buffer, bufferSize, "%s   trigger:%s\n",buffer,
+		binder->listenerName);
+	}
+}
+
+void printSensorTriggersText(sensor * s)
+{
+	if(s->noOfSensorListenerFunctions==0)
+		return;
+
+	consoleMessageBuffer[0]=0;
+
+	appendSensorDescriptionToText(s, consoleMessageBuffer, CONSOLE_MESSAGE_SIZE);
+	Serial.printf("%s\n", consoleMessageBuffer);
+}
+
+void doShowSensorsText(char * commandLine)
+{
+	Serial.println();
+	iterateThroughSensors(printSensorTriggersText);
 }
 
 void act_onJson_message(const char *json, void (*deliverResult)(char *resultText));
@@ -346,7 +376,8 @@ struct consoleCommand userCommands[] =
 	{"commands", "show all the remote commands", doShowRemoteCommandsText},
 	{"commandsjson", "show all the remote commands in json", doShowRemoteCommandsJson},
 	{"save", "save all the setting values", doSaveSettings},
-	{"sensors","list all the sensor triggers", doShowSensors},
+	{"sensors","list all the sensor triggers", doShowSensorsText},
+	{"sensorsjson","list all the sensor triggers in json", doShowSensorsJson},
 	{"status", "show the sensor status", doDumpStatus},
 	{"storage", "show the storage use of sensors and processes", doDumpStorage},
 	{"pirtest", "test the PIR sensor", doTestPIRSensor},

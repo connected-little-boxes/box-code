@@ -137,8 +137,10 @@ These are all the available commands.
     host - start the configuration web host
     settings - show all the setting values
     dump - dump all the setting values
-    remote - show all the remote commands
+    commands - show all the remote commands
+    commandsjson - show all the remote commands in json
     save - save all the setting values
+    sensors - list all the sensor triggers
     status - show the sensor status
     storage - show the storage use of sensors and processes
     pirtest - test the PIR sensor
@@ -146,9 +148,11 @@ These are all the available commands.
     pottest - test the pot sensor
     colours - step through all the colours
     listeners - list the command listeners
-    clearlisteners - clear the command listeners 
+    clearalllisteners - clear all the command listeners
+    clearsensorlisteners - clear the command listeners for a sensor
     restart - restart the device
-    otaupdate - update firmware over the air
+    hullos - HullOS commands
+    sprites - dump sprite data
     clear - clear all seeings and restart the device
 ```
 For full command descriptions consult the device manual.
@@ -172,4 +176,4 @@ Once you have configured your settings you need to tell Platform IO to use these
 board = d1_mini
 build_flags = -DWEMOSD1MINI -DDEFAULTS_ON 
 ```
-Now, when you build the software the settings that you have selected are "baked in" to the program itself. This means that you can just fire up the device and use it without any further  configuration. 
+Now, when you build the software the settings that you have selected are "baked in" to the program itself. This means that you can just fire up the device and use it without any further configuration. 
