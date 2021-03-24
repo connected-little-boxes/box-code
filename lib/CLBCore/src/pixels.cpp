@@ -261,8 +261,8 @@ struct CommandItem colourCommandMask = {
 	noDefaultAvailable};
 
 struct CommandItem colourCommandOptionItem = {
-	"option",
-	"option for the colour command(timed)",
+	"options",
+	"options for the colour command(timed)",
 	COMMAND_PIXEL_OPTION_OFFSET,
 	textCommand,
 	validatePixelCommandString,

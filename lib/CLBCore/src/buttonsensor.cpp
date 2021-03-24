@@ -96,6 +96,56 @@ void readButtonSensor(struct buttonSensorReading *buttonSensorActiveReading)
 	}
 }
 
+void buttonSensorTest()
+{
+	struct buttonSensorReading *buttonSensorActiveReading =
+		(struct buttonSensorReading *)buttonSensor.activeReading;
+
+	pinMode(buttonSensorSettings.buttonSensorInputPinNo, INPUT_PULLUP);
+
+	if (buttonSensorSettings.buttonGroundPin != -1)
+	{
+		pinMode(buttonSensorSettings.buttonGroundPin, OUTPUT);
+		digitalWrite(buttonSensorSettings.buttonGroundPin, LOW);
+	}
+
+	Serial.println("Button Sensor test\nPress the enter key to end the test");
+
+	int count = 0;
+	bool triggered = false;
+
+	while (true)
+	{
+		if (Serial.available() != 0)
+		{
+			int ch = Serial.read();
+			if (ch == 0x0d)
+			{
+				break;
+			}
+		}
+
+		readButtonSensor(buttonSensorActiveReading);
+
+		if (buttonSensorActiveReading->pressed)
+		{
+			if (triggered == false)
+			{
+				count++;
+				Serial.printf("    pressed: %d\n", count);
+				triggered = true;
+			}
+		}
+		else
+		{
+			triggered = false;
+		}
+		delay(100);
+	}
+
+	Serial.println("Button test ended");
+}
+
 bool updateButtonSensor()
 {
 	if (!buttonSensor.beingUpdated)
@@ -192,6 +242,8 @@ void startbuttonSensor()
 		buttonSensor.status = SENSOR_OK;
 	}
 }
+
+
 
 void stopButtonSensor()
 {

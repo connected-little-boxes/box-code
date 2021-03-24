@@ -131,8 +131,8 @@ boolean validatePRINTERMessageString(void *dest, const char *newValueStr)
 }
 
 struct CommandItem PrinterCommandOptionName = {
-    "option",
-    "printer option(sameline,datestamp)",
+    "options",
+    "printer options(sameline,datestamp)",
     PRINTER_OPTION_OFFSET,
     textCommand,
     validatePrinterOptionString,

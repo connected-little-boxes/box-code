@@ -35,5 +35,6 @@ void startbuttonSensorReading(struct sensor * buttonSensorSensor);
 int addbuttonSensorReading(struct sensor * buttonSensorSensor, char * jsonBuffer, int jsonBufferSize);
 void buttonSensorStatusMessage(struct sensor * buttonSensorsensor, char * buffer, int bufferLength);
 void buttonSensorTest(struct sensor * buttonSensor);
+void buttonSensorTest();
 
 extern struct sensor buttonSensor;

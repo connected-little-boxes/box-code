@@ -3,6 +3,7 @@
 #include "mqtt.h"
 #include "errors.h"
 #include "rotarySensor.h"
+#include "buttonsensor.h"
 #include "potSensor.h"
 #include "pixels.h"
 #include "connectwifi.h"
@@ -124,6 +125,12 @@ void doSaveSettings(char * commandline)
 	saveSettings();
 	Serial.println("\nSettings saved");
 }
+
+void doTestButtonSensor(char * commandline)
+{
+	buttonSensorTest();
+}
+
 
 void doTestPIRSensor(char * commandline)
 {
@@ -318,14 +325,21 @@ void doOTAUpdate(char * commandLine)
 
 #endif
 
+#define ESC_KEY 0x1b
+
 void doColourDisplay(char * commandLine)
 {
 	Serial.println("Press space to step through each colour");
+	Serial.println("Press the ESC key to exit");
 	
 	for(int i=0; i<noOfColours; i++)
 	{
 		while(Serial.available()){
-			Serial.read();
+			int ch = Serial.read();
+			if(ch==ESC_KEY){
+				Serial.println("Colour display ended");
+				return;
+			}
 		}
 		Serial.printf("Colour:%s\n", colourNames[i].name);
 		frame->fadeToColour(colourNames[i].col, 5);
@@ -334,6 +348,7 @@ void doColourDisplay(char * commandLine)
 			delay(20);
 		} while(Serial.available()==0);
 	}
+	Serial.println("Colour display finished");
 }
 
 
@@ -380,6 +395,7 @@ struct consoleCommand userCommands[] =
 	{"sensorsjson","list all the sensor triggers in json", doShowSensorsJson},
 	{"status", "show the sensor status", doDumpStatus},
 	{"storage", "show the storage use of sensors and processes", doDumpStorage},
+	{"buttontest", "test the button sensor", doTestButtonSensor},
 	{"pirtest", "test the PIR sensor", doTestPIRSensor},
 	{"rotarytest", "test the rotary sensor", doTestRotarySensor},
 	{"pottest", "test the pot sensor", doTestPotSensor},

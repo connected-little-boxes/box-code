@@ -111,6 +111,19 @@ void updatePIRSensor()
 
 		if (config->sendOptionMask & PIRSENSOR_SEND_ON_CHANGE)
 		{
+			Serial.println("trigger on change");
+			unsigned char *optionBuffer = pos->config->optionBuffer;
+			putUnalignedFloat(pirSensoractiveReading->triggered, (unsigned char *)optionBuffer);
+			char *messageBuffer = (char *)optionBuffer + MESSAGE_START_POSITION;
+			if (pirSensoractiveReading->triggered)
+			{
+				snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "triggered");
+			}
+			else
+			{
+				snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "clear");
+			}
+
 			pos->receiveMessage(config->destination, config->optionBuffer);
 			pos->lastReadingMillis = pirSensor.millisAtLastReading;
 			pos = pos->nextMessageListener;
