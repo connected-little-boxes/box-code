@@ -111,7 +111,6 @@ void updatePIRSensor()
 
 		if (config->sendOptionMask & PIRSENSOR_SEND_ON_CHANGE)
 		{
-			Serial.println("trigger on change");
 			unsigned char *optionBuffer = pos->config->optionBuffer;
 			putUnalignedFloat(pirSensoractiveReading->triggered, (unsigned char *)optionBuffer);
 			char *messageBuffer = (char *)optionBuffer + MESSAGE_START_POSITION;

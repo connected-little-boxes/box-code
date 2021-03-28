@@ -62,7 +62,7 @@ struct SettingItemCollection buttonSensorSettingItems = {
 struct sensorEventBinder ButtonSensorListenerFunctions[] = {
 	{"pressed", BUTTONSENSOR_BUTTON_PRESSED},
 	{"released", BUTTONSENSOR_BUTTON_RELEASED},
-	{"changed", BUTTONSENSOR_SEND_ON_CHANGE}};
+	{"change", BUTTONSENSOR_SEND_ON_CHANGE}};
 
 int lastButtonInputValue;
 long buttonInputDebounceStartTime;
@@ -179,6 +179,18 @@ bool updateButtonSensor()
 		if (pos->config->sendOptionMask == BUTTONSENSOR_SEND_ON_CHANGE)
 		{
 			// send on change - so send for this listener
+			unsigned char *optionBuffer = pos->config->optionBuffer;
+			putUnalignedFloat(buttonSensoractiveReading->pressed, (unsigned char *)optionBuffer);
+			char *messageBuffer = (char *)optionBuffer + MESSAGE_START_POSITION;
+			if (buttonSensoractiveReading->pressed)
+			{
+				snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "down");
+			}
+			else
+			{
+				snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "up  ");
+			}
+
 			pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
 			pos->lastReadingMillis = buttonSensor.millisAtLastReading;
 			// move on to the next one

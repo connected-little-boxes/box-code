@@ -9,6 +9,9 @@
 #include "processes.h"
 #include "messages.h"
 
+#define TIME_ZONE_NAME_LENGTH 20
+#define DEFAULT_TIME_ZONE "Europe/London"
+
 #define CLOCK_ERROR_NO_WIFI -1
 #define CLOCK_ERROR_TIME_NOT_SET -2
 #define CLOCK_ERROR_NEEDS_SYNC -3
@@ -56,6 +59,7 @@ struct ClockTimer{
 };
 
 struct ClockSensorSettings {
+	char timeZone[TIME_ZONE_NAME_LENGTH];
 	struct ClockAlarm alarm1;
 	struct ClockAlarm alarm2;
 	struct ClockAlarm alarm3;

@@ -3,6 +3,8 @@
 #include "sensors.h"
 #include "pixels.h"
 
+extern Timezone homeTimezone;
+
 char *dayNames[] = {"", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
 char *monthNames[] = {"", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
@@ -10,6 +12,11 @@ char *monthNames[] = {"", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"
 struct ClockSensorSettings clockSensorSettings;
 
 struct ClockReading clockReading;
+
+void setDefaultTimeZone(void *dest)
+{
+	strcpy((char *)dest, DEFAULT_TIME_ZONE);
+}
 
 void defaultalarm1hour(void *dest)
 {
@@ -40,6 +47,33 @@ void defaultalarmInterval(void *dest)
 	int *destInt = (int *)dest;
 	*destInt = 30;
 }
+
+boolean validateTimeZone(void *dest, const char *newValueStr)
+{
+	bool validText = validateString((char *)dest, newValueStr, TIME_ZONE_NAME_LENGTH);
+
+	if(!validText) return false;
+
+	validText = true;
+
+	if (WiFiProcessDescriptor.status == WIFI_OK)
+	{
+		validText = homeTimezone.setLocation(newValueStr);
+	}
+
+	if(validText) strcpy((char *) dest, newValueStr);
+
+	return validText;
+}
+
+struct SettingItem timeZoneSetting = {
+	"Clock time zone", 
+	"timezone", 
+	clockSensorSettings.timeZone, 
+	TIME_ZONE_NAME_LENGTH, 
+	text, 
+	setDefaultTimeZone, 
+	validateTimeZone};
 
 struct SettingItem alarm1Hour = {
 	"Alarm1 hour",
@@ -205,6 +239,7 @@ struct SettingItem interval2SingleShot = {
 
 struct SettingItem *clockSettingItemPointers[] =
 	{
+		&timeZoneSetting,
 		&alarm1Hour,
 		&alarm1Min,
 		&alarm1Enabled,
@@ -540,8 +575,6 @@ void startClockSensor()
 {
 	needToInitialiseAlarmsAndTimers = true;
 
-	homeTimezone.setLocation();
-
 	struct ClockReading *clockActiveReading;
 
 	if (clockSensor.activeReading == NULL)
@@ -579,17 +612,16 @@ void stopClockSensor()
 
 void getClockReadings()
 {
-	struct clockReading *clockActiveReading;
-	clockActiveReading =
+	struct clockReading *clockActiveReading =
 		(struct clockReading *)clockSensor.activeReading;
 
-	clockActiveReading->hour = hour();
-	clockActiveReading->minute = minute();
-	clockActiveReading->second = second();
-	clockActiveReading->day = day();
-	clockActiveReading->month = month();
-	clockActiveReading->year = year();
-	clockActiveReading->dayOfWeek = weekday();
+	clockActiveReading->hour = homeTimezone.hour();
+	clockActiveReading->minute = homeTimezone.minute();
+	clockActiveReading->second = homeTimezone.second();
+	clockActiveReading->day = homeTimezone.day();
+	clockActiveReading->month = homeTimezone.month();
+	clockActiveReading->year = homeTimezone.year();
+	clockActiveReading->dayOfWeek = homeTimezone.weekday();
 	clockSensor.millisAtLastReading = millis();
 }
 
@@ -608,6 +640,7 @@ void updateClockReading()
 		if (WiFiProcessDescriptor.status == WIFI_OK)
 		{
 			clockSensor.status = CLOCK_ERROR_TIME_NOT_SET;
+			homeTimezone.setLocation(F("Europe/London"));
 		}
 		break;
 

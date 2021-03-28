@@ -501,7 +501,7 @@ int doSetTwinkle(char *destination, unsigned char *settingBase)
 
 	return WORKED_OK;
 }
-
+  
 struct CommandItem *setPixelBrightnessItems[] =
 	{
 		&floatValueItem,
