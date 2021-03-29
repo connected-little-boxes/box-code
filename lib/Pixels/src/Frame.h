@@ -3,7 +3,7 @@
 #include "Led.h"
 #include "Leds.h"
 
-#define MAX_NO_OF_SPRITES 25
+#define MAX_NO_OF_SPRITES 20
 
 class Sprite;
 
