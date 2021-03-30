@@ -13,16 +13,6 @@ float getUnalignedFloat(unsigned char * source);
 
 void putUnalignedFloat(float fval, unsigned char * dest);
 
-void getBootReasonMessage(char *buffer, int bufferlength);
-
-int getRestartCode();
-
-#define BOOT_REASON_MESSAGE_SIZE 120 
-
-extern char bootReasonMessage [BOOT_REASON_MESSAGE_SIZE];
-
-void loadBootReasonMessage();
-
 #if defined(ARDUINO_ARCH_ESP32)
 
 #include <Arduino.h>
@@ -58,4 +48,6 @@ void loadBootReasonMessage();
 #define PROC_NAME "ESP8266"
 
 #endif
+
+
 

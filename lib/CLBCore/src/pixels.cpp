@@ -10,6 +10,7 @@
 #include "Led.h"
 #include "Leds.h"
 #include "Sprite.h"
+#include "boot.h"
 
 // Some of the colours have been commented out because they don't render well
 // on NeoPixels
@@ -750,6 +751,15 @@ void initPixel()
 
 void startPixel()
 {
+	if(bootMode == CONFIG_BOOT_MODE)
+	{
+		// don't start the pixel display
+		pixelProcess.status = PIXELS_STATUS_ONLY;
+		return;		
+	}
+
+	// Otherwise we create the led storage for the pixels
+
 	int noOfPixels = pixelSettings.noOfXPixels * pixelSettings.noOfYPixels;
 
 	if (noOfPixels == 0)
@@ -773,13 +783,8 @@ void startPixel()
 void showDeviceStatus();	   // declared in control.h
 boolean getInputSwitchValue(); // declared in inputswitch.h
 
-void updatePixel()
+void updateFrame()
 {
-	if (pixelProcess.status != PIXEL_OK)
-	{
-		return;
-	}
-
 	unsigned long currentMillis = millis();
 	unsigned long millisSinceLastUpdate = ulongDiff(currentMillis, millisOfLastPixelUpdate);
 
@@ -788,6 +793,24 @@ void updatePixel()
 		frame->update();
 		frame->render();
 		millisOfLastPixelUpdate = currentMillis;
+	}
+}
+
+void updatePixel()
+{
+	switch (pixelProcess.status)
+	{
+	case PIXEL_NO_PIXELS:
+		return;
+	case PIXEL_OK:
+		updateFrame();		
+		break;
+	case PIXEL_OFF:
+		return;
+	case PIXELS_STATUS_ONLY:
+		return;
+	default:
+		break;
 	}
 }
 
@@ -813,6 +836,9 @@ void pixelStatusMessage(char *buffer, int bufferLength)
 		break;
 	case PIXEL_OFF:
 		snprintf(buffer, bufferLength, "PIXEL OFF");
+		break;
+	case PIXELS_STATUS_ONLY:
+		snprintf(buffer, bufferLength, "PIXELS status only");
 		break;
 	default:
 		snprintf(buffer, bufferLength, "Pixel status invalid");

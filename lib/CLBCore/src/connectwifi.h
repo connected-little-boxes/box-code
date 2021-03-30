@@ -25,7 +25,7 @@
 #define WIFI_CONFIG_STARTING_WEBSITE 612
 #define WIFI_CONFIG_STARTING_AP 613
 
-#define WIFI_MAX_NO_OF_FAILED_SCANS 2
+#define WIFI_MAX_NO_OF_FAILED_SCANS 5
 
 #define WIFI_SCAN_RETRY_MILLIS 5000
 #define WIFI_CONNECT_RETRY_MILLS 5000
@@ -85,4 +85,7 @@ extern WiFiConnectionState wifiState;
 extern struct process WiFiProcessDescriptor;
 
 void startWiFiConfigAP();
+
+bool wifiConfigurationsEmpty();
+
 

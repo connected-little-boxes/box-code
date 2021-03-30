@@ -135,12 +135,12 @@ boolean validateFloat0to1(void *dest, const char *newValueStr)
 {
 	float value;
 
-	if(!validateFloat(&value,newValueStr))
+	if (!validateFloat(&value, newValueStr))
 	{
 		return false;
 	}
 
-	if(value<0 || value>1)
+	if (value < 0 || value > 1)
 	{
 		return false;
 	}
@@ -473,15 +473,15 @@ void appendSettingJSON(SettingItem *item, char *jsonBuffer, int bufferLength)
 		boolValuePointer = (boolean *)item->value;
 		if (*boolValuePointer)
 		{
-		snprintf(jsonBuffer, bufferLength,
-				 "%syes",
-				 jsonBuffer);
+			snprintf(jsonBuffer, bufferLength,
+					 "%syes",
+					 jsonBuffer);
 		}
 		else
 		{
-		snprintf(jsonBuffer, bufferLength,
-				 "%sno",
-				 jsonBuffer);
+			snprintf(jsonBuffer, bufferLength,
+					 "%sno",
+					 jsonBuffer);
 		}
 		break;
 
@@ -531,15 +531,17 @@ void PrintSettingCollection(SettingItemCollection *settingCollection)
 	}
 }
 
-void appendSettingCollectionJson(SettingItemCollection *settings, char * buffer, int bufferLength)
+void appendSettingCollectionJson(SettingItemCollection *settings, char *buffer, int bufferLength)
 {
-	snprintf(buffer, bufferLength,"%s[", buffer);
+	snprintf(buffer, bufferLength, "%s[", buffer);
 
-	for(int i=0; i< settings->noOfSettings;i++) {
-		if(i>0){
-			snprintf(buffer,bufferLength,"%s,",buffer );
+	for (int i = 0; i < settings->noOfSettings; i++)
+	{
+		if (i > 0)
+		{
+			snprintf(buffer, bufferLength, "%s,", buffer);
 		}
-		appendSettingJSON(settings->settings[i], buffer,bufferLength);
+		appendSettingJSON(settings->settings[i], buffer, bufferLength);
 	}
 
 	snprintf(buffer, bufferLength, "%s]", buffer);
@@ -759,11 +761,11 @@ void saveSettings()
 
 	writeByteToEEPROM(checksum, saveAddr);
 
-	saveAddr = saveAddr+1;
+	saveAddr = saveAddr + 1;
 
 	writeByteToEEPROM(CHECK_BYTE_O1, saveAddr);
 
-	saveAddr = saveAddr+1;
+	saveAddr = saveAddr + 1;
 
 	writeByteToEEPROM(CHECK_BYTE_O2, saveAddr);
 
@@ -802,7 +804,7 @@ void checkSettingsBLockFromEEPROM(unsigned char *block, int size)
 boolean validStoredSettings()
 {
 	boolean result = true;
-	
+
 	loadAddr = SETTINGS_EEPROM_OFFSET;
 
 	checksum = 0;
@@ -819,29 +821,29 @@ boolean validStoredSettings()
 
 	Serial.printf("   settings occupy %d bytes of EEPROM\n", loadAddr - SETTINGS_EEPROM_OFFSET);
 
-	if(calcChecksum != readChecksum)
+	if (calcChecksum != readChecksum)
 	{
 		Serial.printf("   checksum fail: Calc checksum:%02x  read checksum:%02x\n", calcChecksum, readChecksum);
 		result = false;
 	}
 
-	loadAddr = loadAddr+1;
+	loadAddr = loadAddr + 1;
 
 	byte check;
-	
+
 	check = readByteFromEEPROM(loadAddr);
 
-	if(check != CHECK_BYTE_O1)
+	if (check != CHECK_BYTE_O1)
 	{
 		Serial.printf("   check byte 1 fail: Read:%02x expected:%02x\n", check, CHECK_BYTE_O1);
 		result = false;
 	}
 
-	loadAddr = loadAddr+1;
+	loadAddr = loadAddr + 1;
 
 	check = readByteFromEEPROM(loadAddr);
 
-	if(check != CHECK_BYTE_O2)
+	if (check != CHECK_BYTE_O2)
 	{
 		Serial.printf("   check byte 2 fail: Read:%02x expected:%02x\n", check, CHECK_BYTE_O1);
 		result = false;
@@ -1046,6 +1048,32 @@ void testSettingsStorage()
 
 void setupSettings()
 {
+
+	if (!SPIFFS.begin())
+	{
+		Serial.println("An Error has occurred while mounting SPIFFS");
+	}
+	else
+	{
+		File f = SPIFFS.open("/test.txt", "r");
+		Serial.println("***********Opened file: ");
+		Serial.println(f.read());
+		f.close();
+		// bool formatted = SPIFFS.format();
+		// if (formatted)
+		// {
+		// 	Serial.println("SPIFFS formatted successfully");
+		// 	File f = SPIFFS.open("/test.txt", "w");
+		// 	f.write("hello world");
+		// 	f.close();
+		// 	Serial.println("Test file written OK");
+		// }
+		// else
+		// {
+		// 	Serial.println("Error formatting");
+		// }
+	}
+
 	EEPROM.begin(EEPROM_SIZE);
 
 	Serial.println("Settings Setup");
@@ -1068,4 +1096,3 @@ void setupSettings()
 
 	//PrintAllSettings();
 }
-

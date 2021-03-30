@@ -28,11 +28,13 @@
 #include "printer.h"
 #include "BME280Sensor.h"
 #include "HullOS.h"
+#include "boot.h"
 
 // This function will be different for each build of the device.
 
 void populateProcessList()
 {
+	addProcessToAllProcessList(&bootProcessDescriptor);
 	addProcessToAllProcessList(&pixelProcess);
 	addProcessToAllProcessList(&statusLedProcess);
 	addProcessToAllProcessList(&inputSwitchProcess);
@@ -84,15 +86,12 @@ void startDevice()
 
 	Serial.println("\n\n\n\n");
 
-	loadBootReasonMessage();
-
 	Serial.printf("Connected Little Boxes Device\n");
 	Serial.printf("www.connectedlittleboxes.com\n");
 	Serial.printf("Version %s build date: %s %s\n", Version, __DATE__, __TIME__);
 #ifdef DEBUG
 	Serial.println("**** Debug output enabled");
 #endif
-	Serial.printf("Reset reason: %s\n\n", bootReasonMessage);
 
 	//	Serial.print("Initial Heap: ");
 	//	Serial.println(ESP.getFreeHeap());
@@ -109,8 +108,6 @@ void startDevice()
 	initialiseAllProcesses();
 
 	beginStatusDisplay();
-
-	// this is where we do the configuration thing - or not
 
 	buildActiveProcessListFromMask(BOOT_PROCESS);
 
@@ -144,10 +141,6 @@ void heapMonitor()
 		heapPrintTime = millis();
 	}
 }
-
-
-
-
 
 void setup()
 {

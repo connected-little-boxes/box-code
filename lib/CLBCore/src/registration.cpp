@@ -2,6 +2,7 @@
 #include "mqtt.h"
 #include "errors.h"
 #include "clock.h"
+#include "boot.h"
 
 struct RegistrationSettings RegistrationSettings;
 

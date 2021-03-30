@@ -4,6 +4,8 @@
 #include "processes.h"
 #include "connectwifi.h"
 #include "settingsWebServer.h"
+#include "boot.h"
+#include "pixels.h"
 
 boolean validateWifiSSID(void *dest, const char *newValueStr)
 {
@@ -168,19 +170,26 @@ void updateReconnectTimer()
 
 void handleConnectFailure()
 {
+	if(bootMode==WARM_BOOT_MODE)
+	{
+		// if we have already rebooted once because of a connection failure 
+		// we don't do it again. 
+		return;
+	}
+
 	wifiConnectAttempts++;
 
 	if (wifiConnectAttempts == WIFI_MAX_NO_OF_FAILED_SCANS)
 	{
 		TRACE("Reset due to WiFi lockup");
-		delay(200);
-		ESP.restart();
+		internalReboot(WARM_BOOT_MODE);
 	}
 }
 
 void handleFailedWiFiScan()
 {
 	TRACELN("No networks found that match stored network names");
+	handleConnectFailure();
 	displayMessage(WIFI_STATUS_NO_MATCHING_NETWORKS_MESSAGE_NUMBER, ledFlashAlertState, WIFI_STATUS_NO_MATCHING_NETWORKS_MESSAGE_TEXT);
 	startReconnectTimer();
 }
@@ -300,8 +309,7 @@ void checkWiFIOK()
 
 	if (wifiStatusValue != WL_CONNECTED)
 	{
-		displayWiFiStatus(wifiStatusValue);
-		handleConnectFailure();
+		startReconnectTimer();
 	}
 }
 
@@ -334,6 +342,7 @@ void startWiFiConfigWebsite()
 {
 	if (startHostingConfigWebsite())
 	{
+		beginStatusDisplay();
 		displayMessage(WIFI_STATUS_HOSTING_AP_MESSAGE_NUMBER, ledFlashConfigState, WIFI_STATUS_HOSTING_AP_MESSAGE_TEXT);
 		Serial.printf("   Hosting at 192.168.4.1 on %s\n", CONFIG_ACCESS_POINT_SSID);
 		WiFiProcessDescriptor.status = WIFI_CONFIG_HOSTING_WEBSITE;
@@ -353,7 +362,7 @@ void startWifi()
 {
 	if (wifiConnectionSettings.wiFiOn)
 	{
-		if (wifiConfigurationsEmpty())
+		if(bootMode == CONFIG_BOOT_MODE)
 		{
 			// we need to get some configuration
 			// changes state to WIFI_CONFIG_STARTING_AP

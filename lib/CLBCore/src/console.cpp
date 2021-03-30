@@ -9,6 +9,7 @@
 #include "connectwifi.h"
 #include "settingsWebServer.h"
 #include "HullOS.h"
+#include "boot.h"
 
 struct ConsoleSettings consoleSettings;
 
@@ -94,9 +95,7 @@ char consoleMessageBuffer[CONSOLE_MESSAGE_SIZE];
 
 void doStartWebServer(char * commandLine)
 {
-	startWiFiConfigAP();
-
-	Serial.println("Restart the device after configuration");
+	internalReboot(CONFIG_BOOT_NO_TIMEOUT_MODE);
 }
 
 void doDumpStatus(char * commandLine)
@@ -109,15 +108,15 @@ void doDumpStatus(char * commandLine)
 
 void doRestart(char * commandLine)
 {
-	saveSettings(); 
-	ESP.restart();
+	saveSettings();
+	internalReboot(DEVICE_BOOT_MODE);
 }
 
 void doClear(char * commandLine)
 {
 	resetSettings();
 	saveSettings();
-	ESP.restart();
+	internalReboot(DEVICE_BOOT_MODE);
 }
 
 void doSaveSettings(char * commandline)

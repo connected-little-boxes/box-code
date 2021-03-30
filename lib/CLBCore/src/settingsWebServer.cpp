@@ -4,6 +4,7 @@
 #include "settings.h"
 #include "sensors.h"
 #include "processes.h"
+#include "boot.h"
 
 #define WEB_PAGE_BUFFER_SIZE 3000
 
@@ -242,6 +243,11 @@ void serveHome(WebServer *webServer)
 {
 	// Serial.println("Serve request hit");
 
+	// if we get a request stop the boot process from 
+	// ending the server
+
+	bootMode = CONFIG_BOOT_NO_TIMEOUT_MODE;
+	
 	if (webServer->args() == 0) {
 		// Serial.println("Serving the home page");
 		buildHomePage();
@@ -275,6 +281,11 @@ const char sensorResetMessage[] =
 
 void pageNotFound(WebServer *webServer)
 {
+	// if we get a request stop the boot process from 
+	// ending the server
+
+	bootMode = CONFIG_BOOT_NO_TIMEOUT_MODE;
+
 	String uriString = webServer->uri();
 
 	const char * uriChars = uriString.c_str();
@@ -289,7 +300,7 @@ void pageNotFound(WebServer *webServer)
 		webServer->sendHeader("Content-Length", String(strlen(sensorResetMessage)));
 		webServer->send(200, "text/html", sensorResetMessage);
 		delay(5000);
-		ESP.restart();
+		internalReboot(WARM_BOOT_MODE);
 	}
 
 	if(strcasecmp(pageNameStart, "full")==0)
