@@ -1216,6 +1216,65 @@ void showLocalPublishCommandResult(char *resultText)
 	Serial.println(resultText);
 }
 
+#define CONTROLLER_FLOAT_VALUE_OFFSET 0
+#define CONTROLLER_MESSAGE_OFFSET (CONTROLLER_FLOAT_VALUE_OFFSET + sizeof(float))
+
+
+boolean validateControllerCommandStoreString(void *dest, const char *newValueStr)
+{
+	return (validateString((char *)dest, newValueStr, COMMAND_STORE_NAME_LENGTH));
+}
+
+struct CommandItem commandStoreName = {
+	"store",
+	"store containing the commands to be performed",
+	CONTROLLER_MESSAGE_OFFSET,
+	textCommand,
+	validateControllerCommandStoreString,
+	noDefaultAvailable};
+
+
+struct CommandItem *performCommandStoreItems[] =
+	{
+		&commandStoreName};
+
+int doPerformCommandStore(char *destination, unsigned char *settingBase);
+
+struct Command performCommandStore
+{
+	"perform",
+		"Performs the commands in a command store",
+		performCommandStoreItems,
+		sizeof(performCommandStoreItems) / sizeof(struct CommandItem *),
+		doPerformCommandStore
+};
+
+int doPerformCommandStore(char *destination, unsigned char *settingBase)
+{
+	if (*destination != 0)
+	{
+		// we have a destination for the command. Build the string
+		char buffer[JSON_BUFFER_SIZE];
+		createJSONfromSettings("controller", &performCommandStore, destination, settingBase, buffer, JSON_BUFFER_SIZE);
+		return publishBufferToMQTTTopic(buffer, destination);
+	}
+
+	Serial.println("Performing a command");
+
+	char *command = (char *)(settingBase + CONTROLLER_MESSAGE_OFFSET);
+	return performCommandsInStore(command);
+}
+
+struct Command *controlCommandList[] = {
+	&performCommandStore
+	};
+
+struct CommandItemCollection controllerCommands =
+	{
+		"Perform commands on the device",
+		controlCommandList,
+		sizeof(controlCommandList) / sizeof(struct Command *)};
+
 void initcontroller()
 {
 	controllerProcess.status = CONTROLLER_STOPPED;
@@ -1269,7 +1328,7 @@ struct process controllerProcess = {
 	0,
 	NULL,
 	(unsigned char *)&controllerSettings, sizeof(controllerSettings), &controllerSettingItems,
-	NULL,
+	&controllerCommands,
 	BOOT_PROCESS + ACTIVE_PROCESS,
 	NULL,
 	NULL,

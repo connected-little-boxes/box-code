@@ -13,6 +13,8 @@
 #define STORE_FILENAME_LENGTH 30
 #define BOOT_FOLDER_NAME "boot"
 
+#define COMMAND_STORE_NAME_LENGTH 20
+
 struct controllerSettings 
 {
     bool active;

@@ -113,6 +113,7 @@ void doRestart(char *commandLine)
 
 void doClear(char *commandLine)
 {
+	LittleFS.format();
 	resetSettings();
 	saveSettings();
 	internalReboot(DEVICE_BOOT_MODE);
