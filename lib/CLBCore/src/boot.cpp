@@ -202,20 +202,42 @@ int getRestartCode()
     return result;
 }
 
+#if defined(ARDUINO_ARCH_ESP32)
+RTC_NOINIT_ATTR int bootCode;
+#endif
+
 int getInternalBootCode()
 {
+#if defined(ARDUINO_ARCH_ESP8266)
     uint32_t result;
 
     ESP.rtcUserMemoryRead(0, &result, 1);
 
     return (int)result;
+#endif
+
+#if defined(ARDUINO_ARCH_ESP32)
+    TRACE("Got ESP32 internal boot code:");
+    TRACELN(bootCode);
+    return bootCode;
+#endif
 }
 
 void setInternalBootCode(int value)
 {
+#if defined(ARDUINO_ARCH_ESP8266)
     uint32_t storeValue = value;
 
     ESP.rtcUserMemoryWrite(0, &storeValue, 1);
+#endif 
+
+#if defined(ARDUINO_ARCH_ESP32)
+    TRACE("Setting ESP32 internal boot code:");
+    TRACELN(value);
+    bootCode = value;
+#endif
+
+
 }
 
 bool isSoftwareReset()
@@ -255,6 +277,10 @@ void initBoot()
         case CONFIG_BOOT_MODE:
             Serial.println("  Starting in config mode\n");
             bootMode = CONFIG_BOOT_MODE;
+            break;
+        case CONFIG_BOOT_NO_TIMEOUT_MODE:
+            Serial.println("  Starting in config mode with no timeout\n");
+            bootMode = CONFIG_BOOT_NO_TIMEOUT_MODE;
             break;
         default:
             Serial.printf("  Invalid boot code %d. Starting as a device\n", storedCode);

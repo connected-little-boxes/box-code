@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <Wire.h>
+#include "LittleFS.h"
 
 #include "debug.h"
 #include "utils.h"
@@ -29,6 +30,7 @@
 #include "BME280Sensor.h"
 #include "HullOS.h"
 #include "boot.h"
+
 
 // This function will be different for each build of the device.
 

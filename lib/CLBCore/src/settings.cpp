@@ -1,5 +1,7 @@
 #include <EEPROM.h>
 #include <Arduino.h>
+#include "LittleFS.h"
+
 #include "string.h"
 #include "errors.h"
 #include "settings.h"
@@ -11,8 +13,6 @@
 #include "controller.h"
 #include "registration.h"
 #include "HullOS.h"
-
-struct Device_Settings settings;
 
 void setEmptyString(void *dest)
 {
@@ -337,7 +337,7 @@ boolean validateServerName(void *dest, const char *newValueStr)
 	return (validateString((char *)dest, newValueStr, SERVER_NAME_LENGTH));
 }
 
-void printSettingValue(SettingItem *item)
+void printSettingValue(SettingItem *item, char * buffer, int bufferLength, bool secure)
 {
 	int *intValuePointer;
 	boolean *boolValuePointer;
@@ -345,73 +345,149 @@ void printSettingValue(SettingItem *item)
 	double *doubleValuePointer;
 	uint32_t *loraIDValuePointer;
 
-	char loraKeyBuffer[LORA_KEY_LENGTH * 2 + 1];
-
 	switch (item->settingType)
 	{
 
 	case text:
-		Serial.println((char *)item->value);
+		snprintf(buffer, bufferLength, "%s", (char *)item->value);
 		break;
 
 	case password:
 		//Serial.println((char *)item->value);
-		Serial.println("******");
+		if(secure)
+		{
+			snprintf(buffer, bufferLength, "%s", (char *)item->value);
+		}
+		else 
+		{
+			snprintf(buffer, bufferLength, "*****");
+		}
 		break;
 
 	case integerValue:
 		intValuePointer = (int *)item->value;
-		Serial.println(*intValuePointer);
+		snprintf(buffer, bufferLength, "%d", *intValuePointer);
 		break;
 
 	case floatValue:
 		floatValuePointer = (float *)item->value;
-		Serial.println(*floatValuePointer);
+		snprintf(buffer, bufferLength, "%f", *floatValuePointer);
 		break;
 
 	case doubleValue:
 		doubleValuePointer = (double *)item->value;
-		Serial.println(*doubleValuePointer);
+		snprintf(buffer, bufferLength, "%lf", *doubleValuePointer);
 		break;
 
 	case yesNo:
 		boolValuePointer = (boolean *)item->value;
 		if (*boolValuePointer)
 		{
-			Serial.println("yes");
+			snprintf(buffer, bufferLength, "yes");
 		}
 		else
 		{
-			Serial.println("no");
+			snprintf(buffer, bufferLength, "no");
 		}
 		break;
 
 	case loraKey:
-		dumpHexString(loraKeyBuffer, (uint8_t *)item->value, LORA_KEY_LENGTH);
-		Serial.println(loraKeyBuffer);
+		dumpHexString(buffer, (uint8_t *)item->value, LORA_KEY_LENGTH);
 		break;
 
 	case loraID:
 		loraIDValuePointer = (uint32_t *)item->value;
-		dumpUnsignedLong(loraKeyBuffer, *loraIDValuePointer);
-		Serial.println(loraKeyBuffer);
+		dumpUnsignedLong(buffer, *loraIDValuePointer);
 		break;
 
 	default:
-		Serial.println("***** invalid setting type");
+		snprintf(buffer, bufferLength, "***** invalid setting type");
 	}
 }
 
 void printSetting(SettingItem *item)
 {
-	Serial.printf("    %s [%s]: ", item->prompt, item->formName);
-	printSettingValue(item);
+	char itemBuffer [SETTING_VALUE_OUTPUT_LENGTH];
+	printSettingValue(item, itemBuffer, SETTING_VALUE_OUTPUT_LENGTH, true);
+
+	Serial.printf("    %s [%s]: %s\n", item->prompt, item->formName, itemBuffer);
 }
 
 void dumpSetting(SettingItem *item)
 {
-	Serial.printf("%s=", item->formName);
-	printSettingValue(item);
+	char itemBuffer [SETTING_VALUE_OUTPUT_LENGTH];
+	printSettingValue(item, itemBuffer, SETTING_VALUE_OUTPUT_LENGTH, true);
+
+	Serial.printf("%s=%s\n", item->formName,itemBuffer);
+}
+
+void buildSaveSettingString(SettingItem *item, char * buffer, int bufferLength)
+{
+	char itemBuffer [SETTING_VALUE_OUTPUT_LENGTH];
+	printSettingValue(item, itemBuffer, SETTING_VALUE_OUTPUT_LENGTH, false);
+	
+	snprintf(buffer, bufferLength, "%s=%s", item->formName,itemBuffer);
+}
+
+File saveFile;
+File loadFile;
+
+void saveSettingToFile(SettingItem *item)
+{
+	char itemBuffer [SETTING_VALUE_OUTPUT_LENGTH];
+	printSettingValue(item, itemBuffer, SETTING_VALUE_OUTPUT_LENGTH, true);
+	saveFile.printf("%s=%s\n", item->formName,itemBuffer);
+}
+
+void saveSettingCollectionToFile(SettingItemCollection *settingCollection)
+{
+	TRACE("  Saving setting collection: ");
+	TRACELN(settingCollection->collectionName);
+	for (int settingNo = 0; settingNo < settingCollection->noOfSettings; settingNo++)
+	{
+		saveSettingToFile(settingCollection->settings[settingNo]);
+	}
+}
+
+void saveAllSettingsToFile(char * path)
+{
+	TRACE("Saving all settings to the file:");
+	TRACELN(path);
+	saveFile = LittleFS.open(path,"w");
+	iterateThroughSensorSettingCollections(saveSettingCollectionToFile);
+	iterateThroughProcessSettingCollections(saveSettingCollectionToFile);
+	saveFile.close();
+	TRACELN("Settings saved");
+}
+
+bool loadAllSettingsFromFile(char * path)
+{
+	TRACE("Loading all settings from the file:");
+	TRACELN(path);
+
+    loadFile = LittleFS.open(path,"r");
+
+    if(!loadFile || loadFile.isDirectory()){
+		TRACELN("  failed to open the file");
+        return false;
+    }	
+
+	while(loadFile.available())
+	{
+		String line = loadFile.readStringUntil('\n');
+
+		const char * lineChar = line.c_str();
+
+		if(processSettingCommand((char *)lineChar) != setOK)
+		{
+			TRACE("  bad setting:");
+			TRACELN(lineChar);
+		}
+	}
+
+	loadFile.close();
+	TRACELN("Settings loaded successfully");
+	return true;
 }
 
 void appendSettingJSON(SettingItem *item, char *jsonBuffer, int bufferLength)
@@ -577,14 +653,17 @@ void PrintSettingCollectionFiltered(SettingItemCollection *settingCollection)
 	}
 }
 
-void PrintSystemDetails()
+void PrintSystemDetails(char * buffer, int length)
 {
-	Serial.printf("   device:%s\n", settings.name);
+	snprintf(buffer, length, "CLB-%06lx", (unsigned long)PROC_ID);	
 }
 
 void PrintAllSettings()
 {
-	PrintSystemDetails();
+	char deviceNameBuffer [DEVICE_NAME_LENGTH];
+	PrintSystemDetails(deviceNameBuffer,DEVICE_NAME_LENGTH);
+
+	Serial.println(deviceNameBuffer);
 	Serial.println("Sensors");
 	iterateThroughSensorSettingCollections(PrintSettingCollection);
 	Serial.println("Processes");
@@ -594,7 +673,9 @@ void PrintAllSettings()
 void PrintSomeSettings(char *filter)
 {
 	settingsPrintFilter = filter;
-	PrintSystemDetails();
+    char deviceNameBuffer [DEVICE_NAME_LENGTH];
+	PrintSystemDetails(deviceNameBuffer,DEVICE_NAME_LENGTH);
+	Serial.println(deviceNameBuffer);
 	Serial.println("Sensors");
 	iterateThroughSensorSettingCollections(PrintSettingCollectionFiltered);
 	Serial.println("Processes");
@@ -614,7 +695,9 @@ void printProcessStorage(process *process)
 
 void PrintStorage()
 {
-	PrintSystemDetails();
+    char deviceNameBuffer [DEVICE_NAME_LENGTH];
+	PrintSystemDetails(deviceNameBuffer,DEVICE_NAME_LENGTH);
+	Serial.println(deviceNameBuffer);
 	Serial.println("Sensors");
 	iterateThroughSensors(printSettingStorage);
 	Serial.println("Processes");
@@ -672,72 +755,9 @@ void DumpSomeSettings(char *filter)
 void resetSettings()
 {
 	// PROC_ID is defined in utils.h
-	snprintf(settings.name, DEVICE_NAME_LENGTH, "CLB-%06lx", (unsigned long)PROC_ID);
 	resetProcessesToDefaultSettings();
 	resetSensorsToDefaultSettings();
 	resetControllerListenersToDefaults();
-}
-
-unsigned char checksum;
-int saveAddr;
-int loadAddr;
-
-void writeByteToEEPROM(byte b, int address)
-{
-	// Serial.printf("Writing byte: %d at address: %d\n", b, address); delay(1);
-	checksum = checksum + b;
-
-	if (EEPROM.read(address) != b)
-	{
-		EEPROM.write(address, b);
-	}
-}
-
-void writeBytesToEEPROM(unsigned char *bytesToStore, int address, int length)
-{
-	int endAddress = address + length;
-
-	for (int i = address; i < endAddress; i++)
-	{
-		byte b = *bytesToStore;
-
-		writeByteToEEPROM(b, i);
-
-		bytesToStore++;
-	}
-}
-
-byte readByteFromEEPROM(int address)
-{
-	byte result;
-	result = EEPROM.read(address);
-	// Serial.printf("Reading byte: %d from address: %d\n", result, address); delay(1);
-
-	checksum += result;
-	return result;
-}
-
-void readBytesFromEEPROM(byte *destination, int address, int length)
-{
-	int endAddress = address + length;
-
-	for (int i = address; i < endAddress; i++)
-	{
-		*destination = readByteFromEEPROM(i);
-		destination++;
-	}
-}
-
-void readSettingsBLockFromEEPROM(unsigned char *block, int size)
-{
-	readBytesFromEEPROM(block, loadAddr, size);
-	loadAddr = loadAddr + size;
-}
-
-void saveSettingsBLockToEEPROM(unsigned char *block, int size)
-{
-	writeBytesToEEPROM(block, saveAddr, size);
-	saveAddr = saveAddr + size;
 }
 
 void iterateThroughAllSettings(void (*func)(unsigned char *settings, int size))
@@ -749,107 +769,12 @@ void iterateThroughAllSettings(void (*func)(unsigned char *settings, int size))
 
 void saveSettings()
 {
-	saveAddr = SETTINGS_EEPROM_OFFSET;
-
-	checksum = 0;
-
-	saveSettingsBLockToEEPROM((unsigned char *)&settings, sizeof(struct Device_Settings));
-
-	iterateThroughAllSettings(saveSettingsBLockToEEPROM);
-
-	iterateThroughControllerListenerSettingCollections(saveSettingsBLockToEEPROM);
-
-	writeByteToEEPROM(checksum, saveAddr);
-
-	saveAddr = saveAddr + 1;
-
-	writeByteToEEPROM(CHECK_BYTE_O1, saveAddr);
-
-	saveAddr = saveAddr + 1;
-
-	writeByteToEEPROM(CHECK_BYTE_O2, saveAddr);
-
-	EEPROM.commit();
+	saveAllSettingsToFile(SETTINGS_FILENAME);
 }
 
-void loadSettings()
+bool loadSettings()
 {
-	loadAddr = SETTINGS_EEPROM_OFFSET;
-
-	checksum = 0;
-
-	readSettingsBLockFromEEPROM((unsigned char *)&settings, sizeof(struct Device_Settings));
-
-	iterateThroughAllSettings(readSettingsBLockFromEEPROM);
-
-	iterateThroughControllerListenerSettingCollections(readSettingsBLockFromEEPROM);
-}
-
-void checksumBytesFromEEPROM(byte *destination, int address, int length)
-{
-	int endAddress = address + length;
-
-	for (int i = address; i < endAddress; i++)
-	{
-		readByteFromEEPROM(i);
-	}
-}
-
-void checkSettingsBLockFromEEPROM(unsigned char *block, int size)
-{
-	checksumBytesFromEEPROM(block, loadAddr, size);
-	loadAddr = loadAddr + size;
-}
-
-boolean validStoredSettings()
-{
-	boolean result = true;
-
-	loadAddr = SETTINGS_EEPROM_OFFSET;
-
-	checksum = 0;
-
-	checkSettingsBLockFromEEPROM((unsigned char *)&settings, sizeof(struct Device_Settings));
-
-	iterateThroughAllSettings(checkSettingsBLockFromEEPROM);
-
-	iterateThroughControllerListenerSettingCollections(checkSettingsBLockFromEEPROM);
-
-	unsigned char calcChecksum = checksum;
-
-	unsigned char readChecksum = readByteFromEEPROM(loadAddr);
-
-	Serial.printf("   settings occupy %d bytes of EEPROM\n", loadAddr - SETTINGS_EEPROM_OFFSET);
-
-	if (calcChecksum != readChecksum)
-	{
-		Serial.printf("   checksum fail: Calc checksum:%02x  read checksum:%02x\n", calcChecksum, readChecksum);
-		result = false;
-	}
-
-	loadAddr = loadAddr + 1;
-
-	byte check;
-
-	check = readByteFromEEPROM(loadAddr);
-
-	if (check != CHECK_BYTE_O1)
-	{
-		Serial.printf("   check byte 1 fail: Read:%02x expected:%02x\n", check, CHECK_BYTE_O1);
-		result = false;
-	}
-
-	loadAddr = loadAddr + 1;
-
-	check = readByteFromEEPROM(loadAddr);
-
-	if (check != CHECK_BYTE_O2)
-	{
-		Serial.printf("   check byte 2 fail: Read:%02x expected:%02x\n", check, CHECK_BYTE_O1);
-		result = false;
-	}
-
-	return result;
+	return loadAllSettingsFromFile(SETTINGS_FILENAME);
 }
 
 boolean matchSettingCollectionName(SettingItemCollection *settingCollection, const char *name)
@@ -1020,79 +945,27 @@ void sendSettingItemToJSONString(struct SettingItem *item, char *buffer, int buf
 	}
 }
 
-void testSettingsStorage()
-{
-	Serial.println("Testing Settings Storage");
-	Serial.println("Resetting Settings");
-	resetSettings();
-	PrintAllSettings();
-	Serial.println("Storing Settings");
-	saveSettings();
-	Serial.println("Restoring setings");
-	saveSettings();
-	Serial.println("Loading Settings");
-	loadSettings();
-	PrintAllSettings();
-	if (validStoredSettings())
-		Serial.println("Settings storage restored OK");
-	else
-		Serial.println("Something wrong with setting storage");
-
-	settings.name[0] = 'x';
-
-	if (!validStoredSettings())
-		Serial.println("Settings change detected");
-	else
-		Serial.println("Settings change not detected");
-}
-
 void setupSettings()
 {
+	TRACELN("Setting up settings");
 
-	if (!SPIFFS.begin())
+	if (!LittleFS.begin())
 	{
 		Serial.println("An Error has occurred while mounting SPIFFS");
 	}
-	else
+
+	if(loadSettings())
 	{
-		File f = SPIFFS.open("/test.txt", "r");
-		Serial.println("***********Opened file: ");
-		Serial.println(f.read());
-		f.close();
-		// bool formatted = SPIFFS.format();
-		// if (formatted)
-		// {
-		// 	Serial.println("SPIFFS formatted successfully");
-		// 	File f = SPIFFS.open("/test.txt", "w");
-		// 	f.write("hello world");
-		// 	f.close();
-		// 	Serial.println("Test file written OK");
-		// }
-		// else
-		// {
-		// 	Serial.println("Error formatting");
-		// }
-	}
-
-	EEPROM.begin(EEPROM_SIZE);
-
-	Serial.println("Settings Setup");
-
-	//testSettingsStorage();
-
-	if (validStoredSettings())
-	{
-		loadSettings();
-		PrintSystemDetails();
-		Serial.println("   settings loaded OK\n");
+		Serial.println("Settings loaded OK");
 	}
 	else
 	{
 		resetSettings();
 		saveSettings();
-		PrintSystemDetails();
-		Serial.println("   ***** settings reset\n");
+		Serial.println("Settings reset to default values");
 	}
 
-	//PrintAllSettings();
+    char deviceNameBuffer [DEVICE_NAME_LENGTH];
+	PrintSystemDetails(deviceNameBuffer,DEVICE_NAME_LENGTH);
+	Serial.println(deviceNameBuffer);
 }

@@ -246,8 +246,10 @@ void startPrinter()
 
     if (printerSettings.printerEnabled)
     {
+    	char deviceNameBuffer [DEVICE_NAME_LENGTH];
+	    PrintSystemDetails(deviceNameBuffer,DEVICE_NAME_LENGTH);
         char buffer[100];
-        snprintf(buffer,100,"\n\nPrinter starting on:%s\n\n\n", settings.name);
+        snprintf(buffer,100,"\n\nPrinter starting on:%s\n\n\n", deviceNameBuffer);
         printerProcess.status = PRINTER_OK;
         printMessage(buffer, NULL);
     }

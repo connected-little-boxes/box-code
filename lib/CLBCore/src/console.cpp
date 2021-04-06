@@ -289,7 +289,6 @@ void performRemoteCommand(char * commandLine)
 	act_onJson_message(commandLine,showRemoteCommandResult);
 }
 
-
 void doClearAllListeners(char * commandLine)
 {
 	Serial.println("\nClearing all the listeners\n");

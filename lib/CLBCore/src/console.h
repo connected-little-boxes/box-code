@@ -34,6 +34,5 @@ struct consoleCommand {
 struct consoleCommand * findCommand(char * commandLine,consoleCommand * commands, int noOfCommands);
 char * skipCommand(char * commandLine);
 boolean performCommand(char * commandLine, consoleCommand * commands, int noOfCommands);
-
-
+void performRemoteCommand(char * commandLine);
 

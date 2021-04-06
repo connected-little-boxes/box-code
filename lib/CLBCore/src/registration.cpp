@@ -109,10 +109,12 @@ void buildConfigJson(char *destination, int bufferSize)
 void sendRegistrationMessage()
 {
 	char messageBuffer[CONNECTION_MESSAGE_BUFFER_SIZE];
+	char deviceNameBuffer [DEVICE_NAME_LENGTH];
+	PrintSystemDetails(deviceNameBuffer,DEVICE_NAME_LENGTH);
 
 	snprintf(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE,
 			 "{\"name\":\"%s\",\"processor\":\"%s\",\"friendlyName\":\"%s\",\"version\":\"%s\",",
-			 settings.name,
+			 deviceNameBuffer,
 			 PROC_NAME,
 			 RegistrationSettings.friendlyName,
 			 Version);
@@ -127,11 +129,14 @@ void sendRegistrationMessage()
 void sendConnectionMessage()
 {
 	char messageBuffer[CONNECTION_MESSAGE_BUFFER_SIZE];
+	char deviceNameBuffer [DEVICE_NAME_LENGTH];
+	PrintSystemDetails(deviceNameBuffer,DEVICE_NAME_LENGTH);
+
 
 	snprintf(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE,
 				"{\"name\":\"%s\",\"reset\":\"%s\","
 				"\"cpu\":\"%s\",\"resetcode\":%d}",
-				settings.name, bootReasonMessage,
+				deviceNameBuffer, bootReasonMessage,
 				PROC_NAME, getRestartCode());
 
 	publishBufferToMQTTTopic(messageBuffer, MQTT_CONNECTED_TOPIC);
@@ -275,10 +280,12 @@ int doRegistrationGetSetupCommand(char *destination, unsigned char *settingBase)
 	}
 
 	char messageBuffer[CONNECTION_MESSAGE_BUFFER_SIZE];
+	char deviceNameBuffer [DEVICE_NAME_LENGTH];
+	PrintSystemDetails(deviceNameBuffer,DEVICE_NAME_LENGTH);
 
 	snprintf(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE,
 				"{\"name\":\"%s\",",
-				settings.name);
+				deviceNameBuffer);
 
 	buildConfigJson(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE);
 
@@ -339,10 +346,12 @@ int doRegistrationGetSettingsCommand(char *destination, unsigned char *settingBa
 	}
 
 	char messageBuffer[CONNECTION_MESSAGE_BUFFER_SIZE];
+	char deviceNameBuffer [DEVICE_NAME_LENGTH];
+	PrintSystemDetails(deviceNameBuffer,DEVICE_NAME_LENGTH);
 
 	snprintf(messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE,
 			 "{\"name\":\"%s\",\"name\":\"%s\",\"settings\":",
-			 settings.name, name);
+			 deviceNameBuffer, name);
 
 	appendSettingCollectionJson(settingCollection, messageBuffer, CONNECTION_MESSAGE_BUFFER_SIZE);
 

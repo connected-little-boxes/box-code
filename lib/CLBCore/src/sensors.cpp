@@ -42,7 +42,6 @@ void clearSensorListener(struct sensorListener * listener)
 	listener->nextMessageListener = NULL;
 }
 
-
 struct sensorListener * getNewSensorListener()
 {
 	TRACELN("Getting a sensor listener");

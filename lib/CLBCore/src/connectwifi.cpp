@@ -362,7 +362,7 @@ void startWifi()
 {
 	if (wifiConnectionSettings.wiFiOn)
 	{
-		if(bootMode == CONFIG_BOOT_MODE)
+		if((bootMode == CONFIG_BOOT_MODE) || (bootMode == CONFIG_BOOT_NO_TIMEOUT_MODE))
 		{
 			// we need to get some configuration
 			// changes state to WIFI_CONFIG_STARTING_AP

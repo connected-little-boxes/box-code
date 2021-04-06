@@ -116,41 +116,40 @@ bool isProgramStored()
 return true;
 }
 
+// set to the length of the program in bytes
+// Get this from the file size when we load the program
 
-
-
-
-
+int programSize;
 
 void dumpProgramFromEEPROM(int EEPromStart)
 {
-    int EEPromPos = EEPromStart;
+    // int EEPromPos = EEPromStart;
 
-    Serial.println(F("Program: "));
+    // Serial.println(F("Program: "));
 
-    char byte;
-    while (true)
-    {
-        byte = readHullOSProgramByte(EEPromPos++);
+    // char byte;
+    // while (true)
+    // {
+    //     byte = readHullOSProgramByte(EEPromPos++);
 
-        if (byte == STATEMENT_TERMINATOR)
-            Serial.println();
-        else
-            Serial.print(byte);
+    //     if (byte == STATEMENT_TERMINATOR)
+    //         Serial.println();
+    //     else
+    //         Serial.print(byte);
 
-        if (byte == PROGRAM_TERMINATOR)
-        {
-            Serial.print(F("Program size: "));
-            Serial.println(EEPromPos - EEPromStart);
-            break;
-        }
+    //     if (byte == PROGRAM_TERMINATOR)
+    //     {
+    //         Serial.print(F("Program size: "));
+    //         Serial.println(EEPromPos - EEPromStart);
+    //         break;
+    //     }
 
-        if (EEPromPos >= EEPROM_SIZE)
-        {
-            Serial.println(F("Eeprom end"));
-            break;
-        }
-    }
+    //     if (EEPromPos >= EEPROM_SIZE)
+    //     {
+    //         Serial.println(F("Eeprom end"));
+    //         break;
+    //     }
+    // }
 }
 
 void startProgramExecution(int programPosition)
@@ -504,13 +503,13 @@ int findNextStatement(int programPosition)
 	{
 		char ch = readHullOSProgramByte(programPosition);
 
-		if ((ch == PROGRAM_TERMINATOR) || (programPosition == EEPROM_SIZE))
+		if ((ch == PROGRAM_TERMINATOR) || (programPosition == programSize))
 			return -1;
 
 		if (ch == STATEMENT_TERMINATOR)
 		{
 			programPosition++;
-			if (programPosition == EEPROM_SIZE)
+			if (programPosition == programSize)
 				return -1;
 			else
 				return programPosition;
@@ -617,7 +616,7 @@ int findLabelInProgram(char *label, int programPosition)
 
 		// Now spin down the label looking for a match
 
-		while ((*labelTest != STATEMENT_TERMINATOR) && (programPosition < EEPROM_SIZE))
+		while ((*labelTest != STATEMENT_TERMINATOR) && (programPosition < programSize))
 		{
 			programByte = readHullOSProgramByte(programPosition);
 
@@ -1453,7 +1452,7 @@ bool exeuteProgramStatement()
 	{
 		programByte = readHullOSProgramByte(programCounter++);
 
-		if (programCounter >= EEPROM_SIZE || programByte == PROGRAM_TERMINATOR)
+		if (programCounter >= programSize || programByte == PROGRAM_TERMINATOR)
 		{
 			haltProgramExecution();
 			return false;

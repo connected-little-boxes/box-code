@@ -10,6 +10,8 @@
 #include "settings.h"
 
 #include "ArduinoJson-v5.13.2.h"
+#include "FS.h"
+#include <LITTLEFS.h>
 
 #define COMMAND_REPLY_BUFFER_SIZE 240
 #define REPLY_ELEMENT_SIZE 100
@@ -38,32 +40,32 @@ void printListenerConfiguration(sensorListenerConfiguration *item)
 {
 	if (item->listenerName[0] != 0)
 	{
-		sensor * s = findSensorByName(item->sensorName);
+		sensor *s = findSensorByName(item->sensorName);
 
-		if(s==NULL){
+		if (s == NULL)
+		{
 			Serial.printf("Sensor %s in listener not found\n", item->sensorName);
 			return;
 		}
 
-		struct sensorEventBinder * binder = findSensorEventBinderByTrigger(s, item->sendOptionMask);
+		struct sensorEventBinder *binder = findSensorEventBinderByTrigger(s, item->sendOptionMask);
 
-		if(item->destination[0]==0)
+		if (item->destination[0] == 0)
 		{
 			Serial.printf("Process:%s Command:%s Sensor:%s Trigger:%s\n",
-					  item->commandProcess,
-					  item->commandName, 
-					  item->sensorName,
-					  binder->listenerName
-					  );
+						  item->commandProcess,
+						  item->commandName,
+						  item->sensorName,
+						  binder->listenerName);
 		}
 		else
 		{
 			Serial.printf("Process:%s Command:%s Sensor:%s Trigger:%s Destination:%s\n",
-					  item->commandProcess,
-					  item->commandName,
-					  item->sensorName,
-					  binder->listenerName,
-					  item->destination);
+						  item->commandProcess,
+						  item->commandName,
+						  item->sensorName,
+						  binder->listenerName,
+						  item->destination);
 		}
 	}
 }
@@ -115,14 +117,14 @@ void resetControllerListenersToDefaults()
 	iterateThroughListenerConfigurations(resetListenerConfiguration);
 }
 
-void resetSensorListenersToDefaults(char * sensorName)
+void resetSensorListenersToDefaults(char *sensorName)
 {
 	TRACE("Resetting listeners for sensor:");
 	TRACELN(sensorName);
 
 	for (int i = 0; i < CONTROLLER_NO_OF_LISTENERS; i++)
 	{
-		if(strcasecmp(sensorName, ControllerListenerDescriptions[i].sensorName)==0)
+		if (strcasecmp(sensorName, ControllerListenerDescriptions[i].sensorName) == 0)
 		{
 			TRACE("   resetting:");
 			TRACELN(ControllerListenerDescriptions[i].listenerName);
@@ -298,9 +300,9 @@ sensorListener *makeSensorListenerFromConfiguration(struct sensorListenerConfigu
 	return result;
 }
 
-bool clearSensorListeners(sensor * s)
+bool clearSensorListeners(sensor *s)
 {
-	if(s==NULL)
+	if (s == NULL)
 		return false;
 
 	removeAllMessageListenersFromSensor(s);
@@ -312,15 +314,14 @@ bool clearSensorListeners(sensor * s)
 	return true;
 }
 
-bool clearSensorNameListeners(char * sensorName)
+bool clearSensorNameListeners(char *sensorName)
 {
 	TRACE("Clearing listeners for sensor:");
 	TRACELN(sensorName);
 
-	sensor * s = findSensorByName(sensorName);
+	sensor *s = findSensorByName(sensorName);
 	return clearSensorListeners(s);
 }
-
 
 void startSensorListener(struct sensorListenerConfiguration *commandItem)
 {
@@ -468,79 +469,80 @@ void do_Json_setting(JsonObject &root, void (*deliverResult)(char *resultText))
 	deliverResult(command_reply_buffer);
 }
 
-void appendCommandItemType(CommandItem * item, char * buffer, int bufferSize)
+void appendCommandItemType(CommandItem *item, char *buffer, int bufferSize)
 {
-	switch(item->type)
+	switch (item->type)
 	{
-		case textCommand:
-			snprintf(buffer, bufferSize, "%stext", buffer);
-			break;
+	case textCommand:
+		snprintf(buffer, bufferSize, "%stext", buffer);
+		break;
 
-		case integerCommand:
-			snprintf(buffer, bufferSize, "%sint", buffer);
-			break;
+	case integerCommand:
+		snprintf(buffer, bufferSize, "%sint", buffer);
+		break;
 
-		case floatCommand:
-			snprintf(buffer, bufferSize, "%sfloat", buffer);
-			break;
+	case floatCommand:
+		snprintf(buffer, bufferSize, "%sfloat", buffer);
+		break;
 	}
 }
 
-void appendCommandDescriptionToJson(Command * command, char * buffer, int bufferSize)
+void appendCommandDescriptionToJson(Command *command, char *buffer, int bufferSize)
 {
-	snprintf(buffer, bufferSize,"%s{\"name\":\"%s\",\"version\":\"%s\",\"desc\":\"%s\",\"items\":[",
-		buffer, command->name, Version, command->description);
+	snprintf(buffer, bufferSize, "%s{\"name\":\"%s\",\"version\":\"%s\",\"desc\":\"%s\",\"items\":[",
+			 buffer, command->name, Version, command->description);
 
-	for(int i=0;i<command->noOfItems;i++)
+	for (int i = 0; i < command->noOfItems; i++)
 	{
-		if(i>0){
-			snprintf(buffer, bufferSize,"%s,",buffer);
+		if (i > 0)
+		{
+			snprintf(buffer, bufferSize, "%s,", buffer);
 		}
-		CommandItem * item = command->items[i];
+		CommandItem *item = command->items[i];
 
 		snprintf(buffer, bufferSize, "%s{\"name\":\"%s\",\"optional\":%d,\"desc\":\"%s\",\"type\":\"",
-		buffer,
-		item->name,
-		item->setDefaultValue!=noDefaultAvailable,
-		item->description);
+				 buffer,
+				 item->name,
+				 item->setDefaultValue != noDefaultAvailable,
+				 item->description);
 		appendCommandItemType(item, buffer, bufferSize);
 		snprintf(buffer, bufferSize, "%s\"}", buffer);
 	}
-	
+
 	snprintf(buffer, bufferSize, "%s]}", buffer);
 }
 
-void appendCommandDescriptionToText(Command * command, char * buffer, int bufferSize)
+void appendCommandDescriptionToText(Command *command, char *buffer, int bufferSize)
 {
-	snprintf(buffer, bufferSize,"%s    %s - %s\n",
-		buffer, command->name, command->description);
+	snprintf(buffer, bufferSize, "%s    %s - %s\n",
+			 buffer, command->name, command->description);
 
-	for(int i=0;i<command->noOfItems;i++)
+	for (int i = 0; i < command->noOfItems; i++)
 	{
-		CommandItem * item = command->items[i];
-		snprintf(buffer, bufferSize, "%s        %s - %s : ",buffer, item->name,item->description);
+		CommandItem *item = command->items[i];
+		snprintf(buffer, bufferSize, "%s        %s - %s : ", buffer, item->name, item->description);
 		appendCommandItemType(item, buffer, bufferSize);
-		if(item->setDefaultValue!=noDefaultAvailable)
+		if (item->setDefaultValue != noDefaultAvailable)
 		{
 			snprintf(buffer, bufferSize, "%s (optional)",
-			buffer);
+					 buffer);
 		}
 		snprintf(buffer, bufferSize, "%s\n", buffer);
 		continue;
-		
-		if(item->setDefaultValue==noDefaultAvailable)
+
+		if (item->setDefaultValue == noDefaultAvailable)
 		{
 			snprintf(buffer, bufferSize, "      %s%s  - %s:",
-			buffer,
-			item->name,
-			item->description);
+					 buffer,
+					 item->name,
+					 item->description);
 		}
 		else
 		{
 			snprintf(buffer, bufferSize, "     %s%s* - %s:",
-			buffer,
-			item->name,
-			item->description);
+					 buffer,
+					 item->name,
+					 item->description);
 		}
 		appendCommandItemType(item, buffer, bufferSize);
 		snprintf(buffer, bufferSize, "%s", buffer);
@@ -707,9 +709,176 @@ int CreateSensorListener(
 	return WORKED_OK;
 }
 
+bool buildStoreFolderName(char *dest, int length, const char * store)
+{
+	if(store[0] != '/')
+	{
+		snprintf(dest,length,"/%s", store);
+	}
+	else
+	{
+		snprintf(dest,length,"%s", store);
+	}
+	return true;
+}
+
+// Builds and verifies the name of a stored file
+// At the moment it just appends the strings.
+
+bool buildStoreFilename(char *dest, int length, const char *store, const char *name)
+{
+	if(store[0] != '/')
+	{
+		snprintf(dest, length, "/%s/%s", store, name);
+	}
+	else 
+	{
+		snprintf(dest, length, "%s/%s", store, name);
+	}
+	return true;
+}
+
+// We can put commands into "stores" which equate to
+// file folders. All the commands in a store can be triggered
+// allowing us to create macros. Some stores have special names
+// and contain commands that are to be performed at a particular time
+// We have a boot store, a Wifi store, a Clock store and an MQTT store which
+// can contain commands for those events. Starting with the boot one first.
+// This function checks for a store property and puts the command in that store
+// If the store (folder) does not exist it will be created
+
+int checkAndAddToStore(JsonObject &root)
+{
+	TRACELN("Checking if a commnand should be added to a store:");
+
+	const char *commandStoreName = root["store"];
+
+	if (commandStoreName == NULL)
+	{
+		TRACELN("    No store command.");
+		return WORKED_OK;
+	}
+
+	const char *commandID = root["id"];
+
+	if (commandID == NULL)
+	{
+		TRACELN("    Store command missing ID.");
+		return JSON_MESSAGE_STORE_ID_MISSING_FROM_STORE_COMMAND;
+	}
+
+	char fullStoreName[STORE_FILENAME_LENGTH];
+
+	if(!buildStoreFolderName(fullStoreName,STORE_FILENAME_LENGTH, commandStoreName ))
+	{
+		return JSON_MESSAGE_STORE_FOLDERNAME_INVALID;
+	}
+
+	File folder = LittleFS.open(fullStoreName, "r");
+
+	if (!folder)
+	{
+		TRACE("    Creating a folder for:");
+		TRACELN(fullStoreName);
+		// need to create a folder for this store
+		bool dirMake = LittleFS.mkdir(fullStoreName);
+
+		if (!dirMake)
+		{
+			TRACELN("   folder could not be created");
+			return JSON_MESSAGE_COULD_NOT_CREATE_STORE_FOLDER;
+		}
+
+		folder = LittleFS.open(fullStoreName, "r");
+	}
+
+	if (!folder.isDirectory())
+	{
+		// this should be a directory
+		TRACELN("    File found in place of folder for store");
+		folder.close();
+		return JSON_MESSAGE_FILE_IN_PLACE_OF_STORE_FOLDER;
+	}
+
+	char fullFileName[STORE_FILENAME_LENGTH];
+
+	if (!buildStoreFilename(fullFileName, STORE_FILENAME_LENGTH, commandStoreName, commandID))
+	{
+		folder.close();
+		return JSON_MESSAGE_STORE_FILENAME_INVALID;
+	}
+
+	TRACE("    storing the command in:");
+	TRACELN(fullFileName);
+
+	File outputFile = LittleFS.open(fullFileName, "w");
+	
+	// Remove these tags from the saved command
+	root.remove("store");
+	root.remove("id");
+
+	char rawCommandText[500];
+
+	root.printTo(rawCommandText, 500);
+
+	TRACE("    storing the command:");
+	TRACELN(rawCommandText);
+
+	outputFile.printf("%s\n", rawCommandText);
+
+	outputFile.close();
+
+	return WORKED_OK;
+}
+
+int performCommandsInStore(char *commandStoreName)
+{
+	TRACE("Performing the commands in command store folder:");
+	TRACELN(commandStoreName);
+
+	char fullStoreName[STORE_FILENAME_LENGTH];
+
+	if(!buildStoreFolderName(fullStoreName,STORE_FILENAME_LENGTH, commandStoreName ))
+	{
+		return JSON_MESSAGE_STORE_FOLDERNAME_INVALID;
+	}
+
+	File folder = LittleFS.open(fullStoreName, "r");
+
+	if (!folder)
+	{
+		TRACELN("    Folder does not exist");
+		return JSON_MESSAGE_STORE_FOLDER_DOES_NOT_EXIST;
+	}
+
+	while (true)
+	{
+		File entry = folder.openNextFile();
+
+		if (!entry)
+		{
+			// no more files in the folder
+			break;
+		}
+
+		TRACE("     Found file:");
+		TRACELN(entry.name());
+
+		String line = entry.readStringUntil('\n');
+
+		const char * lineChar = line.c_str();
+		TRACE("    Contains command:");
+		TRACELN(lineChar);
+
+		performRemoteCommand((char *)lineChar);
+
+		entry.close();
+	}
+}
+
 unsigned char commandParameterBuffer[OPTION_STORAGE_SIZE];
 
-int decodeCommand(process *process, Command *command,
+int decodeCommand(const char *rawCommandText, process *process, Command *command,
 				  unsigned char *parameterBuffer, JsonObject &root)
 {
 	TRACELN("Decoding a command");
@@ -731,14 +900,14 @@ int decodeCommand(process *process, Command *command,
 		{
 			// Need to treat the value item as special
 			// We can live without a value item if we are using a sensor as the source
-			if(sensorName != NULL)
+			if (sensorName != NULL)
 			{
 				// ignore the missing value - this will be supplied from the sensor
 				continue;
 			}
-			
+
 			// no option with this name - do we have a default for it?
-			
+
 			if (item->setDefaultValue(parameterBuffer + item->commandSettingOffset))
 			{
 				TRACE("Found a default option for ");
@@ -838,8 +1007,13 @@ int decodeCommand(process *process, Command *command,
 
 	// We have a valid command - see if it is being controlled by a sensor trigger
 
+	int result = WORKED_OK;
+
 	if (sensorName != NULL)
 	{
+		TRACELN("   adding a listener");
+		// Creating and adding a sensor with a trigger
+		// The command will not be performed now
 		const char *trigger = root["trigger"];
 
 		if (trigger == NULL)
@@ -861,15 +1035,28 @@ int decodeCommand(process *process, Command *command,
 			return JSON_MESSAGE_NO_MATCHING_SENSOR_FOR_LISTENER;
 		}
 
-		return CreateSensorListener(s, process, command, binder, destination, commandParameterBuffer);
+		result = CreateSensorListener(s, process, command, binder, destination, commandParameterBuffer);
+	}
+	else
+	{
+		// Performing a command now
+		TRACELN("   performing a command");
+		result = command->performCommand(destination, parameterBuffer);
+	}
+
+	if (result == WORKED_OK)
+	{
+		// command performed/listener assigned successfully
+		// see if it should be added to a command folder
+		result = checkAndAddToStore(root);
 	}
 
 	TRACELN("Done decoding");
 
-	return command->performCommand(destination, parameterBuffer);
+	return result;
 }
 
-void do_Json_command(JsonObject &root, void (*deliverResult)(char *resultText))
+void do_Json_command(const char *rawCommandText, JsonObject &root, void (*deliverResult)(char *resultText))
 {
 	TRACE("Doing JSON command");
 	const char *processName = root["process"];
@@ -916,7 +1103,7 @@ void do_Json_command(JsonObject &root, void (*deliverResult)(char *resultText))
 
 	if (error == WORKED_OK)
 	{
-		error = decodeCommand(process, command, commandParameterBuffer, root);
+		error = decodeCommand(rawCommandText, process, command, commandParameterBuffer, root);
 	}
 
 	build_command_reply(error, root, command_reply_buffer);
@@ -962,7 +1149,7 @@ void act_onJson_message(const char *json, void (*deliverResult)(char *resultText
 
 	if (command)
 	{
-		do_Json_command(root, deliverResult);
+		do_Json_command(json, root, deliverResult);
 		return;
 	}
 
@@ -1041,6 +1228,9 @@ void startcontroller()
 	// Look for sensors and bind a message controller to each
 	// need to iterate through all the controllers and add to each sensor.
 	iterateThroughListenerConfigurations(startSensorListener);
+
+	performCommandsInStore(BOOT_FOLDER_NAME);
+
 }
 
 void updatecontroller()

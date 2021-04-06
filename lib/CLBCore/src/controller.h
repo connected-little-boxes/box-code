@@ -10,6 +10,8 @@
 #define MESSAGE_START_POSITION sizeof(float)
 
 #define CONTROLLERMESSAGE_COMMAND_LENGTH 20
+#define STORE_FILENAME_LENGTH 30
+#define BOOT_FOLDER_NAME "boot"
 
 struct controllerSettings 
 {

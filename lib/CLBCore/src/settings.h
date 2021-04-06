@@ -1,10 +1,19 @@
 #pragma once
 
 #include <Arduino.h>
+#include "FS.h"
+#include <LittleFS.h>
+
+#define SETTINGS_FILENAME "/Settings.config"
+#define BOOT_FILENAME_EXTENSION ".ini"
+#define MAX_FILENAME_LENGTH 20
 
 #ifdef DEFAULTS_ON
 
 #include "defaults.hsec"
+
+extern File saveFile;
+extern File loadFile;
 
 #else
 
@@ -17,7 +26,7 @@
 #endif
 
 #include "utils.h"
-#define Version "1.0.0.21"
+#define Version "1.0.0.22"
 
 // Sensor settings
 #define UNKNOWN_SENSOR 0
@@ -30,6 +39,7 @@
 #define WIFI_SSID_LENGTH 30
 #define WIFI_PASSWORD_LENGTH 30
 
+#define SETTING_VALUE_OUTPUT_LENGTH 40
 #define NUMBER_INPUT_LENGTH 20
 #define YESNO_INPUT_LENGTH 0
 #define ONOFF_INPUT_LENGTH 0
@@ -40,18 +50,6 @@
 #define LORA_EUI_LENGTH 8
 
 #define MAX_SETTING_LENGTH 300
-
-#define EEPROM_SIZE 5000
-#define SETTINGS_EEPROM_OFFSET 0
-#define CHECK_BYTE_O1 0x55
-#define CHECK_BYTE_O2 0xAA
-
-struct Device_Settings
-{
-	char name[DEVICE_NAME_LENGTH];
-};
-
-extern struct Device_Settings settings;
 
 enum Setting_Type { text, password, integerValue, doubleValue, floatValue, loraKey, loraID, yesNo };
 
@@ -76,7 +74,7 @@ struct SettingItemCollection
 enum processSettingCommandResult { displayedOK, setOK, settingNotFound, settingValueInvalid };
 
 void saveSettings();
-void loadSettings();
+bool loadSettings();
 void resetSettings();
 void PrintAllSettings();
 void PrintSomeSettings(char * filter);
@@ -93,8 +91,7 @@ processSettingCommandResult processSettingCommand(char * command);
 
 void setupSettings();
 
-void PrintSystemDetails();
-
+void PrintSystemDetails(char * buffer, int length);
 void dumpHexString(char *dest, uint8_t *pos, int length);
 void dumpUnsignedLong(char *dest, uint32_t value);
 int decodeHexValueIntoBytes(uint8_t *dest, const char *newVal, int length);

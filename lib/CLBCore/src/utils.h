@@ -26,10 +26,9 @@ void putUnalignedFloat(float fval, unsigned char * dest);
 #include <WebServer.h>
 //#include <DNSServer.h>
 
-#define LED_BUILTIN 2
-
 #define PROC_ID (unsigned long)ESP.getEfuseMac()
 #define PROC_NAME "ESP32"
+#define LittleFS LITTLEFS
 
 #endif
 
@@ -46,6 +45,11 @@ void putUnalignedFloat(float fval, unsigned char * dest);
 
 #define PROC_ID (unsigned long)ESP.getChipId()
 #define PROC_NAME "ESP8266"
+
+#ifndef LED_BUILTIN
+#define LED_BUILTIN 2
+#endif
+
 
 #endif
 
