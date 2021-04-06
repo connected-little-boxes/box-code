@@ -6,7 +6,7 @@
 
 #define SETTINGS_FILENAME "/Settings.config"
 #define BOOT_FILENAME_EXTENSION ".ini"
-#define MAX_FILENAME_LENGTH 20
+#define MAX_FILENAME_L ENGTH 20
 
 #ifdef DEFAULTS_ON
 
@@ -26,7 +26,7 @@ extern File loadFile;
 #endif
 
 #include "utils.h"
-#define Version "1.0.0.22"
+#define Version "1.0.0.24"
 
 // Sensor settings
 #define UNKNOWN_SENSOR 0

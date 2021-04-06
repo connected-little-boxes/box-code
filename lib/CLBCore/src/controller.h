@@ -68,6 +68,8 @@ void iterateThroughControllerListenerSettingCollections(void (*func) (unsigned c
 void createJSONfromSettings(char * processName, struct Command * command,  char * destination, unsigned char * settingBase, char * buffer, int bufferLength);
 
 void dumpCommand(const char * processName,const char * commandName, unsigned char * commandParameterBuffer);
+bool buildStoreFilename(char *dest, int length, const char *store, const char *name);
+
 
 void appendCommandDescriptionToJson(Command * command, char * buffer, int bufferSize);
 void appendCommandDescriptionToText(Command * command, char * buffer, int bufferSize);

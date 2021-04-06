@@ -954,15 +954,16 @@ void setupSettings()
 		Serial.println("An Error has occurred while mounting SPIFFS");
 	}
 
+	resetSettings();
+
 	if(loadSettings())
 	{
 		Serial.println("Settings loaded OK");
 	}
 	else
 	{
-		resetSettings();
-		saveSettings();
 		Serial.println("Settings reset to default values");
+		resetSettings();
 	}
 
     char deviceNameBuffer [DEVICE_NAME_LENGTH];

@@ -14,46 +14,44 @@
 struct ConsoleSettings consoleSettings;
 
 struct SettingItem echoSerialInput = {
-	"Echo serial input", 
-	"echoserial", 
-	&consoleSettings.echoInput, 
-	ONOFF_INPUT_LENGTH, 
-	yesNo, 
-	setTrue, 
+	"Echo serial input",
+	"echoserial",
+	&consoleSettings.echoInput,
+	ONOFF_INPUT_LENGTH,
+	yesNo,
+	setTrue,
 	validateYesNo};
 
 struct SettingItem autoSaveSettings = {
-	"Auto save settings after change", 
-	"autosavesettings", 
-	&consoleSettings.autoSaveSettings, 
-	ONOFF_INPUT_LENGTH, 
-	yesNo, 
-	setTrue, 
+	"Auto save settings after change",
+	"autosavesettings",
+	&consoleSettings.autoSaveSettings,
+	ONOFF_INPUT_LENGTH,
+	yesNo,
+	setTrue,
 	validateYesNo};
 
-struct SettingItem* consoleSettingItemPointers[] =
-{
-	&echoSerialInput,
-	&autoSaveSettings
-};
+struct SettingItem *consoleSettingItemPointers[] =
+	{
+		&echoSerialInput,
+		&autoSaveSettings};
 
 struct SettingItemCollection consoleSettingItems = {
 	"Serial console",
 	"Serial console configuration",
 	consoleSettingItemPointers,
-	sizeof(consoleSettingItemPointers) / sizeof(struct SettingItem*)
-};
+	sizeof(consoleSettingItemPointers) / sizeof(struct SettingItem *)};
 
-void doHelp(char * commandLine);
+void doHelp(char *commandLine);
 
-char * skipCommand(char * commandLine)
+char *skipCommand(char *commandLine)
 {
-	while((*commandLine != ' ') && (*commandLine != 0))
+	while ((*commandLine != ' ') && (*commandLine != 0))
 	{
-		commandLine++;		
+		commandLine++;
 	}
 
-	if(*commandLine == ' ')
+	if (*commandLine == ' ')
 	{
 		commandLine++;
 	}
@@ -61,44 +59,45 @@ char * skipCommand(char * commandLine)
 	return commandLine;
 }
 
-void doShowSettings(char * commandLine)
+void doShowSettings(char *commandLine)
 {
-	char * filterStart = skipCommand(commandLine);
+	char *filterStart = skipCommand(commandLine);
 
-	if(*filterStart != 0)
+	if (*filterStart != 0)
 	{
 		PrintSomeSettings(filterStart);
 	}
-	else{
+	else
+	{
 		PrintAllSettings();
 	}
 }
 
-void doDumpSettings(char * commandLine)
+void doDumpSettings(char *commandLine)
 {
 
-	char * filterStart = skipCommand(commandLine);
+	char *filterStart = skipCommand(commandLine);
 
-	if(*filterStart != 0)
+	if (*filterStart != 0)
 	{
 		DumpSomeSettings(filterStart);
 	}
-	else{
+	else
+	{
 		DumpAllSettings();
 	}
 }
-
 
 #define CONSOLE_MESSAGE_SIZE 500
 
 char consoleMessageBuffer[CONSOLE_MESSAGE_SIZE];
 
-void doStartWebServer(char * commandLine)
+void doStartWebServer(char *commandLine)
 {
 	internalReboot(CONFIG_BOOT_NO_TIMEOUT_MODE);
 }
 
-void doDumpStatus(char * commandLine)
+void doDumpStatus(char *commandLine)
 {
 	dumpSensorStatus();
 	dumpProcessStatus();
@@ -106,69 +105,70 @@ void doDumpStatus(char * commandLine)
 	Serial.println(ESP.getFreeHeap());
 }
 
-void doRestart(char * commandLine)
+void doRestart(char *commandLine)
 {
 	saveSettings();
 	internalReboot(DEVICE_BOOT_MODE);
 }
 
-void doClear(char * commandLine)
+void doClear(char *commandLine)
 {
 	resetSettings();
 	saveSettings();
 	internalReboot(DEVICE_BOOT_MODE);
 }
 
-void doSaveSettings(char * commandline)
+void doSaveSettings(char *commandline)
 {
 	saveSettings();
 	Serial.println("\nSettings saved");
 }
 
-void doTestButtonSensor(char * commandline)
+void doTestButtonSensor(char *commandline)
 {
 	buttonSensorTest();
 }
 
-
-void doTestPIRSensor(char * commandline)
+void doTestPIRSensor(char *commandline)
 {
 	pirSensorTest();
 }
 
-void doTestRotarySensor(char * commandline)
+void doTestRotarySensor(char *commandline)
 {
 	rotarySensorTest();
 }
 
-void doTestPotSensor(char * commandline)
+void doTestPotSensor(char *commandline)
 {
 	potSensorTest();
 }
 
-void doDumpListeners(char * commandline)
+void doDumpListeners(char *commandline)
 {
 	Serial.println("\nSensor Listeners\n");
 	printControllerListeners();
 }
 
-void printCommandsJson(process *p) {
+void printCommandsJson(process *p)
+{
 
-	if(p->commands == NULL)
+	if (p->commands == NULL)
 	{
 		return;
 	}
 
-	struct CommandItemCollection * c = p->commands;
-	
-	if(c->noOfCommands>0){
+	struct CommandItemCollection *c = p->commands;
+
+	if (c->noOfCommands > 0)
+	{
 		// have got some commands in the collection
 
 		Serial.printf("Process:%s commands:%s\n", p->processName, c->description);
-		
-		for(int i=0;i<c->noOfCommands;i++)
+
+		for (int i = 0; i < c->noOfCommands; i++)
 		{
-			Command * com = c->commands[i];
+			Command *com = c->commands[i];
 			snprintf(consoleMessageBuffer, CONSOLE_MESSAGE_SIZE, "   ");
 			appendCommandDescriptionToJson(com, consoleMessageBuffer, CONSOLE_MESSAGE_SIZE);
 			Serial.println(consoleMessageBuffer);
@@ -176,64 +176,67 @@ void printCommandsJson(process *p) {
 	}
 }
 
-void doShowRemoteCommandsJson(char * commandLine)
+void doShowRemoteCommandsJson(char *commandLine)
 {
 	Serial.println();
 	iterateThroughAllProcesses(printCommandsJson);
 }
 
-void printCommandsText(process *p) {
+void printCommandsText(process *p)
+{
 
-	if(p->commands == NULL)
+	if (p->commands == NULL)
 	{
 		return;
 	}
 
-	struct CommandItemCollection * c = p->commands;
-	
-	if(c->noOfCommands>0){
+	struct CommandItemCollection *c = p->commands;
+
+	if (c->noOfCommands > 0)
+	{
 		// have got some commands in the collection
 
 		Serial.printf("Process:%s commands:%s\n", p->processName, c->description);
-		
-		for(int i=0;i<c->noOfCommands;i++)
+
+		for (int i = 0; i < c->noOfCommands; i++)
 		{
-			Command * com = c->commands[i];
-			consoleMessageBuffer[0]=0;
+			Command *com = c->commands[i];
+			consoleMessageBuffer[0] = 0;
 			appendCommandDescriptionToText(com, consoleMessageBuffer, CONSOLE_MESSAGE_SIZE);
 			Serial.println(consoleMessageBuffer);
 		}
 	}
 }
 
-void doShowRemoteCommandsText(char * commandLine)
+void doShowRemoteCommandsText(char *commandLine)
 {
 	Serial.println();
 	iterateThroughAllProcesses(printCommandsText);
 }
 
-void appendSensorDescriptionToJson(sensor * s, char * buffer, int bufferSize)
+void appendSensorDescriptionToJson(sensor *s, char *buffer, int bufferSize)
 {
-	snprintf(buffer, bufferSize,"%s{\"name\":\"%s\",\"version\":\"%s\",\"triggers\":[",
-		buffer, s->sensorName, Version);
+	snprintf(buffer, bufferSize, "%s{\"name\":\"%s\",\"version\":\"%s\",\"triggers\":[",
+			 buffer, s->sensorName, Version);
 
-	for(int i=0;i<s->noOfSensorListenerFunctions;i++)
+	for (int i = 0; i < s->noOfSensorListenerFunctions; i++)
 	{
-		if(i>0){
-			snprintf(buffer, bufferSize,"%s,",buffer);
+		if (i > 0)
+		{
+			snprintf(buffer, bufferSize, "%s,", buffer);
 		}
 
-		sensorEventBinder * binder = &s->sensorListenerFunctions[i];
-		snprintf(buffer, bufferSize, "%s{\"name\":\"%s\"}",buffer,
-		binder->listenerName);
+		sensorEventBinder *binder = &s->sensorListenerFunctions[i];
+		snprintf(buffer, bufferSize, "%s{\"name\":\"%s\"}", buffer,
+				 binder->listenerName);
 	}
-	
+
 	snprintf(buffer, bufferSize, "%s]}", buffer);
 }
 
-void printSensorTriggersJson(sensor * s)
+void printSensorTriggersJson(sensor *s)
 {
-	if(s->noOfSensorListenerFunctions==0)
+	if (s->noOfSensorListenerFunctions == 0)
 		return;
 
 	snprintf(consoleMessageBuffer, CONSOLE_MESSAGE_SIZE, "Sensor: %s\n     ", s->sensorName);
@@ -241,37 +244,37 @@ void printSensorTriggersJson(sensor * s)
 	Serial.printf("%s\n", consoleMessageBuffer);
 }
 
-void doShowSensorsJson(char * commandLine)
+void doShowSensorsJson(char *commandLine)
 {
 	Serial.println();
 	iterateThroughSensors(printSensorTriggersJson);
 }
 
-void appendSensorDescriptionToText(sensor * s, char * buffer, int bufferSize)
+void appendSensorDescriptionToText(sensor *s, char *buffer, int bufferSize)
 {
-	snprintf(buffer, bufferSize,"%sSensor name %s\n",
-		buffer, s->sensorName);
+	snprintf(buffer, bufferSize, "%sSensor name %s\n",
+			 buffer, s->sensorName);
 
-	for(int i=0;i<s->noOfSensorListenerFunctions;i++)
+	for (int i = 0; i < s->noOfSensorListenerFunctions; i++)
 	{
-		sensorEventBinder * binder = &s->sensorListenerFunctions[i];
-		snprintf(buffer, bufferSize, "%s   trigger:%s\n",buffer,
-		binder->listenerName);
+		sensorEventBinder *binder = &s->sensorListenerFunctions[i];
+		snprintf(buffer, bufferSize, "%s   trigger:%s\n", buffer,
+				 binder->listenerName);
 	}
 }
 
-void printSensorTriggersText(sensor * s)
+void printSensorTriggersText(sensor *s)
 {
-	if(s->noOfSensorListenerFunctions==0)
+	if (s->noOfSensorListenerFunctions == 0)
 		return;
 
-	consoleMessageBuffer[0]=0;
+	consoleMessageBuffer[0] = 0;
 
 	appendSensorDescriptionToText(s, consoleMessageBuffer, CONSOLE_MESSAGE_SIZE);
 	Serial.printf("%s\n", consoleMessageBuffer);
 }
 
-void doShowSensorsText(char * commandLine)
+void doShowSensorsText(char *commandLine)
 {
 	Serial.println();
 	iterateThroughSensors(printSensorTriggersText);
@@ -279,27 +282,27 @@ void doShowSensorsText(char * commandLine)
 
 void act_onJson_message(const char *json, void (*deliverResult)(char *resultText));
 
-void showRemoteCommandResult(char * resultText)
+void showRemoteCommandResult(char *resultText)
 {
 	Serial.println(resultText);
 }
 
-void performRemoteCommand(char * commandLine)
+void performRemoteCommand(char *commandLine)
 {
-	act_onJson_message(commandLine,showRemoteCommandResult);
+	act_onJson_message(commandLine, showRemoteCommandResult);
 }
 
-void doClearAllListeners(char * commandLine)
+void doClearAllListeners(char *commandLine)
 {
 	Serial.println("\nClearing all the listeners\n");
 	clearAllListeners();
 }
 
-void doClearSensorListeners(char * commandLine)
+void doClearSensorListeners(char *commandLine)
 {
-	char * sensorName = skipCommand(commandLine);
+	char *sensorName = skipCommand(commandLine);
 
-	if(clearSensorNameListeners(sensorName))
+	if (clearSensorNameListeners(sensorName))
 	{
 		Serial.println("Sensor listeners cleared");
 	}
@@ -309,14 +312,14 @@ void doClearSensorListeners(char * commandLine)
 	}
 }
 
-void doDumpStorage(char * commandLine)
+void doDumpStorage(char *commandLine)
 {
 	PrintStorage();
 }
 
 #ifdef OTA_UPDATE_ON
 
-void doOTAUpdate(char * commandLine)
+void doOTAUpdate(char *commandLine)
 {
 	performOTAUpdate();
 }
@@ -325,95 +328,205 @@ void doOTAUpdate(char * commandLine)
 
 #define ESC_KEY 0x1b
 
-void doColourDisplay(char * commandLine)
+void doColourDisplay(char *commandLine)
 {
 	Serial.println("Press space to step through each colour");
 	Serial.println("Press the ESC key to exit");
-	
-	for(int i=0; i<noOfColours; i++)
+
+	for (int i = 0; i < noOfColours; i++)
 	{
-		while(Serial.available()){
+		while (Serial.available())
+		{
 			int ch = Serial.read();
-			if(ch==ESC_KEY){
+			if (ch == ESC_KEY)
+			{
 				Serial.println("Colour display ended");
 				return;
 			}
 		}
 		Serial.printf("Colour:%s\n", colourNames[i].name);
 		frame->fadeToColour(colourNames[i].col, 5);
-		do{
+		do
+		{
 			pixelProcess.udpateProcess();
 			delay(20);
-		} while(Serial.available()==0);
+		} while (Serial.available() == 0);
 	}
 	Serial.println("Colour display finished");
 }
 
-
-void doHullOSHelp(char * commandLine)
+void doHullOSHelp(char *commandLine)
 {
 	Serial.println("Hullos help");
-
 }
 
-void doHullOSRun(char * commandLine)
+void doHullOSRun(char *commandLine)
 {
 	Serial.println("Hullos run");
-
 }
 
 struct consoleCommand HullOSCommands[] =
-{
-	{"help", "show all the commands", doHullOSHelp},
-	{"run", "run the HullOS program ", doHullOSRun}
-};
+	{
+		{"help", "show all the commands", doHullOSHelp},
+		{"run", "run the HullOS program ", doHullOSRun}};
 
-void doHullOS(char * commandLine)
+void doHullOS(char *commandLine)
 {
-	char * hullosCommand = skipCommand(commandLine);
+	char *hullosCommand = skipCommand(commandLine);
 
 	performCommand(hullosCommand, HullOSCommands, sizeof(HullOSCommands) / sizeof(struct consoleCommand));
 }
 
-void doDumpSprites(char * commandLine)
+void doDumpSprites(char *commandLine)
 {
 	frame->dump();
 }
 
-struct consoleCommand userCommands[] =
+void dumpFilesInStores()
 {
-	{"help", "show all the commands", doHelp},
-	{"host", "start the configuration web host", doStartWebServer},
-	{"settings", "show all the setting values", doShowSettings},
-	{"dump", "dump all the setting values", doDumpSettings},
-	{"commands", "show all the remote commands", doShowRemoteCommandsText},
-	{"commandsjson", "show all the remote commands in json", doShowRemoteCommandsJson},
-	{"save", "save all the setting values", doSaveSettings},
-	{"sensors","list all the sensor triggers", doShowSensorsText},
-	{"sensorsjson","list all the sensor triggers in json", doShowSensorsJson},
-	{"status", "show the sensor status", doDumpStatus},
-	{"storage", "show the storage use of sensors and processes", doDumpStorage},
-	{"buttontest", "test the button sensor", doTestButtonSensor},
-	{"pirtest", "test the PIR sensor", doTestPIRSensor},
-	{"rotarytest", "test the rotary sensor", doTestRotarySensor},
-	{"pottest", "test the pot sensor", doTestPotSensor},
-	{"colours", "step through all the colours", doColourDisplay},
-	{"listeners", "list the command listeners", doDumpListeners},
-	{"clearalllisteners", "clear all the command listeners", doClearAllListeners},
-	{"clearsensorlisteners", "clear the command listeners for a sensor", doClearSensorListeners},
-	{"restart", "restart the device", doRestart},
-	{"hullos", "HullOS commands", doHullOS},
-	{"sprites", "dump sprite data", doDumpSprites},
+	File dir = LittleFS.open("/", "r");
+
+	while (true)
+	{
+
+		File storeDir = dir.openNextFile();
+
+		if (!storeDir)
+		{
+			// no more files in the folder
+			break;
+		}
+
+		if (storeDir.isDirectory())
+		{
+			// Only dump the contents of directories
+			Serial.printf(" Store:%s\n", storeDir.name());
+			while (true)
+			{
+				File storeFile = storeDir.openNextFile();
+
+				if (!storeFile)
+				{
+					break;
+				}
+
+				Serial.printf("   File:%s\n", storeFile.name());
+
+				String line = storeFile.readStringUntil('\n');
+				const char *lineChar = line.c_str();
+				Serial.printf("      %s\n", lineChar);
+				storeFile.close();
+			}
+		}
+	}
+	dir.close();
+}
+
+void deleteFileInStore(char *deleteName)
+{
+	File dir = LittleFS.open("/", "r");
+
+	char fullDeleteFileName[STORE_FILENAME_LENGTH];
+
+	// set the delete filename to empty
+	fullDeleteFileName[0] = 0;
+
+	// spin until we have a file to delete
+	while (fullDeleteFileName[0] == 0)
+	{
+		File storeDir = dir.openNextFile();
+
+		if (!storeDir)
+		{
+			// no more files in the folder
+			break;
+		}
+
+		if (storeDir.isDirectory())
+		{
+			const char *storeName = storeDir.name();
+
+			while (fullDeleteFileName[0] == 0)
+			{
+				File storeFile = storeDir.openNextFile();
+
+				if (!storeFile)
+				{
+					break;
+				}
+
+				const char *filename = (const char *)storeFile.name();
+
+				if (strcasecmp(filename, deleteName) == 0)
+				{
+					buildStoreFilename(fullDeleteFileName, STORE_FILENAME_LENGTH, storeName, filename);
+				}
+
+				storeFile.close();
+			}
+		}
+	}
+
+	dir.close();
+
+	if (fullDeleteFileName[0] != 0)
+	{
+		Serial.printf("\nRemoving:%s", fullDeleteFileName);
+		LittleFS.remove(fullDeleteFileName);
+	}
+	else{
+		Serial.printf("\nFile:%s not found",deleteName);
+	}
+}
+
+void doDumpFiles(char *commandLine)
+{
+	Serial.println();
+	dumpFilesInStores();
+}
+
+void doDeleteFile(char *commandLine)
+{
+	char *filename = skipCommand(commandLine);
+	deleteFileInStore(filename);
+}
+
+struct consoleCommand userCommands[] =
+	{
+		{"buttontest", "test the button sensor", doTestButtonSensor},
+		{"clearalllisteners", "clear all the command listeners", doClearAllListeners},
+		{"clear", "clear all seeings and restart the device", doClear},
+		{"clearsensorlisteners", "clear the command listeners for a sensor", doClearSensorListeners},
+		{"colours", "step through all the colours", doColourDisplay},
+		{"commands", "show all the remote commands", doShowRemoteCommandsText},
+		{"commandsjson", "show all the remote commands in json", doShowRemoteCommandsJson},
+		{"deletefile", "delete the named file", doDeleteFile},
+		{"dump", "dump all the setting values", doDumpSettings},
+		{"files", "dump all the file stores", doDumpFiles},
+		{"help", "show all the commands", doHelp},
+		{"host", "start the configuration web host", doStartWebServer},
+		{"hullos", "HullOS commands", doHullOS},
+		{"listeners", "list the command listeners", doDumpListeners},
 #ifdef OTA_UPDATE_ON
-	{"otaupdate", "start an over-the-air firmware update", doOTAUpdate},
+		{"otaupdate", "start an over-the-air firmware update", doOTAUpdate},
 #endif
-	{"clear", "clear all seeings and restart the device", doClear}
+		{"pirtest", "test the PIR sensor", doTestPIRSensor},
+		{"pottest", "test the pot sensor", doTestPotSensor},
+		{"rotarytest", "test the rotary sensor", doTestRotarySensor},
+		{"restart", "restart the device", doRestart},
+		{"save", "save all the setting values", doSaveSettings},
+		{"sensors", "list all the sensor triggers", doShowSensorsText},
+		{"sensorsjson", "list all the sensor triggers in json", doShowSensorsJson},
+		{"settings", "show all the setting values", doShowSettings},
+		{"sprites", "dump sprite data", doDumpSprites},
+		{"status", "show the sensor status", doDumpStatus},
+		{"storage", "show the storage use of sensors and processes", doDumpStorage},
 };
 
-void doHelp(char * commandLine)
+void doHelp(char *commandLine)
 {
 	Serial.printf("\n\nConnected Little Boxes\n Device Version %s\n\nThese are all the available commands.\n\n",
-		Version);
+				  Version);
 
 	int noOfCommands = sizeof(userCommands) / sizeof(struct consoleCommand);
 
@@ -423,23 +536,22 @@ void doHelp(char * commandLine)
 	}
 
 	Serial.printf("\nYou can view the value of any setting just by typing the setting name, for example:\n\n"
-		"    mqttdevicename\n\n"
-		"- would show you the MQTT device name.\n"
-		"You can assign a new value to a setting, for example:\n\n"
-		"     mqttdevicename=Rob\n\n"
-		"- would set the name of the mqttdevicename to Rob.\n\n"
-		"To see a list of all the setting names use the command settings.\n"
-		"This displays all the settings, their values and names.\n"
-		"To see a dump of settings (which can be restored to the device later) use dump.\n"
-		"The dump and settings can be followed by a filter string to match setting names\n\n"
-        "   dump pix\n\n"
-        "- would dump all the settings that contain the string pix\n\n"
-		"If you enter a JSON string this will be interpreted as a remote command.\n"
-		"See the remote command documentation for more details of this.\n"
-	);
+				  "    mqttdevicename\n\n"
+				  "- would show you the MQTT device name.\n"
+				  "You can assign a new value to a setting, for example:\n\n"
+				  "     mqttdevicename=Rob\n\n"
+				  "- would set the name of the mqttdevicename to Rob.\n\n"
+				  "To see a list of all the setting names use the command settings.\n"
+				  "This displays all the settings, their values and names.\n"
+				  "To see a dump of settings (which can be restored to the device later) use dump.\n"
+				  "The dump and settings can be followed by a filter string to match setting names\n\n"
+				  "   dump pix\n\n"
+				  "- would dump all the settings that contain the string pix\n\n"
+				  "If you enter a JSON string this will be interpreted as a remote command.\n"
+				  "See the remote command documentation for more details of this.\n");
 }
 
-boolean findCommandName(consoleCommand * com, char * name)
+boolean findCommandName(consoleCommand *com, char *name)
 {
 	int commandNameLength = strlen(com->name);
 
@@ -461,7 +573,7 @@ boolean findCommandName(consoleCommand * com, char * name)
 	return false;
 }
 
-struct consoleCommand * findCommand(char * commandLine,consoleCommand * commands, int noOfCommands)
+struct consoleCommand *findCommand(char *commandLine, consoleCommand *commands, int noOfCommands)
 {
 	for (int i = 0; i < noOfCommands; i++)
 	{
@@ -473,11 +585,11 @@ struct consoleCommand * findCommand(char * commandLine,consoleCommand * commands
 	return NULL;
 }
 
-boolean performCommand(char * commandLine, consoleCommand * commands, int noOfCommands)
+boolean performCommand(char *commandLine, consoleCommand *commands, int noOfCommands)
 {
 	Serial.printf("Processing: %s ", commandLine);
 
-	if(commandLine[0]=='{')
+	if (commandLine[0] == '{')
 	{
 		// treat the command as JSON
 		performRemoteCommand(commandLine);
@@ -486,7 +598,7 @@ boolean performCommand(char * commandLine, consoleCommand * commands, int noOfCo
 
 	// Look for a command with that name
 
-	consoleCommand * comm = findCommand(commandLine, commands, noOfCommands);
+	consoleCommand *comm = findCommand(commandLine, commands, noOfCommands);
 
 	if (comm != NULL)
 	{
@@ -506,7 +618,7 @@ boolean performCommand(char * commandLine, consoleCommand * commands, int noOfCo
 		return true;
 	case setOK:
 		Serial.println("value set successfully");
-		if(consoleSettings.autoSaveSettings)
+		if (consoleSettings.autoSaveSettings)
 		{
 			saveSettings();
 		}
@@ -527,7 +639,7 @@ void showHelp()
 	doHelp("help");
 }
 
-#define SERIAL_BUFFER_LIMIT SERIAL_BUFFER_SIZE-1
+#define SERIAL_BUFFER_LIMIT SERIAL_BUFFER_SIZE - 1
 
 char serialReceiveBuffer[SERIAL_BUFFER_SIZE];
 
@@ -540,17 +652,19 @@ void reset_serial_buffer()
 
 void actOnSerialCommand()
 {
-	performCommand(serialReceiveBuffer,userCommands,sizeof(userCommands) / sizeof(struct consoleCommand));
+	performCommand(serialReceiveBuffer, userCommands, sizeof(userCommands) / sizeof(struct consoleCommand));
 }
 
 #define BACKSPACE_CHAR 0x08
 
 void bufferSerialChar(char ch)
 {
-	if(consoleSettings.echoInput){
+	if (consoleSettings.echoInput)
+	{
 		Serial.print(ch);
-		if(ch == BACKSPACE_CHAR){
-			if(serialReceiveBufferPos>0)
+		if (ch == BACKSPACE_CHAR)
+		{
+			if (serialReceiveBufferPos > 0)
 			{
 				serialReceiveBufferPos--;
 				Serial.print(' ');
@@ -591,7 +705,6 @@ void initConsole()
 	consoleProcessDescriptor.status = CONSOLE_OFF;
 }
 
-
 void startConsole()
 {
 	consoleProcessDescriptor.status = CONSOLE_OK;
@@ -615,7 +728,7 @@ bool consoleStatusOK()
 	return consoleProcessDescriptor.status == CONSOLE_OK;
 }
 
-void consoleStatusMessage(char * buffer, int bufferLength)
+void consoleStatusMessage(char *buffer, int bufferLength)
 {
 	switch (consoleProcessDescriptor.status)
 	{
@@ -639,78 +752,73 @@ boolean validateConsoleCommandString(void *dest, const char *newValueStr)
 #define COMMANDNAME_CONSOLE_COMMAND_OFFSET 0
 
 struct CommandItem consoleCommandName = {
-	"commandtext",	
+	"commandtext",
 	"console command text",
 	COMMANDNAME_CONSOLE_COMMAND_OFFSET,
 	textCommand,
 	validateConsoleCommandString,
-	noDefaultAvailable
-};
+	noDefaultAvailable};
 
-struct CommandItem * consoleCommandItems [] =
-{
-	&consoleCommandName
-};
+struct CommandItem *consoleCommandItems[] =
+	{
+		&consoleCommandName};
 
-int doRemoteConsoleCommand(char * destination, unsigned char * settingBase);
+int doRemoteConsoleCommand(char *destination, unsigned char *settingBase);
 
 struct Command performConsoleCommnad
 {
 	"remote",
-	"Perform a remote console command",
-	consoleCommandItems,
-	sizeof(consoleCommandItems)/sizeof(struct CommandItem *),
-	doRemoteConsoleCommand
+		"Perform a remote console command",
+		consoleCommandItems,
+		sizeof(consoleCommandItems) / sizeof(struct CommandItem *),
+		doRemoteConsoleCommand
 };
 
-int doRemoteConsoleCommand(char * destination, unsigned char * settingBase)
+int doRemoteConsoleCommand(char *destination, unsigned char *settingBase)
 {
-	if(*destination != 0)
+	if (*destination != 0)
 	{
 		// we have a destination for the command. Build the string
-		char buffer [JSON_BUFFER_SIZE];
-		createJSONfromSettings("console",&performConsoleCommnad,destination, settingBase, buffer,JSON_BUFFER_SIZE);
+		char buffer[JSON_BUFFER_SIZE];
+		createJSONfromSettings("console", &performConsoleCommnad, destination, settingBase, buffer, JSON_BUFFER_SIZE);
 		return publishBufferToMQTTTopic(buffer, destination);
 	}
 
-	char * command = (char *) (settingBase + COMMANDNAME_CONSOLE_COMMAND_OFFSET);
+	char *command = (char *)(settingBase + COMMANDNAME_CONSOLE_COMMAND_OFFSET);
 
-	if(performCommand(command,userCommands,sizeof(userCommands) / sizeof(struct consoleCommand))){
+	if (performCommand(command, userCommands, sizeof(userCommands) / sizeof(struct consoleCommand)))
+	{
 		return WORKED_OK;
 	}
 
 	return JSON_MESSAGE_INVALID_CONSOLE_COMMAND;
 }
 
-struct Command * consoleCommandList [] = {
-	&performConsoleCommnad
-};
-
+struct Command *consoleCommandList[] = {
+	&performConsoleCommnad};
 
 struct CommandItemCollection consoleCommands =
-{
-	"Perform console commands on a remote device",
-	consoleCommandList,
-	sizeof(consoleCommandList)/sizeof(struct Command *)
-};
+	{
+		"Perform console commands on a remote device",
+		consoleCommandList,
+		sizeof(consoleCommandList) / sizeof(struct Command *)};
 
-struct process consoleProcessDescriptor = { 
-	"console", 
+struct process consoleProcessDescriptor = {
+	"console",
 	initConsole,
-	startConsole, 
-	updateConsole, 
-	stopConsole, 
+	startConsole,
+	updateConsole,
+	stopConsole,
 	consoleStatusOK,
-	consoleStatusMessage, 
-	false, 
-	0, 
-	0, 
+	consoleStatusMessage,
+	false,
+	0,
+	0,
 	0,
 	NULL,
-	(unsigned char*) &consoleSettings, sizeof(consoleSettings), &consoleSettingItems,
+	(unsigned char *)&consoleSettings, sizeof(consoleSettings), &consoleSettingItems,
 	&consoleCommands,
-	BOOT_PROCESS+ACTIVE_PROCESS+CONFIG_PROCESS+WIFI_CONFIG_PROCESS,
+	BOOT_PROCESS + ACTIVE_PROCESS + CONFIG_PROCESS + WIFI_CONFIG_PROCESS,
 	NULL,
 	NULL,
 	NULL};
-
