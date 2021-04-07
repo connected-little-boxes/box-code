@@ -411,7 +411,7 @@ void dumpFilesInStores()
 					break;
 				}
 
-				Serial.printf("   File:%s\n", storeFile.name());
+				Serial.printf("   Command:%s\n", storeFile.name());
 
 				String line = storeFile.readStringUntil('\n');
 				const char *lineChar = line.c_str();
@@ -480,13 +480,13 @@ void deleteFileInStore(char *deleteName)
 	}
 }
 
-void doDumpFiles(char *commandLine)
+void doDumpStores(char *commandLine)
 {
 	Serial.println();
 	dumpFilesInStores();
 }
 
-void doDeleteFile(char *commandLine)
+void doDeleteCommand(char *commandLine)
 {
 	char *filename = skipCommand(commandLine);
 	deleteFileInStore(filename);
@@ -501,9 +501,8 @@ struct consoleCommand userCommands[] =
 		{"colours", "step through all the colours", doColourDisplay},
 		{"commands", "show all the remote commands", doShowRemoteCommandsText},
 		{"commandsjson", "show all the remote commands in json", doShowRemoteCommandsJson},
-		{"deletefile", "delete the named file", doDeleteFile},
+		{"deletecommand", "delete the named command", doDeleteCommand},
 		{"dump", "dump all the setting values", doDumpSettings},
-		{"files", "dump all the file stores", doDumpFiles},
 		{"help", "show all the commands", doHelp},
 		{"host", "start the configuration web host", doStartWebServer},
 		{"hullos", "HullOS commands", doHullOS},
@@ -521,6 +520,7 @@ struct consoleCommand userCommands[] =
 		{"settings", "show all the setting values", doShowSettings},
 		{"sprites", "dump sprite data", doDumpSprites},
 		{"status", "show the sensor status", doDumpStatus},
+		{"stores", "dump all the command stores", doDumpStores},
 		{"storage", "show the storage use of sensors and processes", doDumpStorage},
 };
 

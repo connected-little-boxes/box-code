@@ -28,6 +28,10 @@ extern File loadFile;
 #include "utils.h"
 #define Version "1.0.0.24"
 
+// Change this number if you want to create a unique encryption regime for 
+// your devices. 
+#define ENCRYPTION_SALT 0
+
 // Sensor settings
 #define UNKNOWN_SENSOR 0
 #define SDS011_SENSOR 1

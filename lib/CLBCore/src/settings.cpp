@@ -14,6 +14,53 @@
 #include "registration.h"
 #include "HullOS.h"
 
+// These functions are called to encrypt/decrypt fields of type password
+// They are identical at the momement, but if you want to add some extra
+// salt you can modify them accordingly.
+
+void encryptString(char * destination, int destLength, char * source)
+{
+	randomSeed(PROC_ID+ENCRYPTION_SALT);
+	int pos = 0;
+	char * dest = destination;
+	destLength= destLength -1;
+	while(*source)
+	{
+		int mask = random(1,30);
+		*dest = *source ^ mask;
+		dest++;
+		source++;
+		pos++;
+		if(pos==destLength)
+		{
+			break;
+		}
+	}
+	*dest=0;
+}
+
+void decryptString(char * destination, int destLength, char * source)
+{
+	randomSeed(PROC_ID+ENCRYPTION_SALT);
+	int pos = 0;
+	char * dest = destination;
+	destLength= destLength -1;
+	while(*source)
+	{
+		int mask = random(1,30);
+		*dest = *source ^ mask;
+		dest++;
+		source++;
+		pos++;
+		if(pos==destLength)
+		{
+			break;
+		}
+	}
+
+	*dest=0;
+}
+
 void setEmptyString(void *dest)
 {
 	strcpy((char *)dest, "");
@@ -337,7 +384,7 @@ boolean validateServerName(void *dest, const char *newValueStr)
 	return (validateString((char *)dest, newValueStr, SERVER_NAME_LENGTH));
 }
 
-void printSettingValue(SettingItem *item, char * buffer, int bufferLength, bool secure)
+void printSettingValue(SettingItem *item, char * buffer, int bufferLength)
 {
 	int *intValuePointer;
 	boolean *boolValuePointer;
@@ -353,15 +400,7 @@ void printSettingValue(SettingItem *item, char * buffer, int bufferLength, bool 
 		break;
 
 	case password:
-		//Serial.println((char *)item->value);
-		if(secure)
-		{
-			snprintf(buffer, bufferLength, "%s", (char *)item->value);
-		}
-		else 
-		{
-			snprintf(buffer, bufferLength, "*****");
-		}
+		snprintf(buffer, bufferLength, "*****");
 		break;
 
 	case integerValue:
@@ -408,7 +447,7 @@ void printSettingValue(SettingItem *item, char * buffer, int bufferLength, bool 
 void printSetting(SettingItem *item)
 {
 	char itemBuffer [SETTING_VALUE_OUTPUT_LENGTH];
-	printSettingValue(item, itemBuffer, SETTING_VALUE_OUTPUT_LENGTH, true);
+	printSettingValue(item, itemBuffer, SETTING_VALUE_OUTPUT_LENGTH);
 
 	Serial.printf("    %s [%s]: %s\n", item->prompt, item->formName, itemBuffer);
 }
@@ -416,17 +455,9 @@ void printSetting(SettingItem *item)
 void dumpSetting(SettingItem *item)
 {
 	char itemBuffer [SETTING_VALUE_OUTPUT_LENGTH];
-	printSettingValue(item, itemBuffer, SETTING_VALUE_OUTPUT_LENGTH, true);
+	printSettingValue(item, itemBuffer, SETTING_VALUE_OUTPUT_LENGTH);
 
 	Serial.printf("%s=%s\n", item->formName,itemBuffer);
-}
-
-void buildSaveSettingString(SettingItem *item, char * buffer, int bufferLength)
-{
-	char itemBuffer [SETTING_VALUE_OUTPUT_LENGTH];
-	printSettingValue(item, itemBuffer, SETTING_VALUE_OUTPUT_LENGTH, false);
-	
-	snprintf(buffer, bufferLength, "%s=%s", item->formName,itemBuffer);
 }
 
 File saveFile;
@@ -435,7 +466,16 @@ File loadFile;
 void saveSettingToFile(SettingItem *item)
 {
 	char itemBuffer [SETTING_VALUE_OUTPUT_LENGTH];
-	printSettingValue(item, itemBuffer, SETTING_VALUE_OUTPUT_LENGTH, true);
+
+	if(item->settingType == password)
+	{
+		// need to encrypt the setting item
+		encryptString(itemBuffer, SETTING_VALUE_OUTPUT_LENGTH, 
+			(char *) item->value);
+	}
+	else {
+		printSettingValue(item, itemBuffer, SETTING_VALUE_OUTPUT_LENGTH);
+	}
 	saveFile.printf("%s=%s\n", item->formName,itemBuffer);
 }
 
@@ -460,6 +500,51 @@ void saveAllSettingsToFile(char * path)
 	TRACELN("Settings saved");
 }
 
+processSettingCommandResult decodeSettingCommand(char *commandStart)
+{
+	char *command = (char *)commandStart;
+	SettingItem *setting = findSettingByName(command);
+
+	if (setting != NULL)
+	{
+		// found a setting - get the length of the setting name:
+		int settingNameLength = strlen(setting->formName);
+
+		if (command[settingNameLength] == 0)
+		{
+			// Settting is on it's own on the line
+			// Just print the value
+			printSetting(setting);
+			return displayedOK;
+		}
+
+		if (command[settingNameLength] == '=')
+		{
+			// Setting is being assigned a value
+			// move down the input to the new value
+			char *startOfSettingInfo = command + settingNameLength + 1;
+
+			if(setting->settingType == password)
+			{
+				// need to decode passwords
+				decryptString((char *) setting->value, setting->maxLength, startOfSettingInfo);
+				return setOK;
+			}
+
+			// use setting validation behaviour
+
+			if (setting->validateValue(setting->value, startOfSettingInfo))
+			{
+				return setOK;
+			}
+
+			return settingValueInvalid;
+		}
+	}
+	return settingNotFound;
+}
+
+
 bool loadAllSettingsFromFile(char * path)
 {
 	TRACE("Loading all settings from the file:");
@@ -478,7 +563,7 @@ bool loadAllSettingsFromFile(char * path)
 
 		const char * lineChar = line.c_str();
 
-		if(processSettingCommand((char *)lineChar) != setOK)
+		if(decodeSettingCommand((char *)lineChar) != setOK)
 		{
 			TRACE("  bad setting:");
 			TRACELN(lineChar);
