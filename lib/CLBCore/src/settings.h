@@ -26,7 +26,7 @@ extern File loadFile;
 #endif
 
 #include "utils.h"
-#define Version "1.0.0.24"
+#define Version "1.0.0.50"
 
 // Change this number if you want to create a unique encryption regime for 
 // your devices. 

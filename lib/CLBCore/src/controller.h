@@ -71,7 +71,7 @@ void createJSONfromSettings(char * processName, struct Command * command,  char 
 
 void dumpCommand(const char * processName,const char * commandName, unsigned char * commandParameterBuffer);
 bool buildStoreFilename(char *dest, int length, const char *store, const char *name);
-
+int performCommandsInStore(char *commandStoreName);
 
 void appendCommandDescriptionToJson(Command * command, char * buffer, int bufferSize);
 void appendCommandDescriptionToText(Command * command, char * buffer, int bufferSize);

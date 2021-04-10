@@ -1,5 +1,6 @@
 
 #include "mqtt.h"
+#include "controller.h"
 
 #include <PubSubClient.h>
 
@@ -201,10 +202,12 @@ void handleIncomingMQTTMessage()
 }
 
 int mqttConnectErrorNumber;
+bool mqttStartCommandsPerformed ;
 
 void initMQTT()
 {
 	MQTTProcessDescriptor.status = MQTT_OFF;
+	mqttStartCommandsPerformed = false;
 }
 
 void startMQTT()
@@ -380,6 +383,12 @@ void updateMQTT()
 		{
 			mqttPubSubClient->disconnect();
 			MQTTProcessDescriptor.status = MQTT_ERROR_LOOP_FAILED;
+		}
+
+		if(!mqttStartCommandsPerformed)
+		{
+			performCommandsInStore(MQTT_CONNECTED_COMMAND_STORE);
+			mqttStartCommandsPerformed = true;
 		}
 
 		break;

@@ -6,6 +6,8 @@
 #include "messages.h"
 #include "connectwifi.h"
 
+#define MQTT_CONNECTED_COMMAND_STORE "mqtt"
+
 #define MQTT_OK 700
 #define MQTT_OFF 701
 #define MQTT_STARTING 702

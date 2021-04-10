@@ -9,6 +9,8 @@
 #include "processes.h"
 #include "messages.h"
 
+#define CLOCK_GOT_TIME_COMMAND_STORE "clock"
+
 #define TIME_ZONE_NAME_LENGTH 20
 #define DEFAULT_TIME_ZONE "Europe/London"
 

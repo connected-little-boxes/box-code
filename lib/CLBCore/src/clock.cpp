@@ -2,6 +2,7 @@
 #include "connectwifi.h"
 #include "sensors.h"
 #include "pixels.h"
+#include "controller.h"
 
 extern Timezone homeTimezone;
 
@@ -687,7 +688,7 @@ void updateClockReading()
 		{
 			initialiseAlarms(clockActiveReading);
 			initialiseTimers(clockActiveReading);
-
+			performCommandsInStore(CLOCK_GOT_TIME_COMMAND_STORE);
 			needToInitialiseAlarmsAndTimers = false;
 		}
 

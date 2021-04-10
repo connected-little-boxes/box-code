@@ -109,7 +109,7 @@ void buttonSensorTest()
 		digitalWrite(buttonSensorSettings.buttonGroundPin, LOW);
 	}
 
-	Serial.println("Button Sensor test\nPress the enter key to end the test");
+	Serial.println("Button Sensor test\nPress the ESC key to end the test");
 
 	int count = 0;
 	bool triggered = false;
@@ -119,7 +119,7 @@ void buttonSensorTest()
 		if (Serial.available() != 0)
 		{
 			int ch = Serial.read();
-			if (ch == 0x0d)
+			if (ch == ESC_KEY)
 			{
 				break;
 			}

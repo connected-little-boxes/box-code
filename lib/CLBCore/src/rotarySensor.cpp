@@ -248,14 +248,14 @@ void rotarySensorTest()
 {
 	pinMode(rotarySensorSettings.rotarySensorDataPinNo, INPUT);
 
-	Serial.println("Rotary Sensor test\nPress the enter key to end the test");
+	Serial.println("Rotary Sensor test\nPress the ESC key to end the test");
 
 	while (true)
 	{
 		if (Serial.available() != 0)
 		{
 			int ch = Serial.read();
-			if (ch == 0x0d)
+			if (ch == ESC_KEY)
 			{
 				break;
 			}

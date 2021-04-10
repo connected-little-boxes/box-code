@@ -6,6 +6,7 @@
 #include "settingsWebServer.h"
 #include "boot.h"
 #include "pixels.h"
+#include "controller.h"
 
 boolean validateWifiSSID(void *dest, const char *newValueStr)
 {
@@ -182,7 +183,7 @@ void handleConnectFailure()
 	if (wifiConnectAttempts == WIFI_MAX_NO_OF_FAILED_SCANS)
 	{
 		TRACE("Reset due to WiFi lockup");
-		internalReboot(WARM_BOOT_MODE);
+		internalReboot(CONFIG_BOOT_MODE);
 	}
 }
 
@@ -261,7 +262,7 @@ void checkWiFiConnectResult()
 		snprintf(messageBuffer, WIFI_MESSAGE_BUFFER_SIZE, "%s %s", WIFI_STATUS_OK_MESSAGE_TEXT, WiFi.localIP().toString().c_str());
 		displayMessage(WIFI_STATUS_OK_MESSAGE_NUMBER, ledFlashNormalState, messageBuffer);
 		wifiConnectAttempts = 0;
-		WiFiProcessDescriptor.status = WIFI_OK;
+		performCommandsInStore(WIFI_CONNECT_COMMAND_STORE);
 		return;
 	}
 
@@ -309,6 +310,7 @@ void checkWiFIOK()
 
 	if (wifiStatusValue != WL_CONNECTED)
 	{
+		performCommandsInStore(WIFI_DISCONNECT_COMMAND_STORE);
 		startReconnectTimer();
 	}
 }

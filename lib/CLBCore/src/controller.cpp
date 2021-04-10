@@ -749,7 +749,7 @@ bool buildStoreFilename(char *dest, int length, const char *store, const char *n
 
 int checkAndAddToStore(JsonObject &root)
 {
-	TRACELN("Checking if a commnand should be added to a store:");
+	TRACELN("Checking if a command should be added to a store:");
 
 	const char *commandStoreName = root["store"];
 
@@ -874,6 +874,7 @@ int performCommandsInStore(char *commandStoreName)
 
 		entry.close();
 	}
+	return WORKED_OK;
 }
 
 unsigned char commandParameterBuffer[OPTION_STORAGE_SIZE];
@@ -1058,7 +1059,8 @@ int decodeCommand(const char *rawCommandText, process *process, Command *command
 
 void do_Json_command(const char *rawCommandText, JsonObject &root, void (*deliverResult)(char *resultText))
 {
-	TRACE("Doing JSON command");
+	TRACELN();
+	TRACELN("Doing JSON command");
 	const char *processName = root["process"];
 	Command *command = NULL;
 	struct process *process = NULL;
@@ -1071,13 +1073,14 @@ void do_Json_command(const char *rawCommandText, JsonObject &root, void (*delive
 	}
 	else
 	{
-		TRACE("For: ");
+		TRACE("  for process: ");
 		TRACE(processName);
 
 		process = findProcessByName(processName);
 
 		if (process == NULL)
 		{
+			TRACELN("   Process name invalid");
 			error = JSON_MESSAGE_PROCESS_NAME_INVALID;
 		}
 		else
@@ -1086,12 +1089,14 @@ void do_Json_command(const char *rawCommandText, JsonObject &root, void (*delive
 
 			if (commandName == NULL)
 			{
+				TRACELN("   Process command missing command");
 				error = JSON_MESSAGE_COMMAND_MISSING_COMMAND;
 			}
 			else
 			{
 				TRACE(" command: ");
-				TRACE(commandName);
+				TRACELN(commandName);
+				TRACE("  ");
 				command = FindCommandInProcess(process, commandName);
 				if (command == NULL)
 				{
@@ -1117,6 +1122,7 @@ void do_Json_command(const char *rawCommandText, JsonObject &root, void (*delive
 
 void act_onJson_message(const char *json, void (*deliverResult)(char *resultText))
 {
+	TRACELN();
 	TRACE("Received message:");
 	TRACELN(json);
 

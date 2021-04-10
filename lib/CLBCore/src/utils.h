@@ -13,6 +13,8 @@ float getUnalignedFloat(unsigned char * source);
 
 void putUnalignedFloat(float fval, unsigned char * dest);
 
+#define ESC_KEY 0x1b
+
 #if defined(ARDUINO_ARCH_ESP32)
 
 #include <Arduino.h>

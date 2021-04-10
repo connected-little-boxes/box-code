@@ -327,8 +327,6 @@ void doOTAUpdate(char *commandLine)
 
 #endif
 
-#define ESC_KEY 0x1b
-
 void doColourDisplay(char *commandLine)
 {
 	Serial.println("Press space to step through each colour");

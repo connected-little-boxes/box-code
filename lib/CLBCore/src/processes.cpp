@@ -309,7 +309,7 @@ void iterateThroughProcessCommands(void (*func)(Command *c))
 
 Command * FindCommandInProcess(process * procPtr, const char *commandName)
 {
-	TRACE("Find command:");
+	TRACE("Finding command:");
 	TRACELN(commandName);
 
 	for (int i = 0; i < procPtr->commands->noOfCommands; i++)
