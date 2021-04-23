@@ -318,14 +318,10 @@ void doDumpStorage(char *commandLine)
 	PrintStorage();
 }
 
-#ifdef OTA_UPDATE_ON
-
 void doOTAUpdate(char *commandLine)
 {
 	performOTAUpdate();
 }
-
-#endif
 
 void doColourDisplay(char *commandLine)
 {
@@ -494,7 +490,7 @@ struct consoleCommand userCommands[] =
 	{
 		{"buttontest", "test the button sensor", doTestButtonSensor},
 		{"clearalllisteners", "clear all the command listeners", doClearAllListeners},
-		{"clear", "clear all seeings and restart the device", doClear},
+		{"clear", "clear all settings and restart the device", doClear},
 		{"clearsensorlisteners", "clear the command listeners for a sensor", doClearSensorListeners},
 		{"colours", "step through all the colours", doColourDisplay},
 		{"commands", "show all the remote commands", doShowRemoteCommandsText},
@@ -505,9 +501,7 @@ struct consoleCommand userCommands[] =
 		{"host", "start the configuration web host", doStartWebServer},
 		{"hullos", "HullOS commands", doHullOS},
 		{"listeners", "list the command listeners", doDumpListeners},
-#ifdef OTA_UPDATE_ON
 		{"otaupdate", "start an over-the-air firmware update", doOTAUpdate},
-#endif
 		{"pirtest", "test the PIR sensor", doTestPIRSensor},
 		{"pottest", "test the pot sensor", doTestPotSensor},
 		{"rotarytest", "test the rotary sensor", doTestRotarySensor},
@@ -586,7 +580,7 @@ struct consoleCommand *findCommand(char *commandLine, consoleCommand *commands, 
 
 boolean performCommand(char *commandLine, consoleCommand *commands, int noOfCommands)
 {
-	Serial.printf("Processing: %s ", commandLine);
+	Serial.printf("Processing: %s\n", commandLine);
 
 	if (commandLine[0] == '{')
 	{

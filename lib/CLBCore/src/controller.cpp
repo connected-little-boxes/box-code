@@ -8,6 +8,7 @@
 #include "utils.h"
 #include "errors.h"
 #include "settings.h"
+#include "otaupdate.h"
 
 #include "ArduinoJson-v5.13.2.h"
 #include "FS.h"

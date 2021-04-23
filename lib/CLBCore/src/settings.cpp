@@ -746,7 +746,7 @@ void PrintSystemDetails(char * buffer, int length)
 void PrintAllSettings()
 {
 	char deviceNameBuffer [DEVICE_NAME_LENGTH];
-	PrintSystemDetails(deviceNameBuffer,DEVICE_NAME_LENGTH);
+	PrintSystemDetails(deviceNameBuffer,DEVICE_NAME_LENGTH); 
 
 	Serial.println(deviceNameBuffer);
 	Serial.println("Sensors");

@@ -14,6 +14,7 @@
 #include "HullOSVariables.h"
 #include "HullOSScript.h"
 #include "HullOS.h"
+#include "otaupdate.h"
 
 ProgramState programState = PROGRAM_STOPPED;
 DeviceState deviceState = EXECUTE_IMMEDIATELY;

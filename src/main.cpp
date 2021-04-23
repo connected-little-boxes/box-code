@@ -30,6 +30,7 @@
 #include "BME280Sensor.h"
 #include "HullOS.h"
 #include "boot.h"
+#include "otaupdate.h"
 
 
 // This function will be different for each build of the device.
@@ -51,6 +52,7 @@ void populateProcessList()
 	addProcessToAllProcessList(&max7219MessagesProcess);
 	addProcessToAllProcessList(&printerProcess);
 	addProcessToAllProcessList(&hullosProcess);
+	addProcessToAllProcessList(&otaUpdateProcessDescriptor);
 }
 
 void populateSensorList()

@@ -1,12 +1,50 @@
-#ifdef OTA_UPDATE_ON
-
 #include "utils.h"
 #include "processes.h"
 #include "settings.h"
 #include "pixels.h"
 #include "otaupdate.h"
 
-#define MakeFirmwareInfo(k, v) "&_FirmwareInfo&k=" k "&v=" v "&FirmwareInfo_&"
+char * Version = "1.0.0.50";
+
+struct OtaUpdateSettings otaUpdateSettings;
+
+boolean validateOtaUpdatePath(void *dest, const char *newValueStr)
+{
+	return (validateString((char *)dest, newValueStr, OTA_UPDATE_PATH_SIZE));
+}
+ 
+boolean validateOtaProductKey(void *dest, const char *newValueStr)
+{
+	return (validateString((char *)dest, newValueStr, OTA_UPDATE_PRODUCT_KEY_SIZE));
+}
+
+struct SettingItem otaUpdatePathSetting = {
+	"Url of the OTA update server", 
+	"otaupdateurl", 
+	otaUpdateSettings.otaUpdatePath, 
+	OTA_UPDATE_PATH_SIZE, 
+	text, 
+	setEmptyString, validateOtaUpdatePath};
+
+struct SettingItem otaProductKeySetting = {
+	"OTA product key", 
+	"otaupdateproductkey", 
+	otaUpdateSettings.otaUpdateProductKey, 
+	OTA_UPDATE_PRODUCT_KEY_SIZE, 
+	text, 
+	setEmptyString, validateOtaProductKey};
+
+struct SettingItem *otaUpdateSettingItemPointers[] =
+	{
+		&otaUpdatePathSetting,
+		&otaProductKeySetting};
+
+struct SettingItemCollection otaUpdateSettingItems = {
+	"otaupdate",
+	"Over The Air (OTA) update settings",
+	otaUpdateSettingItemPointers,
+	sizeof(otaUpdateSettingItemPointers) / sizeof(struct SettingItem *)};
+
 
 #define USE_SERIAL Serial
 
@@ -42,18 +80,28 @@ void update_error(int err) {
 	Serial.printf("CALLBACK:  HTTP update fatal error code %d\n", err);
 }
 
+void makeUpdateURL( char * buffer, int bufferLength)
+{
+	snprintf(buffer,bufferLength,
+		"%s&s=%lu&_FirmwareInfo&k=%s&v=%s&FirmwareInfo_&",
+		otaUpdateSettings.otaUpdatePath,
+		PROC_ID,
+		otaUpdateSettings.otaUpdateProductKey,
+		Version);
+}
 
 void performOTAUpdate()
 {
-	String url = "http://otadrive.com/DeviceApi/Update?";
 	WiFiClient client;
+	
+	char url[300];
 
-	ota_update_init = true;
-
+	makeUpdateURL (url, 300);
+	
 #if defined(ARDUINO_ARCH_ESP8266)
 
-	url += "&s=" + String(PROC_ID);
-	url += MakeFirmwareInfo(OTA_PRODUCT_KEY, Version);
+//	url += "&s=" + String(PROC_ID);
+//	url += MakeFirmwareInfo(OTA_PRODUCT_KEY, Version);
 
 	Serial.println("Get firmware from url:");
 	Serial.println(url);
@@ -64,6 +112,7 @@ void performOTAUpdate()
 	ESPhttpUpdate.onError(update_error);
 
 	t_httpUpdate_return ret = ESPhttpUpdate.update(client, url, Version);
+
 #endif
 
 #if defined(ARDUINO_ARCH_ESP32)
@@ -97,5 +146,71 @@ void performOTAUpdate()
 	}
 }
 
-#endif
+void initOtaUpdate()
+{
+	otaUpdateProcessDescriptor.status = OTAUPDATE_OFF;
+}
 
+void startOtaUpdate()
+{
+	otaUpdateProcessDescriptor.status = OTAUPDATE_OK;
+}
+
+void updateOtaUpdate()
+{
+}
+
+void stopOtaUpdate()
+{
+	otaUpdateProcessDescriptor.status = OTAUPDATE_OFF;
+}
+
+bool otaUpdateStatusOK()
+{
+	return otaUpdateProcessDescriptor.status == OTAUPDATE_OK;
+}
+
+void otaUpdateStatusMessage(char *buffer, int bufferLength)
+{
+	switch (otaUpdateProcessDescriptor.status)
+	{
+	case OTAUPDATE_OK:
+		snprintf(buffer, bufferLength, "OtaUpdate OK");
+		break;
+	case OTAUPDATE_OFF:
+		snprintf(buffer, bufferLength, "OtaUpdate OFF");
+		break;
+	default:
+		snprintf(buffer, bufferLength, "OtaUpdate status invalid");
+		break;
+	}
+}
+
+struct Command * otaUpdateCommandList[] = {
+};
+
+struct CommandItemCollection otaUpdateCommands =
+	{
+		"Control the Over The Air (OTA) update",
+		otaUpdateCommandList,
+		sizeof(otaUpdateCommandList) / sizeof(struct Command *)};
+
+struct process otaUpdateProcessDescriptor = {
+	"otaUpdate",
+	initOtaUpdate,
+	startOtaUpdate,
+	updateOtaUpdate,
+	stopOtaUpdate,
+	otaUpdateStatusOK,
+	otaUpdateStatusMessage,
+	false,
+	0,
+	0,
+	0,
+	NULL,
+	(unsigned char *)&otaUpdateSettings, sizeof(otaUpdateSettings), &otaUpdateSettingItems,
+	&otaUpdateCommands,
+	BOOT_PROCESS + ACTIVE_PROCESS + CONFIG_PROCESS + WIFI_CONFIG_PROCESS,
+	NULL,
+	NULL,
+	NULL};

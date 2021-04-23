@@ -5,6 +5,7 @@
 #include "sensors.h"
 #include "processes.h"
 #include "boot.h"
+#include "otaupdate.h"
 
 #define WEB_PAGE_BUFFER_SIZE 3000
 

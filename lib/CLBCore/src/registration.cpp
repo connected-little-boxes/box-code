@@ -3,6 +3,7 @@
 #include "errors.h"
 #include "clock.h"
 #include "boot.h"
+#include "otaupdate.h"
 
 struct RegistrationSettings RegistrationSettings;
 
