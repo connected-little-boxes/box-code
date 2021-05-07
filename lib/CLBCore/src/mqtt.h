@@ -28,6 +28,7 @@
 #define MQTT_USER_NAME_LENGTH 100
 #define MQTT_PASSWORD_LENGTH 200
 #define MQTT_TOPIC_LENGTH 150
+#define MQTT_TOPIC_PREFIX_LENGTH 100
 
 #define MQTT_NO_OF_RETRIES 3
 
@@ -62,6 +63,7 @@ struct MqttSettings
 	char mqttPublishTopic[MQTT_TOPIC_LENGTH];
 	char mqttSubscribeTopic[MQTT_TOPIC_LENGTH];
 	char mqttReportTopic[MQTT_TOPIC_LENGTH];
+	char mqttTopicPrefix[MQTT_TOPIC_PREFIX_LENGTH];
 
 	int mqttSecsPerUpdate;
 	int seconds_per_mqtt_retry;

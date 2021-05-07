@@ -27,6 +27,11 @@ boolean validateMQTTtopic(void *dest, const char *newValueStr)
 	return (validateString((char *)dest, newValueStr, MQTT_TOPIC_LENGTH));
 }
 
+boolean validateMQTTtopicPrefix(void *dest, const char *newValueStr)
+{
+	return (validateString((char *)dest, newValueStr, MQTT_TOPIC_PREFIX_LENGTH));
+}
+
 void setDefaultMQTTusername(void *dest)
 {
 	strcpy((char *)dest, DEFAULT_MQTT_USER);
@@ -45,6 +50,11 @@ boolean validateMQTTusername(void *dest, const char *newValueStr)
 boolean validateMQTTPWD(void *dest, const char *newValueStr)
 {
 	return (validateString((char *)dest, newValueStr, MQTT_PASSWORD_LENGTH));
+}
+
+void setDefaultMQTTTopicPrefix(void *dest)
+{
+	snprintf((char *)dest, MQTT_TOPIC_LENGTH, "lb/", PROC_ID);
 }
 
 void setDefaultMQTTpublishTopic(void *dest)
@@ -106,6 +116,9 @@ struct SettingItem mqttUserSetting = {
 struct SettingItem mqttPasswordSetting = {
 	"MQTT Password", "mqttpwd", mqttSettings.mqttPassword, MQTT_PASSWORD_LENGTH, password, setDefaultMQTTpwd, validateMQTTPWD};
 
+struct SettingItem mqttTopicPrefixSetting = {
+	"MQTT Topic prefix", "mqttpre", mqttSettings.mqttTopicPrefix, MQTT_TOPIC_PREFIX_LENGTH, text, setDefaultMQTTTopicPrefix, validateMQTTtopicPrefix};
+
 struct SettingItem mqttPublishTopicSetting = {
 	"MQTT Publish topic", "mqttpub", mqttSettings.mqttPublishTopic, MQTT_TOPIC_LENGTH, text, setDefaultMQTTpublishTopic, validateMQTTtopic};
 
@@ -130,6 +143,7 @@ struct SettingItem *mqttSettingItemPointers[] =
 		&mqttSecureSocketsSetting,
 		&mqttUserSetting,
 		&mqttPasswordSetting,
+		&mqttTopicPrefixSetting,
 		&mqttPublishTopicSetting,
 		&mqttSubscribeTopicSetting,
 		&mqttReportTopicSetting,
@@ -299,7 +313,11 @@ void restartMQTT()
 		return;
 	}
 
-	mqttPubSubClient->subscribe(mqttSettings.mqttSubscribeTopic);
+	char topicBuffer [MQTT_TOPIC_PREFIX_LENGTH+MQTT_TOPIC_LENGTH];
+
+	snprintf(topicBuffer,MQTT_TOPIC_PREFIX_LENGTH+MQTT_TOPIC_LENGTH,"%s%s", mqttSettings.mqttTopicPrefix,mqttSettings.mqttSubscribeTopic);
+
+	mqttPubSubClient->subscribe(topicBuffer);
 
 	//snprintf(mqtt_send_buffer, MQTT_SEND_BUFFER_SIZE,
 	//	"{\"dev\":\"%s\", \"status\":\"starting\"}",
@@ -325,8 +343,14 @@ int publishBufferToMQTTTopic(char *buffer, char *topic)
 	if (MQTTProcessDescriptor.status == MQTT_OK)
 	{
 		messagesSent++;
-		Serial.printf("Publishing %s to %s", buffer, topic);
-		boolean result = mqttPubSubClient->publish(topic, buffer);
+
+		char topicBuffer [MQTT_TOPIC_PREFIX_LENGTH+MQTT_TOPIC_LENGTH];
+
+		snprintf(topicBuffer,MQTT_TOPIC_PREFIX_LENGTH+MQTT_TOPIC_LENGTH,"%s%s", mqttSettings.mqttTopicPrefix,topic);
+
+		Serial.printf("Publishing %s to %s", buffer, topicBuffer);
+
+		boolean result = mqttPubSubClient->publish(topicBuffer, buffer);
 
 		if(result)
 		{
