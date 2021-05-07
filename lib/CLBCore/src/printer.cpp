@@ -188,7 +188,7 @@ int doPrintText(char *destination, unsigned char *settingBase)
         // we have a destination for the command. Build the string
         char buffer[JSON_BUFFER_SIZE];
         createJSONfromSettings("printer", &printMessageCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-        return publishBufferToMQTTTopic(buffer, destination);
+        return publishCommandToRemoteDevice(buffer, destination);
     }
 
     if (printerProcess.status != PRINTER_OK)

@@ -774,7 +774,7 @@ int doRemoteConsoleCommand(char *destination, unsigned char *settingBase)
 		// we have a destination for the command. Build the string
 		char buffer[JSON_BUFFER_SIZE];
 		createJSONfromSettings("console", &performConsoleCommnad, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-		return publishBufferToMQTTTopic(buffer, destination);
+		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
 	char *command = (char *)(settingBase + COMMANDNAME_CONSOLE_COMMAND_OFFSET);

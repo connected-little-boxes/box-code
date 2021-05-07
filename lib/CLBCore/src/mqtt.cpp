@@ -54,22 +54,22 @@ boolean validateMQTTPWD(void *dest, const char *newValueStr)
 
 void setDefaultMQTTTopicPrefix(void *dest)
 {
-	snprintf((char *)dest, MQTT_TOPIC_LENGTH, "lb/", PROC_ID);
+	snprintf((char *)dest, MQTT_TOPIC_LENGTH, "lb");
 }
 
 void setDefaultMQTTpublishTopic(void *dest)
 {
-	snprintf((char *)dest, MQTT_TOPIC_LENGTH, "data/CLB-%06lx", PROC_ID);
+	snprintf((char *)dest, MQTT_TOPIC_LENGTH, "data");
 }
 
 void setDefaultMQTTsubscribeTopic(void *dest)
 {
-	snprintf((char *)dest, MQTT_TOPIC_LENGTH, "command/CLB-%06lx", PROC_ID);
+	snprintf((char *)dest, MQTT_TOPIC_LENGTH, "command");
 }
 
 void setDefaultMQTTreportTopic(void *dest)
 {
-	snprintf((char *)dest, MQTT_TOPIC_LENGTH, "report/CLB-%06lx", PROC_ID);
+	snprintf((char *)dest, MQTT_TOPIC_LENGTH, "report");
 }
 
 void setDefaultMQTTsecsPerUpdate(void *dest)
@@ -315,7 +315,9 @@ void restartMQTT()
 
 	char topicBuffer [MQTT_TOPIC_PREFIX_LENGTH+MQTT_TOPIC_LENGTH];
 
-	snprintf(topicBuffer,MQTT_TOPIC_PREFIX_LENGTH+MQTT_TOPIC_LENGTH,"%s%s", mqttSettings.mqttTopicPrefix,mqttSettings.mqttSubscribeTopic);
+	snprintf(topicBuffer,MQTT_TOPIC_PREFIX_LENGTH+MQTT_TOPIC_LENGTH,"%s/%s/%s", mqttSettings.mqttTopicPrefix,mqttSettings.mqttSubscribeTopic,mqttSettings.mqttDeviceName);
+
+	Serial.printf("Subscribing to:%s\n", topicBuffer);
 
 	mqttPubSubClient->subscribe(topicBuffer);
 
@@ -346,9 +348,9 @@ int publishBufferToMQTTTopic(char *buffer, char *topic)
 
 		char topicBuffer [MQTT_TOPIC_PREFIX_LENGTH+MQTT_TOPIC_LENGTH];
 
-		snprintf(topicBuffer,MQTT_TOPIC_PREFIX_LENGTH+MQTT_TOPIC_LENGTH,"%s%s", mqttSettings.mqttTopicPrefix,topic);
+		snprintf(topicBuffer,MQTT_TOPIC_PREFIX_LENGTH+MQTT_TOPIC_LENGTH,"%s/%s", mqttSettings.mqttTopicPrefix,topic);
 
-		Serial.printf("Publishing %s to %s", buffer, topicBuffer);
+		Serial.printf("MQTT publishing:%s to topic:%s\n", buffer, topicBuffer);
 
 		boolean result = mqttPubSubClient->publish(topicBuffer, buffer);
 
@@ -373,9 +375,23 @@ int publishBufferToMQTTTopic(char *buffer, char *topic)
 	return MQTT_STATUS_MESSAGE_CANT_SEND_MESSAGE_NUMBER;
 }
 
+int publishCommandToRemoteDevice(char *buffer, char *remoteDeviceName)
+{
+	char topicBuffer [MQTT_TOPIC_LENGTH];
+
+	snprintf(topicBuffer,MQTT_TOPIC_LENGTH,"%s/%s",mqttSettings.mqttSubscribeTopic,remoteDeviceName);
+
+	return publishBufferToMQTTTopic(buffer, topicBuffer);
+}
+
+
 int publishBufferToMQTT(char *buffer)
 {
-	return publishBufferToMQTTTopic(buffer, mqttSettings.mqttPublishTopic);
+	char topicBuffer [MQTT_TOPIC_LENGTH];
+
+	snprintf(topicBuffer,MQTT_TOPIC_LENGTH,"%s/%s",mqttSettings.mqttPublishTopic,mqttSettings.mqttDeviceName);
+
+	return publishBufferToMQTTTopic(buffer,topicBuffer);
 }
 
 void stopMQTT()

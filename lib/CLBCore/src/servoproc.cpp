@@ -147,7 +147,7 @@ int doSetServoPositionCommand(char * destination, unsigned char * settingBase)
 		// we have a destination for the command. Build the string
 		char buffer[JSON_BUFFER_SIZE];
 		createJSONfromSettings("servo", &setServoPositionCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-		return publishBufferToMQTTTopic(buffer, destination);
+		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
     float position = getUnalignedFloat(settingBase+SERVO_POSITION_COMMAND_OFFSET);    
@@ -184,7 +184,7 @@ int doSetServoInitialPositionCommand(char * destination, unsigned char * setting
 		// we have a destination for the command. Build the string
 		char buffer[JSON_BUFFER_SIZE];
 		createJSONfromSettings("servo", &setServoInitialPositionCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-		return publishBufferToMQTTTopic(buffer, destination);
+		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
     float position = getUnalignedFloat(settingBase+SERVO_POSITION_COMMAND_OFFSET);    

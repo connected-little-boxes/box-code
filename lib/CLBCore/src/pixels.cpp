@@ -339,7 +339,7 @@ int doSetPixelColor(char *destination, unsigned char *settingBase)
 		// we have a destination for the command. Build the string
 		char buffer[JSON_BUFFER_SIZE];
 		createJSONfromSettings("pixels", &setPixelColourCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-		return publishBufferToMQTTTopic(buffer, destination);
+		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
 	// sets the pixel colour - caller has set the r,g and b values
@@ -377,7 +377,7 @@ int doSetNamedColour(char *destination, unsigned char *settingBase)
 		// we have a destination for the command. Build the string
 		char buffer[JSON_BUFFER_SIZE];
 		createJSONfromSettings("pixels", &setPixelsToNamedColour, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-		return publishBufferToMQTTTopic(buffer, destination);
+		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
 	struct colourNameLookup *col;
@@ -444,7 +444,7 @@ int doSetRandomColour(char *destination, unsigned char *settingBase)
 		// we have a destination for the command. Build the string
 		char buffer[JSON_BUFFER_SIZE];
 		createJSONfromSettings("pixels", &setPixelsToRandomColour, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-		return publishBufferToMQTTTopic(buffer, destination);
+		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
 	char *option = (char *)(settingBase + COMMAND_PIXEL_OPTION_OFFSET);
@@ -486,7 +486,7 @@ int doSetTwinkle(char *destination, unsigned char *settingBase)
 		// we have a destination for the command. Build the string
 		char buffer[JSON_BUFFER_SIZE];
 		createJSONfromSettings("pixels", &setPixelsToTwinkle, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-		return publishBufferToMQTTTopic(buffer, destination);
+		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
 	char *option = (char *)(settingBase + COMMAND_PIXEL_OPTION_OFFSET);
@@ -526,7 +526,7 @@ int doSetBrightness(char *destination, unsigned char *settingBase)
 		// we have a destination for the command. Build the string
 		char buffer[JSON_BUFFER_SIZE];
 		createJSONfromSettings("pixels", &setPixelBrightness, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-		return publishBufferToMQTTTopic(buffer, destination);
+		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
 	float brightness = getUnalignedFloat(settingBase + FLOAT_VALUE_OFFSET);
@@ -562,7 +562,7 @@ int doSetPattern(char *destination, unsigned char *settingBase)
 		// we have a destination for the command. Build the string
 		char buffer[JSON_BUFFER_SIZE];
 		createJSONfromSettings("pixels", &setPixelPattern, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-		return publishBufferToMQTTTopic(buffer, destination);
+		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
 	char *colourMask = (char *)(settingBase + COLOURNAME_PIXEL_COMMAND_OFFSET);

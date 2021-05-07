@@ -247,7 +247,7 @@ int doRemoteRegistrationCommand(char *destination, unsigned char *settingBase)
 		// we have a destination for the command. Build the string
 		char buffer[JSON_BUFFER_SIZE];
 		createJSONfromSettings("registration", &performRegistrationCommnad, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-		return publishBufferToMQTTTopic(buffer, destination);
+		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
 	Serial.println("\nPerforming remote registration\n");
@@ -277,7 +277,7 @@ int doRegistrationGetSetupCommand(char *destination, unsigned char *settingBase)
 		// we have a destination for the command. Build the string
 		char buffer[JSON_BUFFER_SIZE];
 		createJSONfromSettings("registration", &RegistrationGetSetupCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-		return publishBufferToMQTTTopic(buffer, destination);
+		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
 	char messageBuffer[CONNECTION_MESSAGE_BUFFER_SIZE];
@@ -319,7 +319,7 @@ int doRegistrationGetSettingsCommand(char *destination, unsigned char *settingBa
 		// we have a destination for the command. Build the string
 		char buffer[JSON_BUFFER_SIZE];
 		createJSONfromSettings("registration", &RegistrationGetProcessSettingsCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-		return publishBufferToMQTTTopic(buffer, destination);
+		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
 	char *name = (char *)(settingBase + REGISTRATION_COMMAND_VALUE_OFFSET);

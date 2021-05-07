@@ -75,7 +75,9 @@ extern struct MqttSettings mqttSettings;
 extern struct SettingItemCollection mqttSettingItems;
 
 int publishBufferToMQTT(char * buffer);
+int publishCommandToRemoteDevice(char *buffer, char * topic);
 int publishBufferToMQTTTopic(char *buffer, char * topic);
+
 
 boolean validateMQTTtopic(void *dest, const char *newValueStr);
 

@@ -158,7 +158,7 @@ These are all the available commands.
 ```
 For full command descriptions consult the device manual.
 
-# Set connection settings the device
+# Set connection settings on the device
 If you are happy editing the Platform.ini file you can configure it to put connection defaults for WiFi and MQTT connections into your devices when they are built. These will be stored in the device so that no further configuration is required when it is deployed.
 
 Set the default values by entering them in the file **defaults.hsec** which is in the **lib\clb\src** folder. There is a sample file there called **defaults.hsec.sample** which you can use to get started. Fill in your details and  rename the file to defaults.hsec before building the solution. Note that there is a gitignore entrey so that files with the languge extension .hsec are not stored on GitHub when the file is stored on a server.
@@ -178,3 +178,27 @@ board = d1_mini
 build_flags = -DWEMOSD1MINI -DDEFAULTS_ON 
 ```
 Now, when you build the software the settings that you have selected are "baked in" to the program itself. This means that you can just fire up the device and use it without any further configuration. 
+# MQTT addressing
+Each box has a unique name which is used to address it on an MQTT installation. The name is made up of three elements which are managed by the following settings.
+```
+MQTT Device name [mqttdevicename]: CLB-eab998
+MQTT Topic prefix [mqttpre]: lb
+MQTT Subscribe topic [mqttsub]: command
+```
+The **MQTT Device Name** is created from the processor ID the particular chip. It should be unique on a given installation. **The MQTT Topic prefix** is placed in front of any address that is used by the box. By default the string is set to "lb".
+
+The **MQTT Subscribe topic** is used by the box to receive messages. A box will subscribe to this topic and act on any commands that are received on it. A box will also use this topic to publish commands to other box.
+
+If you use the default settings (which I would advise) you can address distant boxes by just puttign their MQTT Device Name value in the **to** part of a command:
+```
+{"process":"pixels", "command":"setnamedcolour","colourname":"green","pixelSpeed":20,"to":"CLB-eab998"}
+```
+The above command would set the pixels green on the box with the MQTT Device name **CLB-eab998**. This command would send the command to the topic string below, which is what the destination device would be subscribed to:
+```
+lb/command/CLB-eab998
+```
+There are some other MQTT topic values defined in the device which are for future expansion.
+## Note
+The present version of the firmware does not handle empty Topic Prefix or Subscribe topic values. So please make sure that you put text into these fields. This will be fixed in a later release. 
+
+

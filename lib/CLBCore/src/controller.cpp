@@ -1263,7 +1263,7 @@ int doPerformCommandStore(char *destination, unsigned char *settingBase)
 		// we have a destination for the command. Build the string
 		char buffer[JSON_BUFFER_SIZE];
 		createJSONfromSettings("controller", &performCommandStore, destination, settingBase, buffer, JSON_BUFFER_SIZE);
-		return publishBufferToMQTTTopic(buffer, destination);
+		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
 	Serial.println("Performing a command");
