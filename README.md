@@ -189,11 +189,11 @@ The **MQTT Device Name** is created from the processor ID the particular chip. I
 
 The **MQTT Subscribe topic** is used by the box to receive messages. A box will subscribe to this topic and act on any commands that are received on it. A box will also use this topic to publish commands to other box.
 
-If you use the default settings (which I would advise) you can address distant boxes by just puttign their MQTT Device Name value in the **to** part of a command:
+If you use the default settings (which I would advise) you can address distant boxes by just putting their MQTT Device Name value in the **to** part of a command:
 ```
 {"process":"pixels", "command":"setnamedcolour","colourname":"green","pixelSpeed":20,"to":"CLB-eab998"}
 ```
-The above command would set the pixels green on the box with the MQTT Device name **CLB-eab998**. This command would send the command to the topic string below, which is what the destination device would be subscribed to:
+The above command would set the pixels green on the box with the MQTT Device name **CLB-eab998**. This would send the command to the topic string below, which is what the destination device would be subscribed to:
 ```
 lb/command/CLB-eab998
 ```
