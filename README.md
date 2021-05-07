@@ -158,26 +158,7 @@ These are all the available commands.
 ```
 For full command descriptions consult the device manual.
 
-# Set connection settings on the device
-If you are happy editing the Platform.ini file you can configure it to put connection defaults for WiFi and MQTT connections into your devices when they are built. These will be stored in the device so that no further configuration is required when it is deployed.
 
-Set the default values by entering them in the file **defaults.hsec** which is in the **lib\clb\src** folder. There is a sample file there called **defaults.hsec.sample** which you can use to get started. Fill in your details and  rename the file to defaults.hsec before building the solution. Note that there is a gitignore entrey so that files with the languge extension .hsec are not stored on GitHub when the file is stored on a server.
-
-```
-#define DEFAULT_WIFI1_SSID "Your SSID"
-#define DEFAULT_WIFI1_PWD "Your password"
-#define DEFAULT_MQTT_HOST "Your MQTT Host"
-#define DEFAULT_MQTT_USER "Your MQTT user"
-#define DEFAULT_MQTT_PWD "Your MQTT password"
-```
-Once you have configured your settings you need to tell Platform IO to use these default values. Open the Platform.ini file and find the settings for the ESP device that you are presently using. At the top of the settings you'll find a **build_flags** entry. Add the entry -DDEFAULTS_ON to this as shown below.
-
-```
-[env:Wemos D1 Mini ESP8266]
-board = d1_mini
-build_flags = -DWEMOSD1MINI -DDEFAULTS_ON 
-```
-Now, when you build the software the settings that you have selected are "baked in" to the program itself. This means that you can just fire up the device and use it without any further configuration. 
 # MQTT addressing
 Each box has a unique name which is used to address it on an MQTT installation. The name is made up of three elements which are managed by the following settings.
 ```
