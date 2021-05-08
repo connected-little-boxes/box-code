@@ -348,7 +348,15 @@ int publishBufferToMQTTTopic(char *buffer, char *topic)
 
 		char topicBuffer [MQTT_TOPIC_PREFIX_LENGTH+MQTT_TOPIC_LENGTH];
 
-		snprintf(topicBuffer,MQTT_TOPIC_PREFIX_LENGTH+MQTT_TOPIC_LENGTH,"%s/%s", mqttSettings.mqttTopicPrefix,topic);
+		if( mqttSettings.mqttTopicPrefix[0]==0)
+		{
+			// no prefix - just send the topic
+			snprintf(topicBuffer,MQTT_TOPIC_PREFIX_LENGTH+MQTT_TOPIC_LENGTH,"%s", topic);
+		}
+		else {
+			// send the prefix separated from the topic by a /
+			snprintf(topicBuffer,MQTT_TOPIC_PREFIX_LENGTH+MQTT_TOPIC_LENGTH,"%s/%s", mqttSettings.mqttTopicPrefix,topic);
+		}
 
 		Serial.printf("MQTT publishing:%s to topic:%s\n", buffer, topicBuffer);
 

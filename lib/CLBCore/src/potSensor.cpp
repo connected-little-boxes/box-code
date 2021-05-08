@@ -139,7 +139,14 @@ void updatePOTSensor()
 			// The command data value is always the first item in the parameter block
 
 			float resultValue = (float)potSensoractiveReading->counter/1024;
+
+			resultValue = 1.0 - resultValue;
+			
 			putUnalignedFloat(resultValue, (unsigned char *) &pos->config->optionBuffer);
+
+			char *messageBuffer = (char *)pos->config->optionBuffer + MESSAGE_START_POSITION;
+			snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%.2f", resultValue);
+
 			pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
 			pos->lastReadingMillis = buttonSensor.millisAtLastReading;
 			// move on to the next one

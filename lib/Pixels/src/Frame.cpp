@@ -298,7 +298,6 @@ void Frame::fadeSpritesToWalkingColours(char *colours, int steps)
 void Frame::fadeSpritesToTwinkle(int steps)
 {
 	int MAX_NO_OF_SPRITESToTwinkle = getNumberOfActiveSprites();
-
 	for (int i = 0; i < MAX_NO_OF_SPRITESToTwinkle; i++)
 	{
 		struct colourNameLookup *newColour = findRandomColour();

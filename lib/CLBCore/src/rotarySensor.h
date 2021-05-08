@@ -23,6 +23,7 @@ struct RotarySensorSettings {
 	int rotarySensorClockPinNo;
 	int rotarySensorSwitchPinNo;
 	bool rotarySensorFitted;
+	float rotarySensorInitialValue;
 };
 
 extern struct RotarySensorSettings rotarySensorSettings;

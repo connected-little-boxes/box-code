@@ -898,16 +898,11 @@ int decodeCommand(const char *rawCommandText, process *process, Command *command
 
 		const char *option = root[item->name];
 
+		TRACE("Handling option:");
+		TRACELN(item->name);
+
 		if (option == NULL)
 		{
-			// Need to treat the value item as special
-			// We can live without a value item if we are using a sensor as the source
-			if (sensorName != NULL)
-			{
-				// ignore the missing value - this will be supplied from the sensor
-				continue;
-			}
-
 			// no option with this name - do we have a default for it?
 
 			if (item->setDefaultValue(parameterBuffer + item->commandSettingOffset))

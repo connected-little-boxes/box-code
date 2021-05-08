@@ -28,6 +28,12 @@ void setDefaultRotarySwitchPinNo(void *dest)
 	*destInt = 0;
 }
 
+void setDefaultRotarySensorInitialValue(void *dest)
+{
+	float *destFloat = (float *)dest;
+	*destFloat = 0.5;
+}
+
 struct SettingItem RotarySensorInputPinNoSetting = {
 	"Rotary sensor data Pin",
 	"rotarysensordatapin",
@@ -64,12 +70,22 @@ struct SettingItem rotarySensorFittedSetting = {
 	setFalse,
 	validateYesNo};
 
+struct SettingItem rotarySensorInitialValueSetting = {
+	"Rotary sensor initial value",
+	"rotarysensorinitial",
+	&rotarySensorSettings.rotarySensorInitialValue,
+	NUMBER_INPUT_LENGTH,
+	floatValue,
+	setDefaultRotarySensorInitialValue,
+	validateFloat0to1};
+
 struct SettingItem *rotarySensorSettingItemPointers[] =
 	{
 		&RotarySensorInputPinNoSetting,
 		&RotarySensorClockPinNoSetting,
 		&ROTARYSensorPinNoSetting,
-		&rotarySensorFittedSetting};
+		&rotarySensorFittedSetting,
+		&rotarySensorInitialValueSetting};
 
 struct SettingItemCollection rotarySensorSettingItems = {
 	"rotarySensor",
@@ -151,7 +167,8 @@ void ICACHE_RAM_ATTR clockChange()
 		else
 		{
 			forward = true;
-			counter++;
+			if(counter<100)
+				counter++;
 		}
 	}
 	else
@@ -160,7 +177,8 @@ void ICACHE_RAM_ATTR clockChange()
 		if (digitalRead(rotarySensorSettings.rotarySensorDataPinNo))
 		{
 			forward = true;
-			counter++;
+			if(counter<100)
+				counter++;
 		}
 		else
 		{
@@ -231,6 +249,10 @@ void updateROTARYSensor()
 
 				float resultValue = (float)rotarySensoractiveReading->counter/100.0;
 				putUnalignedFloat(resultValue, (unsigned char *) &pos->config->optionBuffer);
+
+				char *messageBuffer = (char *)pos->config->optionBuffer + MESSAGE_START_POSITION;
+				snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%.2f", resultValue);
+
 				pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
 				pos->lastReadingMillis = buttonSensor.millisAtLastReading;
 				// move on to the next one
@@ -282,13 +304,11 @@ void startRotarySensor()
 	}
 	else
 	{
-
+		counter = (int) (rotarySensorSettings.rotarySensorInitialValue * 100);
 		pinMode(rotarySensorSettings.rotarySensorDataPinNo, INPUT);
 		pinMode(rotarySensorSettings.rotarySensorClockPinNo, INPUT);
 		pinMode(rotarySensorSettings.rotarySensorSwitchPinNo, INPUT);
-
 		attachInterrupt(rotarySensorSettings.rotarySensorClockPinNo, clockChange, HIGH);
-
 		rotarySensor.status = SENSOR_OK;
 	}
 }
