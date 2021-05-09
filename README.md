@@ -18,6 +18,8 @@ The first thing you will need to do is deploy the software to a device and then 
 1. Install the PlatformIO plugin for Visual Studio Code.
 1. Clone this code repository onto your computer.
 1. Build the framework for your chosen platform (ESP32 or ESP8266)
+# Documentation
+You can find full documentation of all Connected Little Boxes software [here](doc/Connected Little Box Reference.pdf)
 
 # Configure the device using your phone
 When a new device is first powered up it detects that there are no WiFi settings configured and it starts an access point called **CLB**. You can connect to this access point with your phone or laptop. If your phone can use the camera configure a WiFi connection you can connect to the device using the following QR code:

@@ -73,8 +73,14 @@ struct BME280SensorSettings {
 	bool bme280SensorFitted;
 	int envNoOfAverages;
 	float tempDelta;
+	float tempNormMin;
+	float tempNormMax;
 	float pressDelta;
+	float pressNormMin;
+	float pressNormMax;
 	float humidDelta;
+	float humidNormMin;
+	float humidNormMax;
 };
 
 extern struct BME280SensorSettings bme280SensorSettings;

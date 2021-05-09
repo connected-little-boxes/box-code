@@ -32,7 +32,7 @@ struct SettingItem bme280SensorFittedSetting = {
 
 struct SettingItem envNoOfAveragesSetting = {
 	"Environment Number of averages",
-	"envnoOfAverages",
+	"bme280envnoOfAverages",
 	&bme280SensorSettings.envNoOfAverages,
 	NUMBER_INPUT_LENGTH,
 	integerValue,
@@ -47,11 +47,41 @@ void setDefaultEnvTempDelta(void *dest)
 
 struct SettingItem BME280TempDelta = {
 	"Temperature change to trigger transmit",
-	"tempchangetoxmit",
+	"bme280tempchangetoxmit",
 	&bme280SensorSettings.tempDelta,
 	NUMBER_INPUT_LENGTH,
 	floatValue,
 	setDefaultEnvTempDelta,
+	validateFloat};
+
+void setDefaultEnvTempNormMin(void *dest)
+{
+	float *destFloat = (float *)dest;
+	*destFloat = 10.0;
+}
+
+struct SettingItem BME280TempNormMin = {
+	"Base value for temperature normalisation",
+	"bme280tempbasenorm",
+	&bme280SensorSettings.tempNormMin,
+	NUMBER_INPUT_LENGTH,
+	floatValue,
+	setDefaultEnvTempNormMin,
+	validateFloat};
+
+void setDefaultEnvTempNormMax(void *dest)
+{
+	float *destFloat = (float *)dest;
+	*destFloat = 30.0;
+}
+
+struct SettingItem BME280TempNormMax = {
+	"Limit value for temperature normalisation",
+	"bme280templimitnorm",
+	&bme280SensorSettings.tempNormMax,
+	NUMBER_INPUT_LENGTH,
+	floatValue,
+	setDefaultEnvTempNormMax,
 	validateFloat};
 
 void setDefaultEnvPressDelta(void *dest)
@@ -62,11 +92,41 @@ void setDefaultEnvPressDelta(void *dest)
 
 struct SettingItem BME280PressDelta = {
 	"Pressure change to trigger transmit",
-	"presschangetoxmit",
+	"bme280presschangetoxmit",
 	&bme280SensorSettings.pressDelta,
 	NUMBER_INPUT_LENGTH,
 	floatValue,
 	setDefaultEnvPressDelta,
+	validateFloat};
+
+void setDefaultEnvPressNormMin(void *dest)
+{
+	float *destFloat = (float *)dest;
+	*destFloat = 0.0;
+}
+
+struct SettingItem BME280PressNormMin = {
+	"Base value for pressure normalisation",
+	"bme280pressbasenorm",
+	&bme280SensorSettings.pressNormMin,
+	NUMBER_INPUT_LENGTH,
+	floatValue,
+	setDefaultEnvPressNormMin,
+	validateFloat};
+
+void setDefaultEnvPressNormMax(void *dest)
+{
+	float *destFloat = (float *)dest;
+	*destFloat = 100.0;
+}
+
+struct SettingItem BME280PressNormMax = {
+	"Limit value for pressure normalisation",
+	"bme280presslimitnorm",
+	&bme280SensorSettings.pressNormMax,
+	NUMBER_INPUT_LENGTH,
+	floatValue,
+	setDefaultEnvPressNormMax,
 	validateFloat};
 
 void setDefaultEnvHumidDelta(void *dest)
@@ -77,19 +137,55 @@ void setDefaultEnvHumidDelta(void *dest)
 
 struct SettingItem BME280HumidDelta = {
 	"Humidity change to trigger transmit",
-	"humidchangetoxmit",
+	"bme280humidchangetoxmit",
 	&bme280SensorSettings.humidDelta,
 	NUMBER_INPUT_LENGTH,
 	floatValue,
 	setDefaultEnvHumidDelta,
 	validateFloat};
 
+void setDefaultEnvHumidNormMin(void *dest)
+{
+	float *destFloat = (float *)dest;
+	*destFloat = 0.0;
+}
+
+struct SettingItem BME280HumidNormMin = {
+	"Base value for humidity normalisation",
+	"bme280humidbasenorm",
+	&bme280SensorSettings.humidNormMin,
+	NUMBER_INPUT_LENGTH,
+	floatValue,
+	setDefaultEnvHumidNormMin,
+	validateFloat};
+
+void setDefaultEnvHumidNormMax(void *dest)
+{
+	float *destFloat = (float *)dest;
+	*destFloat = 100.0;
+}
+
+struct SettingItem BME280HumidNormMax = {
+	"Limit value for humidity normalisation",
+	"bme280humidlimitnorm",
+	&bme280SensorSettings.humidNormMax,
+	NUMBER_INPUT_LENGTH,
+	floatValue,
+	setDefaultEnvHumidNormMax,
+	validateFloat};
+
 struct SettingItem *bme280SensorSettingItemPointers[] =
 	{
 		&bme280SensorFittedSetting,
 		&BME280TempDelta,
+		&BME280TempNormMin,
+		&BME280TempNormMax,
 		&BME280PressDelta,
+		&BME280PressNormMin,
+		&BME280PressNormMax,
 		&BME280HumidDelta,
+		&BME280HumidNormMin,
+		&BME280HumidNormMax,
 		&envNoOfAveragesSetting,
 };
 
@@ -152,6 +248,15 @@ void updateEnvAverages(BME280SensorReading *reading)
 	}
 }
 
+float normaliseValue(float value, float low, float high)
+{
+	if (value < low)
+		return 0;
+	if (value > high)
+		return 1;
+	return (value - low) / (high - low);
+}
+
 void sendBME280Humidity(BME280SensorReading *reading, sensorListener *pos)
 {
 	TRACELN("    BME280 humidity sent");
@@ -159,7 +264,10 @@ void sendBME280Humidity(BME280SensorReading *reading, sensorListener *pos)
 	unsigned char *optionBuffer = pos->config->optionBuffer;
 	char *messageBuffer = (char *)optionBuffer + MESSAGE_START_POSITION;
 	snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%f", reading->humidityAverage);
-	float humidityNormalised = reading->humidityAverage / 100;
+
+	float humidityNormalised = normaliseValue(reading->humidityAverage,
+										  bme280SensorSettings.humidNormMin, bme280SensorSettings.humidNormMax);
+
 	putUnalignedFloat(humidityNormalised, (unsigned char *)optionBuffer);
 	pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
 }
@@ -171,7 +279,10 @@ void sendBME280Temp(BME280SensorReading *reading, sensorListener *pos)
 	unsigned char *optionBuffer = pos->config->optionBuffer;
 	char *messageBuffer = (char *)optionBuffer + MESSAGE_START_POSITION;
 	snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%.1f", reading->temperatureAverage);
-	float tempNormalised = reading->temperatureAverage + 20 / 60;
+
+	float tempNormalised = normaliseValue(reading->temperatureAverage,
+										  bme280SensorSettings.tempNormMin, bme280SensorSettings.tempNormMax);
+
 	putUnalignedFloat(tempNormalised, (unsigned char *)optionBuffer);
 	pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
 }
@@ -183,7 +294,10 @@ void sendBME280Press(BME280SensorReading *reading, sensorListener *pos)
 	unsigned char *optionBuffer = pos->config->optionBuffer;
 	char *messageBuffer = (char *)optionBuffer + MESSAGE_START_POSITION;
 	snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%f", reading->pressureAverage);
-	float pressNormalised = reading->pressureAverage / 1500;
+
+	float pressNormalised = normaliseValue(reading->pressureAverage,
+										  bme280SensorSettings.pressNormMin, bme280SensorSettings.pressNormMax);
+
 	putUnalignedFloat(pressNormalised, (unsigned char *)optionBuffer);
 	pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
 }
@@ -193,17 +307,17 @@ void sendBME280Reading(BME280SensorReading *reading, int sensorNo, sensorListene
 	TRACE("sendBME280Reading for sensor no:");
 	TRACELN(sensorNo);
 
-	if(sensorNo&BME280_HUMID)
+	if (sensorNo & BME280_HUMID)
 		sendBME280Humidity(reading, pos);
 
-	if(sensorNo&BME280_TEMP)
+	if (sensorNo & BME280_TEMP)
 		sendBME280Temp(reading, pos);
 
-	if(sensorNo&BME280_PRESS)
+	if (sensorNo & BME280_PRESS)
 		sendBME280Press(reading, pos);
 }
 
-void sendToBME280SensorListeners(int event,  int sensorNo)
+void sendToBME280SensorListeners(int event, int sensorNo)
 {
 	TRACE("sendToBME280SensorListeners event:");
 	TRACE_HEX(event);
@@ -219,12 +333,13 @@ void sendToBME280SensorListeners(int event,  int sensorNo)
 		struct sensorListenerConfiguration *config = pos->config;
 		int configMask = config->sendOptionMask;
 
-		if((configMask & BME280_EVENT_MASK) == event)
+		if ((configMask & BME280_EVENT_MASK) == event)
 		{
 			// we have a match for the event
 			int configSensorNo = configMask & BME280_SENSOR_MASK;
 
-			if (configSensorNo == sensorNo){
+			if (configSensorNo == sensorNo)
+			{
 				sendBME280Reading(bme280activeReading, configSensorNo, pos);
 			}
 		}
@@ -249,7 +364,7 @@ void sendToBME280SensorListeners(int event)
 		TRACE(" checking listener with ");
 		TRACE_HEXLN(configMask);
 
-		if((configMask & BME280_EVENT_MASK) == event)
+		if ((configMask & BME280_EVENT_MASK) == event)
 		{
 			TRACELN("    match");
 			// we have a match for the event
@@ -280,7 +395,7 @@ void updateBME280Sensor()
 	}
 	else
 	{
-		bme280activeReading->temperature = temp;       
+		bme280activeReading->temperature = temp;
 		bme280activeReading->humidity = bme.readHumidity();
 		bme280activeReading->pressure = bme.readPressure() / 100.0F;
 		bme280Sensor.millisAtLastReading = millis();
@@ -311,7 +426,7 @@ void updateBME280Sensor()
 		bme280activeReading->lastPressSent = bme280activeReading->pressureAverage;
 	}
 
-	if(lastClockSecond == clockReading->second)
+	if (lastClockSecond == clockReading->second)
 	{
 		return;
 	}
@@ -322,7 +437,7 @@ void updateBME280Sensor()
 
 	sendToBME280SensorListeners(BME280_ON_SECOND);
 
-	if(lastClockMinute == clockReading->minute)
+	if (lastClockMinute == clockReading->minute)
 	{
 		return;
 	}
@@ -333,19 +448,19 @@ void updateBME280Sensor()
 
 	sendToBME280SensorListeners(BME280_ON_MIN);
 
-	if(clockReading->minute % 5 == 0)
+	if (clockReading->minute % 5 == 0)
 	{
 		TRACELN("BME280 sending on five minutes");
 		sendToBME280SensorListeners(BME280_ON_FIVE_MIN);
 	}
 
-	if(clockReading->minute % 30 == 0)
+	if (clockReading->minute % 30 == 0)
 	{
 		TRACELN("BME280 sending on half hour");
 		sendToBME280SensorListeners(BME280_ON_HALF_HOUR);
 	}
 
-	if(lastClockHour == clockReading->hour)
+	if (lastClockHour == clockReading->hour)
 	{
 		return;
 	}
@@ -355,7 +470,6 @@ void updateBME280Sensor()
 	TRACELN("BME280 sending half hour");
 	sendToBME280SensorListeners(BME280_ON_HOUR);
 }
-
 
 void startBME280Sensor()
 {

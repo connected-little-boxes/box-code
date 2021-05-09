@@ -84,7 +84,6 @@ struct sensorEventBinder POTSensorListenerFunctions[] = {
 void readPOTSensor(struct potSensorReading *potSensoractiveReading)
 {
 	potSensoractiveReading->counter = analogRead(potSensorSettings.potSensorDataPinNo);
-//	potSensoractiveReading->counter = 100;
 }
 
 void updatePOTSensor()
