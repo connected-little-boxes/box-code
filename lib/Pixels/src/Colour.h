@@ -154,4 +154,5 @@ struct colourNameLookup *findRandomColour();
 
 struct colourCharLookup *findColourByChar(const char ch);
 struct colourNameLookup *findColourByName(const char *name);
+void getColourInbetweenMask(char lowChar, char highChar, float distance, Colour * result);
 

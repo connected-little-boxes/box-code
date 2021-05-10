@@ -502,7 +502,7 @@ int doSetTwinkle(char *destination, unsigned char *settingBase)
 
 	return WORKED_OK;
 }
-  
+
 struct CommandItem *setPixelBrightnessItems[] =
 	{
 		&floatValueItem,
@@ -584,13 +584,114 @@ int doSetPattern(char *destination, unsigned char *settingBase)
 	return WORKED_OK;
 }
 
+struct CommandItem *setPixelValueInColourMapItems[] =
+	{
+		&floatValueItem,
+		&colourCommandOptionItem,
+		&pixelChangeStepsCommandItem,
+		&colourCommandMask};
+
+int doPixelMapValue(char *destination, unsigned char *settingBase);
+
+struct Command setPixelValueInColourMap
+{
+	"map",
+		"Maps a value into a colour map",
+		setPixelValueInColourMapItems,
+		sizeof(setPixelValueInColourMapItems) / sizeof(struct CommandItem *),
+		doPixelMapValue
+};
+
+int doPixelMapValue(char *destination, unsigned char *settingBase)
+{
+	TRACELN("Mapping a pixel value to a mask");
+
+	if (*destination != 0)
+	{
+		// we have a destination for the command. Build the string
+		char buffer[JSON_BUFFER_SIZE];
+		createJSONfromSettings("pixels", &setPixelValueInColourMap, destination, settingBase, buffer, JSON_BUFFER_SIZE);
+		return publishCommandToRemoteDevice(buffer, destination);
+	}
+
+	float value = getUnalignedFloat(settingBase + FLOAT_VALUE_OFFSET);
+
+	TRACE("Value:");
+	TRACE(value);
+
+	char *colourMask = (char *)(settingBase + COLOURNAME_PIXEL_COMMAND_OFFSET);
+
+	TRACE(" Mask:");
+	TRACE(colourMask);
+
+	int steps = getUnalignedInt(settingBase + SPEED_PIXEL_COMMAND_OFFSET);
+	TRACE(" Steps:");
+	TRACE(steps);
+
+	char *option = (char *)(settingBase + COMMAND_PIXEL_OPTION_OFFSET);
+	TRACE(" Option:");
+	TRACE(option);
+
+	int maskLength = strlen(colourMask);
+	TRACE(" Mask:");
+	TRACE(colourMask);
+
+	if (value < 0)
+		value = 0;
+	if (value > 1)
+		value = 1;
+
+	struct Colour colour;
+
+	if (value == 0)
+	{
+		colour = findColourByChar(colourMask[0])->col;
+	}
+	else
+	{
+		if (value == 1)
+		{
+			colour = findColourByChar(colourMask[maskLength - 1])->col;
+		}
+		else
+		{
+			float colourPos = (maskLength-1) * value;
+			TRACE(" ColourPos");
+			TRACE(colourPos);
+
+			if (strcasecmp(option, "mix") == 0)
+			{
+				int lowCol = (int)colourPos;
+				int highCol = lowCol + 1;
+				TRACE(" LowCol:");
+				TRACE(lowCol);
+				TRACE(" HighCol:");
+				TRACE(highCol);
+				getColourInbetweenMask(colourMask[lowCol], colourMask[highCol], colourPos - lowCol, &colour);
+			}
+			else 
+			{
+				int intPos = int (colourPos+0.5);
+				TRACE(" IntPos:");
+				TRACE(intPos);
+				colour = findColourByChar(colourMask[intPos])->col;
+			}
+		}
+	}
+	TRACELN();
+
+	frame->fadeToColour(colour, steps);
+	return WORKED_OK;
+}
+
 struct Command *pixelCommandList[] = {
 	&setPixelColourCommand,
 	&setPixelsToNamedColour,
 	&setPixelsToRandomColour,
 	&setPixelsToTwinkle,
 	&setPixelBrightness,
-	&setPixelPattern};
+	&setPixelPattern,
+	&setPixelValueInColourMap};
 
 struct CommandItemCollection pixelCommands =
 	{
@@ -751,11 +852,11 @@ void initPixel()
 
 void startPixel()
 {
-	if(bootMode == CONFIG_BOOT_MODE)
+	if (bootMode == CONFIG_BOOT_MODE)
 	{
 		// don't start the pixel display
 		pixelProcess.status = PIXELS_STATUS_ONLY;
-		return;		
+		return;
 	}
 
 	// Otherwise we create the led storage for the pixels
@@ -803,7 +904,7 @@ void updatePixel()
 	case PIXEL_NO_PIXELS:
 		return;
 	case PIXEL_OK:
-		updateFrame();		
+		updateFrame();
 		break;
 	case PIXEL_OFF:
 		return;

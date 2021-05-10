@@ -22,12 +22,12 @@ The first thing you will need to do is deploy the software to a device and then 
 You can find full documentation of all Connected Little Boxes software in the doc folder on this site. 
 
 # Configure the device using your phone
-When a new device is first powered up it detects that there are no WiFi settings configured and it starts an access point called **CLB**. You can connect to this access point with your phone or laptop. If your phone can use the camera configure a WiFi connection you can connect to the device using the following QR code:
+When a new device is first powered up it detects that there are no WiFi settings configured and it starts an access point called **CLB**. You can connect to this access point with your phone or laptop. If your phone can use the camera to configure a WiFi connection you can connect to the device using the following QR code:
 
 
 ![WiFi QR code](images/CLBWifiQRcode.png)
 
-When you have connedted to the device you must browse to the address of the configuration server which is **192.168.4.1** The QR code for this adress is as follows:
+When you have connected to the device you can browse to the address of the configuration server which is **192.168.4.1** The QR code for this adress is as follows:
 
 ![Configuration host address](images/CLBLocalHost.png)
 

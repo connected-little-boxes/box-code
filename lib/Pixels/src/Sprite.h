@@ -76,6 +76,15 @@ public:
         return true;
     }
 
+    void setColour(Colour target){
+        redStep = 0;
+        blueStep = 0;
+        greenStep = 0;
+        colour=target;
+        targetColour = target;
+        colourSteps = 0;
+    }
+
     void fadeToColour(Colour target, int noOfSteps){
         redStep = (target.Red - colour.Red) / noOfSteps;
         blueStep = (target.Blue - colour.Blue) / noOfSteps;

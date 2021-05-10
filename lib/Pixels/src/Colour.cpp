@@ -185,3 +185,12 @@ struct colourNameLookup *findRandomColour()
 	return &colourNames[pos];
 }
 
+void getColourInbetweenMask(char lowChar, char highChar, float distance, Colour * result)
+{
+	struct Colour from = findColourByChar(lowChar)->col;
+	struct Colour to = findColourByChar(highChar)->col;
+	result->Red = from.Red + (to.Red - from.Red * distance);
+	result->Green = from.Green + (to.Green - from.Green * distance);
+	result->Blue = from.Blue + (to.Blue - from.Blue * distance);
+}
+

@@ -4,7 +4,7 @@
 #include "pixels.h"
 #include "otaupdate.h"
 
-char * Version = "1.0.0.50";
+char * Version = "1.0.0.60";
 
 struct OtaUpdateSettings otaUpdateSettings;
 

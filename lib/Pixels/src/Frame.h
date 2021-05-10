@@ -41,6 +41,7 @@ public:
 	void fadeToBrightness(float brightness, int steps);
 	void setTargetColour(char ch, Sprite * s, int steps);
 	void fadeToColour(Colour target, int steps);
+	void setColour(Colour target);
 	void fadeSpritesToColourCharMask(char * colourMask, int steps);
 	void fadeSpritesToWalkingColours(char * colours,int steps);
 	void fadeSpritesToTwinkle(int steps);

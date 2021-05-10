@@ -100,6 +100,15 @@ void Frame::fadeToColour(Colour target, int noOfSteps)
 	}
 }
 
+void Frame::setColour(Colour target)
+{
+	for (int i = 0; i < MAX_NO_OF_SPRITES; i++)
+	{
+		sprites[i]->setColour(target);
+	}
+}
+
+
 void Frame::fadeToBrightness(float inTargetBrightness, int noOfSteps)
 {
 	if (noOfSteps <= 0)
