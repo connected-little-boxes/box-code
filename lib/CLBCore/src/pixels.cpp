@@ -434,7 +434,7 @@ void seedRandomFromClock()
 	// seed the random number generator with this value - it will only be for one number
 	// but it shold ensure that we get a random range each time
 
-	randomSeed(seedValue);
+	localSrand(seedValue);
 }
 
 int doSetRandomColour(char *destination, unsigned char *settingBase)

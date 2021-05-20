@@ -1209,7 +1209,8 @@ void createJSONfromSettings(char *processName, struct Command *command, char *de
 			break;
 		}
 	}
-	snprintf(buffer, bufferLength, "%s}", buffer);
+
+	snprintf(buffer, bufferLength, "%s, \"from\":\"%s\"}", buffer, mqttSettings.mqttDeviceName);
 	Serial.printf("Built:%s", buffer);
 }
 

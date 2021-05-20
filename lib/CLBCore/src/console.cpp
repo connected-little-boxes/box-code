@@ -71,6 +71,7 @@ void doShowSettings(char *commandLine)
 	{
 		PrintAllSettings();
 	}
+	Serial.println("\nSettings complete\n");
 }
 
 void doDumpSettings(char *commandLine)
@@ -86,6 +87,7 @@ void doDumpSettings(char *commandLine)
 	{
 		DumpAllSettings();
 	}
+	Serial.println("\nDump complete\n");
 }
 
 #define CONSOLE_MESSAGE_SIZE 500

@@ -4,7 +4,9 @@
 #include "pixels.h"
 #include "otaupdate.h"
 
-char * Version = "1.0.0.60";
+#if defined(ARDUINO_ARCH_ESP8266)
+#include <ESP8266httpUpdate.h>
+#endif
 
 struct OtaUpdateSettings otaUpdateSettings;
 
@@ -13,7 +15,7 @@ boolean validateOtaUpdatePath(void *dest, const char *newValueStr)
 	return (validateString((char *)dest, newValueStr, OTA_UPDATE_PATH_SIZE));
 }
  
-boolean validateOtaProductKey(void *dest, const char *newValueStr)
+boolean validateOtaProdKey(void *dest, const char *newValueStr)
 {
 	return (validateString((char *)dest, newValueStr, OTA_UPDATE_PRODUCT_KEY_SIZE));
 }
@@ -26,18 +28,18 @@ struct SettingItem otaUpdatePathSetting = {
 	text, 
 	setEmptyString, validateOtaUpdatePath};
 
-struct SettingItem otaProductKeySetting = {
+struct SettingItem otaProdKeySetting = {
 	"OTA product key", 
-	"otaupdateproductkey", 
-	otaUpdateSettings.otaUpdateProductKey, 
+	"otaupdateprodkey", 
+	otaUpdateSettings.otaUpdateProdKey, 
 	OTA_UPDATE_PRODUCT_KEY_SIZE, 
 	text, 
-	setEmptyString, validateOtaProductKey};
+	setEmptyString, validateOtaProdKey};
 
 struct SettingItem *otaUpdateSettingItemPointers[] =
 	{
 		&otaUpdatePathSetting,
-		&otaProductKeySetting};
+		&otaProdKeySetting};
 
 struct SettingItemCollection otaUpdateSettingItems = {
 	"otaupdate",
@@ -86,22 +88,21 @@ void makeUpdateURL( char * buffer, int bufferLength)
 		"%s&s=%lu&_FirmwareInfo&k=%s&v=%s&FirmwareInfo_&",
 		otaUpdateSettings.otaUpdatePath,
 		PROC_ID,
-		otaUpdateSettings.otaUpdateProductKey,
+		otaUpdateSettings.otaUpdateProdKey,
 		Version);
 }
 
+
 void performOTAUpdate()
 {
+
 	WiFiClient client;
 	
 	char url[300];
 
 	makeUpdateURL (url, 300);
-	
-#if defined(ARDUINO_ARCH_ESP8266)
 
-//	url += "&s=" + String(PROC_ID);
-//	url += MakeFirmwareInfo(OTA_PRODUCT_KEY, Version);
+#if defined(ARDUINO_ARCH_ESP8266)
 
 	Serial.println("Get firmware from url:");
 	Serial.println(url);
@@ -116,9 +117,6 @@ void performOTAUpdate()
 #endif
 
 #if defined(ARDUINO_ARCH_ESP32)
-
-	url += "&s=" + String(PROC_ID);
-	url += MakeFirmwareInfo(OTA_PRODUCT_KEY, Version);
 
 	Serial.println("Get firmware from url:");
 	Serial.println(url);

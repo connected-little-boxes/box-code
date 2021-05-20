@@ -1,6 +1,11 @@
 #pragma once
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
+int localRand();
+int localRand(int limit);
+int localRand(int low, int high);
+void localSrand(int seed);
+
 int srtcasecmp(const char *string1, const char *string2);
 
 unsigned long ulongDiff(unsigned long end, unsigned long start);

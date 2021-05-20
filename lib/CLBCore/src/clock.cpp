@@ -571,10 +571,16 @@ struct sensorEventBinder ClockSensorListenerFunctions[] = {
 	{"day", CLOCK_DAY_TICK}};
 
 Timezone homeTimezone;
+bool timeZoneNotSet;
+int timeZoneSetRetryCount;
+#define TIME_ZONE_SET_RETRY_LIMIT 5
 
 void startClockSensor()
 {
 	needToInitialiseAlarmsAndTimers = true;
+
+	timeZoneNotSet=true;
+	timeZoneSetRetryCount = 0;
 
 	struct ClockReading *clockActiveReading;
 
@@ -640,14 +646,28 @@ void updateClockReading()
 
 		if (WiFiProcessDescriptor.status == WIFI_OK)
 		{
+			while(timeZoneNotSet)
+			{
+				timeZoneNotSet = homeTimezone.setLocation(clockSensorSettings.timeZone);
+				if(timeZoneNotSet){
+					if(++timeZoneSetRetryCount<TIME_ZONE_SET_RETRY_LIMIT){
+						delay(100);
+					}
+					else {
+						Serial.println("Clock location could not be set after multiple retries. Time and date may be incorrect.");
+						timeZoneNotSet=false;
+					}
+				}
+			}
+			
 			clockSensor.status = CLOCK_ERROR_TIME_NOT_SET;
-			homeTimezone.setLocation(F("Europe/London"));
 		}
 		break;
 
 	case SENSOR_OK:
 	case CLOCK_ERROR_TIME_NOT_SET:
 	case CLOCK_ERROR_NEEDS_SYNC:
+
 
 		events();
 

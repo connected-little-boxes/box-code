@@ -5,6 +5,34 @@
 
 #define LED_BUILTIN 2
 
+int localRandomSeed;
+int randomA=8121;
+int randomC=28411;
+int randomM=134456;
+
+int localRand()
+{
+  localRandomSeed = (randomA * localRandomSeed + randomA) % randomM;
+  return localRandomSeed;
+}
+
+int localRand(int limit)
+{
+    return localRand() % limit;
+}
+
+void localSrand(int seed)
+{    
+    localRandomSeed = seed;
+}
+
+int localRand(int low, int high)
+{
+    int diff = high - low;
+    return random(diff) + low;
+}
+
+
 unsigned long ulongDiff(unsigned long end, unsigned long start)
 {
     if (end >= start)

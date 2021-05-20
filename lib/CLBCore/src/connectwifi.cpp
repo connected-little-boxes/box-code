@@ -468,7 +468,7 @@ void wifiStatusMessage(char *buffer, int bufferLength)
 		snprintf(buffer, bufferLength, "WiFi connection hosting AP");
 		break;
 	default:
-		snprintf(buffer, bufferLength, "WiFi status invalid");
+		snprintf(buffer, bufferLength, "WiFi status invalid %d",WiFiProcessDescriptor.status);
 		break;
 	}
 }

@@ -9,7 +9,7 @@
 #define OTA_UPDATE_PATH_SIZE 200
 #define OTA_UPDATE_PRODUCT_KEY_SIZE 100
 
-extern char * Version;
+#define Version "1.0.0.90"
 
 void performOTAUpdate();
 
@@ -18,7 +18,7 @@ extern struct process otaUpdateProcessDescriptor;
 struct OtaUpdateSettings 
 {
     char otaUpdatePath [OTA_UPDATE_PATH_SIZE];
-    char otaUpdateProductKey [OTA_UPDATE_PRODUCT_KEY_SIZE];
+    char otaUpdateProdKey [OTA_UPDATE_PRODUCT_KEY_SIZE];
 };
 
 extern struct OtaUpdateSettings otaUpdateSettings;

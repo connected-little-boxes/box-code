@@ -1,6 +1,13 @@
 #include <EEPROM.h>
 #include <Arduino.h>
+
+#if defined(ARDUINO_ARCH_ESP8266)
 #include "LittleFS.h"
+#endif
+
+#if defined(ARDUINO_ARCH_ESP32)
+#include "FS.h"
+#endif
 
 #include "string.h"
 #include "errors.h"
@@ -17,6 +24,68 @@
 // These functions are called to encrypt/decrypt fields of type password
 // They are identical at the momement, but if you want to add some extra
 // salt you can modify them accordingly.
+
+#if defined(ARDUINO_ARCH_ESP32)
+
+void encryptString(char *destination, int destLength, char *source)
+{
+	unsigned long seed = (PROC_ID + ENCRYPTION_SALT) % 0xFFFF ;
+	//Serial.printf("Encrypting: %s seed:%lu\n", source, seed);
+
+	localSrand(seed);
+	int pos = 0;
+	char *dest = destination;
+	destLength = destLength - 1;
+	while (*source)
+	{
+		int mask = (localRand()%30)+1;
+		*dest = *source ^ mask;
+		//Serial.printf("    mask:%d source:%c %d  dest:%c %d\n", mask, *source,*source, *dest, *dest);
+		dest++;
+		source++;
+		pos++;
+		if (pos == destLength)
+		{
+			break;
+		}
+	}
+	*dest = 0;
+	//Serial.printf("Output:%s\n", destination);
+}
+
+void decryptString(char *destination, int destLength, char *source)
+{
+	unsigned long seed = (PROC_ID + ENCRYPTION_SALT) % 0xFFFF ;
+	//Serial.printf("Decrypting: %s seed:%lu\n", source, seed);
+
+	localSrand(seed);
+	int pos = 0;
+	char *dest = destination;
+	destLength = destLength - 1;
+	while (*source)
+	{
+		int mask = (localRand()%30)+1;
+		*dest = *source ^ mask;
+		//Serial.printf("    mask:%d source:%c %d  dest:%c %d\n", mask, *source,*source, *dest, *dest);
+		dest++;
+		source++;
+		pos++;
+		if (pos == destLength)
+		{
+			break;
+		}
+	}
+
+	*dest = 0;
+	//Serial.printf("Output:%s\n", destination);
+}
+
+#endif
+
+#if defined(ARDUINO_ARCH_ESP8266)
+
+// use the original Arduino code here because existing devices 
+// contain passwords encoded this way
 
 void encryptString(char * destination, int destLength, char * source)
 {
@@ -60,6 +129,9 @@ void decryptString(char * destination, int destLength, char * source)
 
 	*dest=0;
 }
+
+#endif
+
 
 void setEmptyString(void *dest)
 {
@@ -384,7 +456,7 @@ boolean validateServerName(void *dest, const char *newValueStr)
 	return (validateString((char *)dest, newValueStr, SERVER_NAME_LENGTH));
 }
 
-void printSettingValue(SettingItem *item, char * buffer, int bufferLength)
+void printSettingValue(SettingItem *item, char *buffer, int bufferLength)
 {
 	int *intValuePointer;
 	boolean *boolValuePointer;
@@ -446,7 +518,7 @@ void printSettingValue(SettingItem *item, char * buffer, int bufferLength)
 
 void printSetting(SettingItem *item)
 {
-	char itemBuffer [SETTING_VALUE_OUTPUT_LENGTH];
+	char itemBuffer[SETTING_VALUE_OUTPUT_LENGTH];
 	printSettingValue(item, itemBuffer, SETTING_VALUE_OUTPUT_LENGTH);
 
 	Serial.printf("    %s [%s]: %s\n", item->prompt, item->formName, itemBuffer);
@@ -454,10 +526,10 @@ void printSetting(SettingItem *item)
 
 void dumpSetting(SettingItem *item)
 {
-	char itemBuffer [SETTING_VALUE_OUTPUT_LENGTH];
+	char itemBuffer[SETTING_VALUE_OUTPUT_LENGTH];
 	printSettingValue(item, itemBuffer, SETTING_VALUE_OUTPUT_LENGTH);
 
-	Serial.printf("%s=%s\n", item->formName,itemBuffer);
+	Serial.printf("%s=%s\n", item->formName, itemBuffer);
 }
 
 File saveFile;
@@ -465,18 +537,19 @@ File loadFile;
 
 void saveSettingToFile(SettingItem *item)
 {
-	char itemBuffer [SETTING_VALUE_OUTPUT_LENGTH];
+	char itemBuffer[SETTING_VALUE_OUTPUT_LENGTH];
 
-	if(item->settingType == password)
+	if (item->settingType == password)
 	{
 		// need to encrypt the setting item
-		encryptString(itemBuffer, SETTING_VALUE_OUTPUT_LENGTH, 
-			(char *) item->value);
+		encryptString(itemBuffer, SETTING_VALUE_OUTPUT_LENGTH,
+					  (char *)item->value);
 	}
-	else {
+	else
+	{
 		printSettingValue(item, itemBuffer, SETTING_VALUE_OUTPUT_LENGTH);
 	}
-	saveFile.printf("%s=%s\n", item->formName,itemBuffer);
+	saveFile.printf("%s=%s\n", item->formName, itemBuffer);
 }
 
 void saveSettingCollectionToFile(SettingItemCollection *settingCollection)
@@ -489,11 +562,11 @@ void saveSettingCollectionToFile(SettingItemCollection *settingCollection)
 	}
 }
 
-void saveAllSettingsToFile(char * path)
+void saveAllSettingsToFile(char *path)
 {
 	TRACE("Saving all settings to the file:");
 	TRACELN(path);
-	saveFile = LittleFS.open(path,"w");
+	saveFile = LittleFS.open(path, "w");
 	iterateThroughSensorSettingCollections(saveSettingCollectionToFile);
 	iterateThroughProcessSettingCollections(saveSettingCollectionToFile);
 	saveFile.close();
@@ -524,10 +597,10 @@ processSettingCommandResult decodeSettingCommand(char *commandStart)
 			// move down the input to the new value
 			char *startOfSettingInfo = command + settingNameLength + 1;
 
-			if(setting->settingType == password)
+			if (setting->settingType == password)
 			{
 				// need to decode passwords
-				decryptString((char *) setting->value, setting->maxLength, startOfSettingInfo);
+				decryptString((char *)setting->value, setting->maxLength, startOfSettingInfo);
 				return setOK;
 			}
 
@@ -544,26 +617,26 @@ processSettingCommandResult decodeSettingCommand(char *commandStart)
 	return settingNotFound;
 }
 
-
-bool loadAllSettingsFromFile(char * path)
+bool loadAllSettingsFromFile(char *path)
 {
 	TRACE("Loading all settings from the file:");
 	TRACELN(path);
 
-    loadFile = LittleFS.open(path,"r");
+	loadFile = LittleFS.open(path, "r");
 
-    if(!loadFile || loadFile.isDirectory()){
+	if (!loadFile || loadFile.isDirectory())
+	{
 		TRACELN("  failed to open the file");
-        return false;
-    }	
+		return false;
+	}
 
-	while(loadFile.available())
+	while (loadFile.available())
 	{
 		String line = loadFile.readStringUntil('\n');
 
-		const char * lineChar = line.c_str();
+		const char *lineChar = line.c_str();
 
-		if(decodeSettingCommand((char *)lineChar) != setOK)
+		if (decodeSettingCommand((char *)lineChar) != setOK)
 		{
 			TRACE("  bad setting:");
 			TRACELN(lineChar);
@@ -738,15 +811,15 @@ void PrintSettingCollectionFiltered(SettingItemCollection *settingCollection)
 	}
 }
 
-void PrintSystemDetails(char * buffer, int length)
+void PrintSystemDetails(char *buffer, int length)
 {
-	snprintf(buffer, length, "CLB-%06lx", (unsigned long)PROC_ID);	
+	snprintf(buffer, length, "CLB-%06lx", (unsigned long)PROC_ID);
 }
 
 void PrintAllSettings()
 {
-	char deviceNameBuffer [DEVICE_NAME_LENGTH];
-	PrintSystemDetails(deviceNameBuffer,DEVICE_NAME_LENGTH); 
+	char deviceNameBuffer[DEVICE_NAME_LENGTH];
+	PrintSystemDetails(deviceNameBuffer, DEVICE_NAME_LENGTH);
 
 	Serial.println(deviceNameBuffer);
 	Serial.println("Sensors");
@@ -758,8 +831,8 @@ void PrintAllSettings()
 void PrintSomeSettings(char *filter)
 {
 	settingsPrintFilter = filter;
-    char deviceNameBuffer [DEVICE_NAME_LENGTH];
-	PrintSystemDetails(deviceNameBuffer,DEVICE_NAME_LENGTH);
+	char deviceNameBuffer[DEVICE_NAME_LENGTH];
+	PrintSystemDetails(deviceNameBuffer, DEVICE_NAME_LENGTH);
 	Serial.println(deviceNameBuffer);
 	Serial.println("Sensors");
 	iterateThroughSensorSettingCollections(PrintSettingCollectionFiltered);
@@ -780,8 +853,8 @@ void printProcessStorage(process *process)
 
 void PrintStorage()
 {
-    char deviceNameBuffer [DEVICE_NAME_LENGTH];
-	PrintSystemDetails(deviceNameBuffer,DEVICE_NAME_LENGTH);
+	char deviceNameBuffer[DEVICE_NAME_LENGTH];
+	PrintSystemDetails(deviceNameBuffer, DEVICE_NAME_LENGTH);
 	Serial.println(deviceNameBuffer);
 	Serial.println("Sensors");
 	iterateThroughSensors(printSettingStorage);
@@ -1034,14 +1107,24 @@ void setupSettings()
 {
 	TRACELN("Setting up settings");
 
+#if defined(ARDUINO_ARCH_ESP8266)
 	if (!LittleFS.begin())
 	{
 		Serial.println("An Error has occurred while mounting SPIFFS");
 	}
+#endif
+
+#if defined(ARDUINO_ARCH_ESP32)
+	if (!LittleFS.begin(true))
+	{
+		Serial.println("An Error has occurred while mounting SPIFFS");
+	}
+
+#endif
 
 	resetSettings();
 
-	if(loadSettings())
+	if (loadSettings())
 	{
 		Serial.println("Settings loaded OK");
 	}
@@ -1051,7 +1134,7 @@ void setupSettings()
 		resetSettings();
 	}
 
-    char deviceNameBuffer [DEVICE_NAME_LENGTH];
-	PrintSystemDetails(deviceNameBuffer,DEVICE_NAME_LENGTH);
+	char deviceNameBuffer[DEVICE_NAME_LENGTH];
+	PrintSystemDetails(deviceNameBuffer, DEVICE_NAME_LENGTH);
 	Serial.println(deviceNameBuffer);
 }
