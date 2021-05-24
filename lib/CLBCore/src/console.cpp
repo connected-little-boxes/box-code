@@ -471,8 +471,9 @@ void deleteFileInStore(char *deleteName)
 		Serial.printf("\nRemoving:%s", fullDeleteFileName);
 		LittleFS.remove(fullDeleteFileName);
 	}
-	else{
-		Serial.printf("\nFile:%s not found",deleteName);
+	else
+	{
+		Serial.printf("\nFile:%s not found", deleteName);
 	}
 }
 
@@ -744,12 +745,178 @@ boolean validateConsoleCommandString(void *dest, const char *newValueStr)
 	return (validateString((char *)dest, newValueStr, CONSOLE_COMMAND_SIZE));
 }
 
-#define COMMANDNAME_CONSOLE_COMMAND_OFFSET 0
+/************************************************************************
+ * 
+ * Command offsets */
+
+#define CONSOLE_FLOAT_VALUE_OFFSET 0
+#define CONSOLE_REPORT_TEXT_OFFSET (CONSOLE_FLOAT_VALUE_OFFSET + sizeof(float))
+#define CONSOLE_JSON_ATTR_OFFSET (CONSOLE_REPORT_TEXT_OFFSET + CONSOLE_MAX_MESSAGE_LENGTH)
+#define CONSOLE_PRE_TEXT_OFFSET (CONSOLE_JSON_ATTR_OFFSET + CONSOLE_MAX_OPTION_LENGTH)
+#define CONSOLE_POST_TEXT_OFFSET (CONSOLE_PRE_TEXT_OFFSET + CONSOLE_PRE_MESSAGE_LENGTH)
+#define CONSOLE_COMMAND_OFFSET (CONSOLE_POST_TEXT_OFFSET + CONSOLE_POST_MESSAGE_LENGTH)
+
+/************************************************************************
+ * 
+ * Command option validation */
+
+boolean validateConsoleOptionString(void *dest, const char *newValueStr)
+{
+	return (validateString((char *)dest, newValueStr, CONSOLE_MAX_OPTION_LENGTH));
+}
+
+boolean validateConsoleReportString(void *dest, const char *newValueStr)
+{
+	return (validateString((char *)dest, newValueStr, CONSOLE_MAX_MESSAGE_LENGTH));
+}
+
+boolean validateConsolePreString(void *dest, const char *newValueStr)
+{
+	return (validateString((char *)dest, newValueStr, CONSOLE_PRE_MESSAGE_LENGTH));
+}
+
+boolean validateConsolePostString(void *dest, const char *newValueStr)
+{
+	return (validateString((char *)dest, newValueStr, CONSOLE_POST_MESSAGE_LENGTH));
+}
+
+/************************************************************************
+ * 
+ * Command items */
+
+struct CommandItem ConsolefloatValueItem = {
+	"value",
+	"value",
+	CONSOLE_FLOAT_VALUE_OFFSET,
+	floatCommand,
+	validateFloat,
+	noDefaultAvailable};
+
+struct CommandItem ConsoleReportText = {
+	"text",
+	"console message text",
+	CONSOLE_REPORT_TEXT_OFFSET,
+	textCommand,
+	validateConsoleReportString,
+	noDefaultAvailable};
+
+struct CommandItem JSONAttribute = {
+	"attr",
+	"json attribute for value",
+	CONSOLE_JSON_ATTR_OFFSET,
+	textCommand,
+	validateConsoleOptionString,
+	noDefaultAvailable};
+
+struct CommandItem ConsolePreText = {
+	"pre",
+	"console pre text",
+	CONSOLE_PRE_TEXT_OFFSET,
+	textCommand,
+	validateConsolePreString,
+	setDefaultEmptyString};
+
+struct CommandItem ConsolePostText = {
+	"post",
+	"console post text",
+	CONSOLE_POST_TEXT_OFFSET,
+	textCommand,
+	validateConsolePostString,
+	setDefaultEmptyString};
+
+/************************************************************************
+ * 
+ * Display message command */
+
+struct CommandItem *ConsoleDisplayMessageCommandItems[] =
+	{
+		&ConsoleReportText,
+		&ConsolePreText,
+		&ConsolePostText};
+
+int doSetConsoleReport(char *destination, unsigned char *settingBase);
+
+struct Command consoleReportText
+{
+	"reporttext",
+		"Reports a text message",
+		ConsoleDisplayMessageCommandItems,
+		sizeof(ConsoleDisplayMessageCommandItems) / sizeof(struct CommandItem *),
+		doSetConsoleReport
+};
+
+int doSetConsoleReport(char *destination, unsigned char *settingBase)
+{
+	TRACELN("Doing console text report");
+
+	if (*destination != 0)
+	{
+		// we have a destination for the command. Build the string
+		char buffer[JSON_BUFFER_SIZE];
+		createJSONfromSettings("console", &consoleReportText, destination, settingBase, buffer, JSON_BUFFER_SIZE);
+		return publishCommandToRemoteDevice(buffer, destination);
+	}
+
+	char *message = (char *)(settingBase + CONSOLE_REPORT_TEXT_OFFSET);
+	char *post = (char *)(settingBase + CONSOLE_POST_TEXT_OFFSET);
+	char *pre = (char *)(settingBase + CONSOLE_PRE_TEXT_OFFSET);
+
+	char buffer[MAX_MESSAGE_LENGTH];
+
+	snprintf(buffer, MAX_MESSAGE_LENGTH, "%s%s%s", pre, message, post);
+
+	Serial.println(buffer);
+
+	TRACELN("Done console display");
+	return WORKED_OK;
+}
+
+/************************************************************************
+ * 
+ * Display JSON value command */
+
+struct CommandItem *ConsoleJSONsendValueCommandItems[] =
+	{
+		&ConsoleReportText,
+		&JSONAttribute};
+
+int doShowJSONvalue(char *destination, unsigned char *settingBase);
+
+struct Command consoleReportJSONvalue
+{
+	"reportjson",
+		"report a message as a JSON object",
+		ConsoleJSONsendValueCommandItems,
+		sizeof(ConsoleJSONsendValueCommandItems) / sizeof(struct CommandItem *),
+		doShowJSONvalue
+};
+
+int doShowJSONvalue(char *destination, unsigned char *settingBase)
+{
+	if (*destination != 0)
+	{
+		// we have a destination for the command. Build the string
+		char buffer[JSON_BUFFER_SIZE];
+		createJSONfromSettings("console", &consoleReportJSONvalue, destination, settingBase, buffer, JSON_BUFFER_SIZE);
+		return publishCommandToRemoteDevice(buffer, destination);
+	}
+
+	char *message = (char *)(settingBase + CONSOLE_REPORT_TEXT_OFFSET);
+	char *attributeName = (char *)(settingBase + CONSOLE_JSON_ATTR_OFFSET);
+
+	char buffer[MAX_MESSAGE_LENGTH];
+
+	snprintf(buffer, MAX_MESSAGE_LENGTH, "{\"%s\"=\"%s\"}", attributeName, message);
+
+	Serial.println(buffer);
+
+	return WORKED_OK;
+}
 
 struct CommandItem consoleCommandName = {
 	"commandtext",
 	"console command text",
-	COMMANDNAME_CONSOLE_COMMAND_OFFSET,
+	CONSOLE_COMMAND_OFFSET,
 	textCommand,
 	validateConsoleCommandString,
 	noDefaultAvailable};
@@ -760,7 +927,7 @@ struct CommandItem *consoleCommandItems[] =
 
 int doRemoteConsoleCommand(char *destination, unsigned char *settingBase);
 
-struct Command performConsoleCommnad
+struct Command performConsoleCommand
 {
 	"remote",
 		"Perform a remote console command",
@@ -775,11 +942,11 @@ int doRemoteConsoleCommand(char *destination, unsigned char *settingBase)
 	{
 		// we have a destination for the command. Build the string
 		char buffer[JSON_BUFFER_SIZE];
-		createJSONfromSettings("console", &performConsoleCommnad, destination, settingBase, buffer, JSON_BUFFER_SIZE);
+		createJSONfromSettings("console", &performConsoleCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
 		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
-	char *command = (char *)(settingBase + COMMANDNAME_CONSOLE_COMMAND_OFFSET);
+	char *command = (char *)(settingBase + CONSOLE_COMMAND_OFFSET);
 
 	if (performCommand(command, userCommands, sizeof(userCommands) / sizeof(struct consoleCommand)))
 	{
@@ -790,7 +957,9 @@ int doRemoteConsoleCommand(char *destination, unsigned char *settingBase)
 }
 
 struct Command *consoleCommandList[] = {
-	&performConsoleCommnad};
+	&consoleReportText,
+	&consoleReportJSONvalue,
+	&performConsoleCommand};
 
 struct CommandItemCollection consoleCommands =
 	{
