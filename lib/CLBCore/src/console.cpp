@@ -906,7 +906,7 @@ int doShowJSONvalue(char *destination, unsigned char *settingBase)
 
 	char buffer[MAX_MESSAGE_LENGTH];
 
-	snprintf(buffer, MAX_MESSAGE_LENGTH, "{\"%s\"=\"%s\"}", attributeName, message);
+	snprintf(buffer, MAX_MESSAGE_LENGTH, "{\"%s\":\"%s\"}", attributeName, message);
 
 	Serial.println(buffer);
 

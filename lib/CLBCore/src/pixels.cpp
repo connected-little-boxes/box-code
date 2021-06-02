@@ -48,13 +48,33 @@ void setDefaultNoOfYPixels(void *dest)
 	*destInt = 1;
 }
 
+boolean validateNoOfPixels(void *dest, const char *newValueStr)
+{
+	float value;
+
+	if (!validateInt(&value, newValueStr))
+	{
+		return false;
+	}
+
+	if(value <1)
+	{
+		return false;
+	}
+
+	*(int *)dest = value;
+	return true;
+}
+
+
+
 struct SettingItem pixelNoOfXPixelsSetting = {"Number of X pixels (0 for pixels not fitted)",
 											  "noofxpixels",
 											  &pixelSettings.noOfXPixels,
 											  NUMBER_INPUT_LENGTH,
 											  integerValue,
 											  setDefaultNoOfXPixels,
-											  validateInt};
+											  validateNoOfPixels};
 
 struct SettingItem pixelNoOfYPixelsSetting = {"Number of Y pixels (0 for pixels not fitted)",
 											  "noofypixels",
@@ -62,7 +82,7 @@ struct SettingItem pixelNoOfYPixelsSetting = {"Number of Y pixels (0 for pixels 
 											  NUMBER_INPUT_LENGTH,
 											  integerValue,
 											  setDefaultNoOfYPixels,
-											  validateInt};
+											  validateNoOfPixels};
 
 void setDefaultPixelBrightness(void *dest)
 {
