@@ -50,7 +50,7 @@ void setDefaultNoOfYPixels(void *dest)
 
 boolean validateNoOfPixels(void *dest, const char *newValueStr)
 {
-	float value;
+	int value;
 
 	if (!validateInt(&value, newValueStr))
 	{
