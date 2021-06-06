@@ -554,8 +554,8 @@ void saveSettingToFile(SettingItem *item)
 
 void saveSettingCollectionToFile(SettingItemCollection *settingCollection)
 {
-	TRACE("  Saving setting collection: ");
-	TRACELN(settingCollection->collectionName);
+//	TRACE("  Saving setting collection: ");
+//	TRACELN(settingCollection->collectionName);
 	for (int settingNo = 0; settingNo < settingCollection->noOfSettings; settingNo++)
 	{
 		saveSettingToFile(settingCollection->settings[settingNo]);

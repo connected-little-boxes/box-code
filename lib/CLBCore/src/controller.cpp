@@ -607,6 +607,8 @@ int CreateSensorListener(
 {
 	TRACE("Creating listener:");
 	TRACE(targetListener->listenerName);
+	TRACE(" for process:");
+	TRACE(targetProcess->processName);
 	TRACE(" assigned to sensor:");
 	TRACE(targetSensor->sensorName);
 	TRACE(" destination:");
@@ -630,9 +632,13 @@ int CreateSensorListener(
 				// .. and got a matching destination
 				if (strcasecmp(targetListener->listenerName, sensorConfig->listenerName) == 0)
 				{
-					TRACELN("Found the listener");
-					dest = sensorConfig;
-					break;
+					// .. and got a matching target process
+					if (strcasecmp(targetProcess->processName, sensorConfig->commandProcess) == 0)
+					{
+						TRACELN("Found the listener");
+						dest = sensorConfig;
+						break;
+					}
 				}
 			}
 		}
@@ -693,7 +699,7 @@ int CreateSensorListener(
 
 		addMessageListenerToSensor(targetSensor, newListener);
 
-		// dumpCommand(targetProcess->processName, targetCommand->name, dest->optionBuffer);
+		//dumpCommand(targetProcess->processName, targetCommand->name, dest->optionBuffer);
 
 		TRACELN("All done");
 	}
