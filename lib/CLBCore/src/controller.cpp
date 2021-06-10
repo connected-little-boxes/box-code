@@ -9,13 +9,14 @@
 #include "errors.h"
 #include "settings.h"
 #include "otaupdate.h"
-
+#include "errors.h"
 #include "ArduinoJson-v5.13.2.h"
 #include "FS.h"
 #include <LITTLEFS.h>
 
 #define COMMAND_REPLY_BUFFER_SIZE 240
-#define REPLY_ELEMENT_SIZE 100
+#define REPLY_ELEMENT_SIZE 250
+#define REPLY_ERROR_SIZE 100
 
 // Controller - takes readings and sends them to the required destination
 
@@ -348,6 +349,9 @@ StaticJsonBuffer<1000> jsonBuffer;
 void build_command_reply(int errorNo, JsonObject &root, char *resultBuffer)
 {
 	char replyBuffer[REPLY_ELEMENT_SIZE];
+	char errorDescription[REPLY_ERROR_SIZE];
+
+	decodeError(errorNo, errorDescription,REPLY_ERROR_SIZE);
 
 	const char *sequence = root["seq"];
 
@@ -356,11 +360,11 @@ void build_command_reply(int errorNo, JsonObject &root, char *resultBuffer)
 		// Got a sequence number in the command - must return the same number
 		// so that the sender can identify the command that was sent
 		int sequenceNo = root["seq"];
-		sprintf(replyBuffer, "\"error\":%d,\"seq\":%d", errorNo, sequenceNo);
+		snprintf(replyBuffer,REPLY_ELEMENT_SIZE, "\"error\":%d,\"message\":\"%s\",\"seq\":%d", errorNo, errorDescription, sequenceNo);
 	}
 	else
 	{
-		sprintf(replyBuffer, "\"error\":%d", errorNo);
+		snprintf(replyBuffer, REPLY_ELEMENT_SIZE, "\"error\":%d,\"message\":\"%s\"", errorNo,errorDescription);
 	}
 	strcat(resultBuffer, replyBuffer);
 }
@@ -909,18 +913,24 @@ int decodeCommand(const char *rawCommandText, process *process, Command *command
 
 		if (option == NULL)
 		{
-			// no option with this name - do we have a default for it?
+			TRACELN("  Option not supplied in command");
 
 			if (item->setDefaultValue(parameterBuffer + item->commandSettingOffset))
 			{
-				TRACE("Found a default option for ");
-				TRACELN(item->name);
+				TRACE("    Found a default option - all good");
 				// set OK - move on to the next one
 				continue;
 			}
 			else
 			{
-				TRACE("Failed to find command item for ");
+				TRACE("    Not got a default option - ");
+				if (strcasecmp(item->name, "value")==0 || strcasecmp(item->name, "text")==0 ){
+					if(sensorName != NULL){
+						TRACELN("no need for default as it is a sensor command");
+						continue;
+					}
+				}
+				TRACELN("command failed");
 				TRACELN(item->name);
 				return JSON_MESSAGE_COMMAND_ITEM_NOT_FOUND;
 			}

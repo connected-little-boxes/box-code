@@ -1,7 +1,7 @@
 #pragma once
 
-#define HULLOS_OK 400
-#define HULLOS_STOPPED 401
+#define HULLOS_OK 1400
+#define HULLOS_STOPPED 1401
 
 #define HULLOS_PROGRAM_SIZE 100
 

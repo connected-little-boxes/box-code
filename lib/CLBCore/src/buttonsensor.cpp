@@ -62,7 +62,7 @@ struct SettingItemCollection buttonSensorSettingItems = {
 struct sensorEventBinder ButtonSensorListenerFunctions[] = {
 	{"pressed", BUTTONSENSOR_BUTTON_PRESSED},
 	{"released", BUTTONSENSOR_BUTTON_RELEASED},
-	{"change", BUTTONSENSOR_SEND_ON_CHANGE}};
+	{"changed", BUTTONSENSOR_SEND_ON_CHANGE}};
 
 int lastButtonInputValue;
 long buttonInputDebounceStartTime;

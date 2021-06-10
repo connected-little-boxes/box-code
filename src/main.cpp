@@ -31,6 +31,7 @@
 #include "HullOS.h"
 #include "boot.h"
 #include "otaupdate.h"
+#include "outpin.h"
 
 
 // This function will be different for each build of the device.
@@ -53,6 +54,7 @@ void populateProcessList()
 	addProcessToAllProcessList(&printerProcess);
 	addProcessToAllProcessList(&hullosProcess);
 	addProcessToAllProcessList(&otaUpdateProcessDescriptor);
+	addProcessToAllProcessList(&outPinProcess);
 }
 
 void populateSensorList()

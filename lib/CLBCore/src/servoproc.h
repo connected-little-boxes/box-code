@@ -12,13 +12,13 @@ struct ServoSettings {
 
 int setServoPosition(float position);
 
-int startServo(struct process * ServoProcess);
+int startServo(struct process * servoProcess);
 
-int updateServo(struct process * ServoProcess);
+int updateServo(struct process * servoProcess);
 
-int stopServo(struct process * ServoProcess);
+int stopServo(struct process * servoProcess);
 
-void ServoStatusMessage(struct process * inputSwitchProcess, char * buffer, int bufferLength);
+void ServoStatusMessage(struct process * servoProcess, char * buffer, int bufferLength);
 
 extern struct ServoSettings ServoSettings;
 

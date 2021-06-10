@@ -54,9 +54,9 @@ struct SettingItemCollection pirSensorSettingItems = {
 	sizeof(pirSensorSettingItemPointers) / sizeof(struct SettingItem *)};
 
 struct sensorEventBinder PIRSensorListenerFunctions[] = {
-	{"change", PIRSENSOR_SEND_ON_CHANGE},
+	{"changed", PIRSENSOR_SEND_ON_CHANGE},
 	{"triggered", PIRSENSOR_SEND_ON_TRIGGERED},
-	{"clear", PIRSENSOR_SEND_ON_CLEAR}};
+	{"cleared", PIRSENSOR_SEND_ON_CLEAR}};
 
 void readPIRSensor(struct pirSensorReading *pirSensoractiveReading)
 {
