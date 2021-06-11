@@ -2,7 +2,9 @@
 
 #define OUTPIN_OK 1500
 #define OUTPIN_STOPPED 1501
+
 #define OUTPIN_COMMAND_NAME_LENGTH 40
+#define OUTPIN_MAX_HOLD_TIME_SECS 10
 
 struct outPinSettings {
 	int OutPinOutputPin;

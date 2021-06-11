@@ -10,6 +10,12 @@
 
 struct outPinSettings outpinSettings;
 
+unsigned long outPinHoldMillisStart;
+unsigned long outPinHoldTime;
+bool outpinHoldOriginalState;
+bool outpinHoldActive;
+bool outpinState;
+
 void setDefaultOutPinOutputPin(void *dest)
 {
     int *destInt = (int *)dest;
@@ -65,9 +71,7 @@ struct SettingItemCollection OutPinSettingItems = {
     OutPinSettingItemPointers,
     sizeof(OutPinSettingItemPointers) / sizeof(struct SettingItem *)};
 
-bool outpinState;
-
-int validateOutPinPosition(float position)
+int validateOutPinState(float position)
 {
     return WORKED_OK;
 }
@@ -92,28 +96,9 @@ void setOutPinUsingActiveHigh(bool value){
     }
 }
 
-int setOutPinState(float position)
+bool outPinStateHigh(float stateFloat)
 {
-    if (outPinProcess.status != OUTPIN_OK)
-    {
-        return JSON_MESSAGE_OUTPIN_NOT_AVAILABLE;
-    }
-
-    int result = validateOutPinPosition(position);
-
-    if (result == WORKED_OK)
-    {
-        if(position <0.5)
-        {
-            setOutPinUsingActiveHigh(false);
-        }
-        else
-        {
-            setOutPinUsingActiveHigh(true);
-        }
-    }
-
-    return result;
+    return stateFloat >= 0.5;
 }
 
 struct OutPinCommandItems outpinCommandItems;
@@ -124,10 +109,11 @@ boolean validateOutPinCommandString(void *dest, const char *newValueStr)
 }
 
 #define OUTPIN_STATE_COMMAND_OFFSET 0
+#define OUTPIN_HOLD_TIME_OFFSET (OUTPIN_STATE_COMMAND_OFFSET+sizeof(float))
 
 #define OUTPIN_COMMAND_SIZE = (OUTPIN_STATE_COMMAND_OFFSET+sizeof(float))
 
-struct CommandItem outpinPositionCommandItem = {
+struct CommandItem outpinStatusCommandItem = {
     "value",
     "state of outpin (0-1) >=0.5 is on",
     OUTPIN_STATE_COMMAND_OFFSET,
@@ -135,9 +121,36 @@ struct CommandItem outpinPositionCommandItem = {
     validateFloat0to1,
     noDefaultAvailable};
 
+boolean validateOutpinHoldTime(void *dest, const char *newValueStr)
+{
+	float value;
+
+	if (!validateFloat(&value, newValueStr))
+	{
+		return false;
+	}
+
+	if (value < 0 || value > OUTPIN_MAX_HOLD_TIME_SECS)
+	{
+		return false;
+	}
+
+	*(float *)dest = value;
+	return true;
+}
+
+struct CommandItem outpinHoldTimeCommandItem = {
+    "hold",
+    "time to hold level in secs",
+    OUTPIN_HOLD_TIME_OFFSET,
+    floatCommand,
+    validateOutpinHoldTime,
+    setDefaultZero};
+
 struct CommandItem *setOutPinItems[] =
     {
-        &outpinPositionCommandItem};
+        &outpinStatusCommandItem,
+        &outpinHoldTimeCommandItem};
 
 int doSetOutPinCommand(char * destination, unsigned char * settingBase);
 
@@ -160,9 +173,40 @@ int doSetOutPinCommand(char * destination, unsigned char * settingBase)
 		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
-    float state = getUnalignedFloat(settingBase+OUTPIN_STATE_COMMAND_OFFSET);    
+    if (outPinProcess.status != OUTPIN_OK)
+    {
+        return JSON_MESSAGE_OUTPIN_NOT_AVAILABLE;
+    }
 
-    return setOutPinState(state);
+    float stateValue = getUnalignedFloat(settingBase+OUTPIN_STATE_COMMAND_OFFSET); 
+
+    bool newState = outPinStateHigh(stateValue);
+
+    // Have we changed state?
+
+    if(newState == outpinState)
+    {
+        // return if we have - no need to change anything
+        return WORKED_OK;
+    }
+
+    float hold = getUnalignedFloat(settingBase+OUTPIN_HOLD_TIME_OFFSET);  
+
+    if(hold != 0)
+    {
+        outPinHoldMillisStart = millis();
+        outPinHoldTime = hold*1000;
+        // haven't set the pin to the new state yet - record the current state
+        outpinHoldOriginalState = outpinState;
+        outpinHoldActive=true;
+    }
+    else {
+        outpinHoldActive=false;
+    }
+
+    setOutPinUsingActiveHigh(newState);
+
+    return WORKED_OK;
 }
 
 struct CommandItem outpinInitialPositionCommandItem = {
@@ -182,8 +226,8 @@ struct Command setOutPinInitialStateCommand
 {
     "setinitoutpinstate",
         "Sets the initial state of the outpin",
-        setOutPinItems,
-        sizeof(setOutPinItems) / sizeof(struct CommandItem *),
+        setOutPinInitialPositionItems,
+        sizeof(setOutPinInitialPositionItems) / sizeof(struct CommandItem *),
         doSetOutPinInitialStateCommand
 };
 
@@ -199,7 +243,7 @@ int doSetOutPinInitialStateCommand(char * destination, unsigned char * settingBa
 
     float position = getUnalignedFloat(settingBase+OUTPIN_STATE_COMMAND_OFFSET);    
 
-    int result = validateOutPinPosition(position);
+    int result = validateOutPinState(position);
 
     if (result == WORKED_OK)
     {
@@ -223,6 +267,7 @@ struct CommandItemCollection outpinCommands =
 void initOutPin()
 {
     outPinProcess.status = OUTPIN_STOPPED;
+    outpinHoldActive = false;
 }
 
 void startOutPin()
@@ -241,6 +286,33 @@ void startOutPin()
 
 void updateOutPin()
 {
+    // need to handle the timeout of the hold function
+    // Don't do anything if the pin is turned off
+    if (outPinProcess.status != OUTPIN_OK)
+    {
+        return;
+    }
+
+    // Don't do anything if there is not a hold active
+    if(!outpinHoldActive){
+        return;
+    }
+
+    // Get the time since the hold started
+    unsigned long elapsedTime = ulongDiff(millis(),outPinHoldMillisStart);
+
+    // Quit if the hold is not over yet
+    if(elapsedTime<outPinHoldTime){
+        return;
+    }
+
+    // have reached the end of the hold
+
+    // Put the pin back
+    setOutPinUsingActiveHigh(outpinHoldOriginalState);
+
+    // turn off the hold
+    outpinHoldActive = false;
 }
 
 void stopOutPin()
