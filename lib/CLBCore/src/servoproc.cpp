@@ -18,6 +18,12 @@
 
 struct ServoSettings servoSettings;
 
+float servoPosition;
+unsigned long servoHoldMillisStart;
+unsigned long servoHoldTime;
+float servoHoldOriginalPosition;
+bool servoHoldActive;
+
 Servo *servo = NULL;
 
 void setDefaultServoOutputPin(void *dest)
@@ -71,7 +77,6 @@ struct SettingItemCollection ServoSettingItems = {
     ServoSettingItemPointers,
     sizeof(ServoSettingItemPointers) / sizeof(struct SettingItem *)};
 
-float servoPosition;
 
 int validateServoPosition(float position)
 {
@@ -114,6 +119,8 @@ boolean validateServoCommandString(void *dest, const char *newValueStr)
 }
 
 #define SERVO_POSITION_COMMAND_OFFSET 0
+#define SERVO_HOLD_TIME_OFFSET (SERVO_POSITION_COMMAND_OFFSET+sizeof(float))
+
 
 #define SERVO_COMMAND_SIZE = (SERVO_POSITION_COMMAND_OFFSET+sizeof(float))
 
@@ -125,9 +132,36 @@ struct CommandItem servoPositionCommandItem = {
     validateFloat0to1,
     noDefaultAvailable};
 
+boolean validateServoHoldTime(void *dest, const char *newValueStr)
+{
+	float value;
+
+	if (!validateFloat(&value, newValueStr))
+	{
+		return false;
+	}
+
+	if (value < 0 || value > SERVO_MAX_HOLD_TIME_SECS)
+	{
+		return false;
+	}
+
+	*(float *)dest = value;
+	return true;
+}
+
+struct CommandItem servoHoldTimeCommandItem = {
+    "hold",
+    "time to hold level in secs",
+    SERVO_HOLD_TIME_OFFSET,
+    floatCommand,
+    validateServoHoldTime,
+    setDefaultZero};
+
 struct CommandItem *setServoPositionItems[] =
     {
-        &servoPositionCommandItem};
+        &servoPositionCommandItem,
+        &servoHoldTimeCommandItem};
 
 int doSetServoPositionCommand(char * destination, unsigned char * settingBase);
 
@@ -150,9 +184,35 @@ int doSetServoPositionCommand(char * destination, unsigned char * settingBase)
 		return publishCommandToRemoteDevice(buffer, destination);
 	}
 
-    float position = getUnalignedFloat(settingBase+SERVO_POSITION_COMMAND_OFFSET);    
+    float newPosition = getUnalignedFloat(settingBase+SERVO_POSITION_COMMAND_OFFSET);  
 
-    return setServoPosition(position);
+    if(newPosition == servoPosition)
+    {
+        return WORKED_OK;
+    }
+
+    float oldServoPosition = servoPosition;
+
+    int result = setServoPosition(newPosition);
+
+    if(result != WORKED_OK){
+        return result;
+    }
+
+    float hold = getUnalignedFloat(settingBase+SERVO_HOLD_TIME_OFFSET);  
+
+    if(hold != 0)
+    {
+        servoHoldMillisStart = millis();
+        servoHoldTime = hold*1000;
+        servoHoldOriginalPosition = oldServoPosition;
+        servoHoldActive=true;
+    }
+    else {
+        servoHoldActive=false;
+    }
+
+    return WORKED_OK;
 }
 
 struct CommandItem servoInitialPositionCommandItem = {
@@ -235,6 +295,33 @@ void startServo()
 
 void updateServo()
 {
+    // need to handle the timeout of the hold function
+    // Don't do anything if the pin is turned off
+    if (ServoProcess.status != SERVO_OK)
+    {
+        return;
+    }
+
+    // Don't do anything if there is not a hold active
+    if(!servoHoldActive){
+        return;
+    }
+
+    // Get the time since the hold started
+    unsigned long elapsedTime = ulongDiff(millis(),servoHoldMillisStart);
+
+    // Quit if the hold is not over yet
+    if(elapsedTime<servoHoldTime){
+        return;
+    }
+
+    // have reached the end of the hold
+
+    // Put the servo back
+    setServoPosition(servoHoldOriginalPosition);
+
+    // turn off the hold
+    servoHoldActive = false;
 }
 
 void stopServo()

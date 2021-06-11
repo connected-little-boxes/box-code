@@ -3,6 +3,8 @@
 #define SERVO_OK 900
 #define SERVO_STOPPED 901
 #define SERVO_COMMAND_NAME_LENGTH 40
+#define SERVO_MAX_HOLD_TIME_SECS 10
+
 
 struct ServoSettings {
 	int ServoOutputPin;
