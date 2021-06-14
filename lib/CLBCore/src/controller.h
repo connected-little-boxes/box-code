@@ -8,6 +8,8 @@
 #define MAX_MESSAGE_LENGTH 80
 #define VALUE_START_POSITION 0
 #define MESSAGE_START_POSITION sizeof(float)
+#define COMMAND_OPTION_AREA_START (MESSAGE_START_POSITION+MAX_MESSAGE_LENGTH)
+
 
 #define CONTROLLERMESSAGE_COMMAND_LENGTH 20
 #define STORE_FILENAME_LENGTH 30
@@ -57,7 +59,8 @@ void act_onJson_message(const char *json, void (*deliverResult)(char *resultText
 
 bool setDefaultEmptyString(void * dest);
 bool noDefaultAvailable(void * dest);
-bool setDefaultZero(void * dest);
+bool setDefaultIntZero(void * dest);
+bool setDefaultFloatZero(void *dest);
 
 void resetControllerListenersToDefaults();
 

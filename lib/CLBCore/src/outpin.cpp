@@ -109,9 +109,9 @@ boolean validateOutPinCommandString(void *dest, const char *newValueStr)
 }
 
 #define OUTPIN_STATE_COMMAND_OFFSET 0
-#define OUTPIN_HOLD_TIME_OFFSET (OUTPIN_STATE_COMMAND_OFFSET+sizeof(float))
+#define OUTPIN_HOLD_TIME_OFFSET COMMAND_OPTION_AREA_START
 
-#define OUTPIN_COMMAND_SIZE = (OUTPIN_STATE_COMMAND_OFFSET+sizeof(float))
+#define OUTPIN_COMMAND_SIZE = (OUTPIN_HOLD_TIME_OFFSET+sizeof(float))
 
 struct CommandItem outpinStatusCommandItem = {
     "value",
@@ -135,7 +135,7 @@ boolean validateOutpinHoldTime(void *dest, const char *newValueStr)
 		return false;
 	}
 
-	*(float *)dest = value;
+    putUnalignedFloat(value,(unsigned char *)dest);
 	return true;
 }
 
@@ -145,7 +145,7 @@ struct CommandItem outpinHoldTimeCommandItem = {
     OUTPIN_HOLD_TIME_OFFSET,
     floatCommand,
     validateOutpinHoldTime,
-    setDefaultZero};
+    setDefaultFloatZero};
 
 struct CommandItem *setOutPinItems[] =
     {

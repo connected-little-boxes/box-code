@@ -97,3 +97,17 @@ void putUnalignedFloat(float fval, unsigned char *dest)
     memcpy(dest, source, sizeof(float));
 }
 
+float getUnalignedDouble(unsigned char *source)
+{
+    double result;
+    memcpy((unsigned char *)&result, source, sizeof(double));
+    return result;
+}
+
+void putUnalignedDouble(double dval, unsigned char *dest)
+{
+    unsigned char *source = (unsigned char *)&dval;
+    memcpy(dest, source, sizeof(double));
+}
+
+

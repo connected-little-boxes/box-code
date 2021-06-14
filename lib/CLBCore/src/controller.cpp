@@ -243,10 +243,16 @@ bool noDefaultAvailable(void *dest)
 	return false;
 }
 
-boolean setDefaultZero(void *dest)
+bool setDefaultIntZero(void *dest)
 {
 	int *destInt = (int *)dest;
 	*destInt = 0;
+	return true;
+}
+
+bool setDefaultFloatZero(void *dest)
+{
+	putUnalignedFloat(0, (unsigned char *)dest);
 	return true;
 }
 

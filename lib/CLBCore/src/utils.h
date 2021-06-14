@@ -18,6 +18,9 @@ float getUnalignedFloat(unsigned char * source);
 
 void putUnalignedFloat(float fval, unsigned char * dest);
 
+float getUnalignedDouble(unsigned char *source);
+void putUnalignedDouble(double dval, unsigned char *dest);
+
 #define ESC_KEY 0x1b
 
 #if defined(ARDUINO_ARCH_ESP32)

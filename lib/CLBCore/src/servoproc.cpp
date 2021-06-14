@@ -119,8 +119,7 @@ boolean validateServoCommandString(void *dest, const char *newValueStr)
 }
 
 #define SERVO_POSITION_COMMAND_OFFSET 0
-#define SERVO_HOLD_TIME_OFFSET (SERVO_POSITION_COMMAND_OFFSET+sizeof(float))
-
+#define SERVO_HOLD_TIME_OFFSET COMMAND_OPTION_AREA_START
 
 #define SERVO_COMMAND_SIZE = (SERVO_POSITION_COMMAND_OFFSET+sizeof(float))
 
@@ -132,7 +131,7 @@ struct CommandItem servoPositionCommandItem = {
     validateFloat0to1,
     noDefaultAvailable};
 
-boolean validateServoHoldTime(void *dest, const char *newValueStr)
+bool validateServoHoldTime(void *dest, const char *newValueStr)
 {
 	float value;
 
@@ -146,7 +145,7 @@ boolean validateServoHoldTime(void *dest, const char *newValueStr)
 		return false;
 	}
 
-	*(float *)dest = value;
+    putUnalignedFloat(value,(unsigned char *)dest);
 	return true;
 }
 
@@ -156,7 +155,7 @@ struct CommandItem servoHoldTimeCommandItem = {
     SERVO_HOLD_TIME_OFFSET,
     floatCommand,
     validateServoHoldTime,
-    setDefaultZero};
+    setDefaultFloatZero};
 
 struct CommandItem *setServoPositionItems[] =
     {
