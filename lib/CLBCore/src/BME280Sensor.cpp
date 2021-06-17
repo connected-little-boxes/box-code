@@ -14,6 +14,7 @@
 #include "clock.h"
 
 struct BME280SensorSettings bme280SensorSettings;
+bool BME280firstRun;
 
 void setDefaultEnvnoOfAverages(void *dest)
 {
@@ -27,7 +28,7 @@ struct SettingItem bme280SensorFittedSetting = {
 	&bme280SensorSettings.bme280SensorFitted,
 	ONOFF_INPUT_LENGTH,
 	yesNo,
-	setFalse,
+	setTrue,
 	validateYesNo};
 
 struct SettingItem envNoOfAveragesSetting = {
@@ -405,25 +406,32 @@ void updateBME280Sensor()
 
 	bme280Sensor.millisAtLastReading = millis();
 
-	if (fabsf(bme280activeReading->lastHumidSent - bme280activeReading->humidityAverage) > bme280SensorSettings.humidDelta)
+	// always send a changed event when we first start up
+
+	if ((fabsf(bme280activeReading->lastHumidSent - bme280activeReading->humidityAverage) > bme280SensorSettings.humidDelta)||
+	BME280firstRun)
 	{
 		TRACELN("Humidity change:");
 		sendToBME280SensorListeners(BME280_ON_CHANGE, BME280_HUMID);
 		bme280activeReading->lastHumidSent = bme280activeReading->humidityAverage;
 	}
 
-	if (fabsf(bme280activeReading->lastTempSent - bme280activeReading->temperatureAverage) > bme280SensorSettings.tempDelta)
+	if ((fabsf(bme280activeReading->lastTempSent - bme280activeReading->temperatureAverage) > bme280SensorSettings.tempDelta)||
+		BME280firstRun)
 	{
 		TRACELN("Temp change:");
 		sendToBME280SensorListeners(BME280_ON_CHANGE, BME280_TEMP);
 		bme280activeReading->lastTempSent = bme280activeReading->temperatureAverage;
 	}
 
-	if (fabsf(bme280activeReading->lastPressSent - bme280activeReading->pressureAverage) > bme280SensorSettings.pressDelta)
+	if ((fabsf(bme280activeReading->lastPressSent - bme280activeReading->pressureAverage) > bme280SensorSettings.pressDelta)||
+		BME280firstRun)
 	{
 		TRACELN("Press change:");
 		sendToBME280SensorListeners(BME280_ON_CHANGE, BME280_PRESS);
 		bme280activeReading->lastPressSent = bme280activeReading->pressureAverage;
+		// clear the first run flag
+		BME280firstRun=false;
 	}
 
 	if (lastClockSecond == clockReading->second)
@@ -473,6 +481,8 @@ void updateBME280Sensor()
 
 void startBME280Sensor()
 {
+	BME280firstRun=true;
+
 	if (!bme280SensorSettings.bme280SensorFitted)
 	{
 		bme280Sensor.status = BME280SENSOR_NOT_FITTED;

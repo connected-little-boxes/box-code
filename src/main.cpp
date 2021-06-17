@@ -48,7 +48,7 @@ void populateProcessList()
 	addProcessToAllProcessList(&MQTTProcessDescriptor);
 	addProcessToAllProcessList(&controllerProcess);
 	addProcessToAllProcessList(&ServoProcess);
-	addProcessToAllProcessList(&RegistrationProcessDescriptor);
+	addProcessToAllProcessList(&RegistrationProcess);
 	addProcessToAllProcessList(&WebServerProcess);
 	addProcessToAllProcessList(&max7219MessagesProcess);
 	addProcessToAllProcessList(&printerProcess);

@@ -36,17 +36,17 @@ struct RegistrationCommand
 
 void initRegistration()
 {
-	RegistrationProcessDescriptor.status = REGISTRATION_OFF;
+	RegistrationProcess.status = REGISTRATION_OFF;
 }
 
 void startRegistration()
 {
-	RegistrationProcessDescriptor.status = REGISTRATION_WAITING_FOR_MQTT;
+	RegistrationProcess.status = REGISTRATION_WAITING_FOR_MQTT;
 }
 
 void stopRegistration()
 {
-	RegistrationProcessDescriptor.status = REGISTRATION_OFF;
+	RegistrationProcess.status = REGISTRATION_OFF;
 }
 
 #define CONNECTION_MESSAGE_BUFFER_SIZE 500
@@ -145,7 +145,7 @@ void sendConnectionMessage()
 
 void updateRegistration()
 {
-	switch (RegistrationProcessDescriptor.status)
+	switch (RegistrationProcess.status)
 	{
 	case REGISTRATION_OK:
 		break;
@@ -156,7 +156,7 @@ void updateRegistration()
 	case REGISTRATION_WAITING_FOR_MQTT:
 		if (MQTTProcessDescriptor.status != MQTT_OK)
 		{
-			RegistrationProcessDescriptor.status = REGISTRATION_WAITING_FOR_MQTT;
+			RegistrationProcess.status = REGISTRATION_WAITING_FOR_MQTT;
 		}
 		else
 		{
@@ -168,7 +168,7 @@ void updateRegistration()
 				// say we have connected
 				sendConnectionMessage();
 
-				RegistrationProcessDescriptor.status = REGISTRATION_OK;
+				RegistrationProcess.status = REGISTRATION_OK;
 			}
 		}
 
@@ -177,7 +177,7 @@ void updateRegistration()
 	case WAITING_FOR_REGISTRATION_REPLY:
 		if (MQTTProcessDescriptor.status != MQTT_OK)
 		{
-			RegistrationProcessDescriptor.status = REGISTRATION_WAITING_FOR_MQTT;
+			RegistrationProcess.status = REGISTRATION_WAITING_FOR_MQTT;
 		}
 
 		break;
@@ -186,12 +186,12 @@ void updateRegistration()
 
 bool registrationStatusOK()
 {
-	return RegistrationProcessDescriptor.status == REGISTRATION_OK;
+	return RegistrationProcess.status == REGISTRATION_OK;
 }
 
 void RegistrationStatusMessage(char *buffer, int bufferLength)
 {
-	switch (RegistrationProcessDescriptor.status)
+	switch (RegistrationProcess.status)
 	{
 	case REGISTRATION_OK:
 		snprintf(buffer, bufferLength, "Registration OK");
@@ -374,7 +374,7 @@ struct CommandItemCollection RegistrationCommands =
 		RegistrationCommandList,
 		sizeof(RegistrationCommandList) / sizeof(struct Command *)};
 
-struct process RegistrationProcessDescriptor = {
+struct process RegistrationProcess = {
 	"registration",
 	initRegistration,
 	startRegistration,

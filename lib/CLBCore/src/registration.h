@@ -22,7 +22,7 @@
 
 #define FRIENDLY_NAME_LENGTH 30
 
-extern struct process RegistrationProcessDescriptor;
+extern struct process RegistrationProcess;
 
 struct RegistrationSettings 
 {

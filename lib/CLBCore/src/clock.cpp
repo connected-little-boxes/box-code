@@ -571,16 +571,28 @@ struct sensorEventBinder ClockSensorListenerFunctions[] = {
 	{"day", CLOCK_DAY_TICK}};
 
 Timezone homeTimezone;
-bool timeZoneNotSet;
-int timeZoneSetRetryCount;
-#define TIME_ZONE_SET_RETRY_LIMIT 5
+bool timeZoneSet;
+
+void checkTimeZone()
+{
+	if(timeZoneSet)
+	{
+		return;
+	}
+
+	Serial.println("Setting time zone");
+
+	if(homeTimezone.setLocation(clockSensorSettings.timeZone)){
+		Serial.println("Time zone set");
+		timeZoneSet = true;
+	}
+}
 
 void startClockSensor()
 {
 	needToInitialiseAlarmsAndTimers = true;
 
-	timeZoneNotSet=true;
-	timeZoneSetRetryCount = 0;
+	timeZoneSet=false;
 
 	struct ClockReading *clockActiveReading;
 
@@ -617,6 +629,8 @@ void stopClockSensor()
 	clockSensor.status = CLOCK_STOPPED;
 }
 
+
+
 void getClockReadings()
 {
 	struct clockReading *clockActiveReading =
@@ -646,20 +660,6 @@ void updateClockReading()
 
 		if (WiFiProcessDescriptor.status == WIFI_OK)
 		{
-			while(timeZoneNotSet)
-			{
-				timeZoneNotSet = homeTimezone.setLocation(clockSensorSettings.timeZone);
-				if(timeZoneNotSet){
-					if(++timeZoneSetRetryCount<TIME_ZONE_SET_RETRY_LIMIT){
-						delay(100);
-					}
-					else {
-						Serial.println("Clock location could not be set after multiple retries. Time and date may be incorrect.");
-						timeZoneNotSet=false;
-					}
-				}
-			}
-			
 			clockSensor.status = CLOCK_ERROR_TIME_NOT_SET;
 		}
 		break;
@@ -668,6 +668,7 @@ void updateClockReading()
 	case CLOCK_ERROR_TIME_NOT_SET:
 	case CLOCK_ERROR_NEEDS_SYNC:
 
+		checkTimeZone();
 
 		events();
 
