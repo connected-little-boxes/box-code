@@ -109,7 +109,7 @@ boolean validateOutPinCommandString(void *dest, const char *newValueStr)
 }
 
 #define OUTPIN_STATE_COMMAND_OFFSET 0
-#define OUTPIN_HOLD_TIME_OFFSET COMMAND_OPTION_AREA_START
+#define OUTPIN_PULSE_LENGTH_OFFSET COMMAND_OPTION_AREA_START
 
 #define OUTPIN_COMMAND_SIZE = (OUTPIN_HOLD_TIME_OFFSET+sizeof(float))
 
@@ -121,36 +121,12 @@ struct CommandItem outpinStatusCommandItem = {
     validateFloat0to1,
     noDefaultAvailable};
 
-boolean validateOutpinHoldTime(void *dest, const char *newValueStr)
-{
-	float value;
-
-	if (!validateFloat(&value, newValueStr))
-	{
-		return false;
-	}
-
-	if (value < 0 || value > OUTPIN_MAX_HOLD_TIME_SECS)
-	{
-		return false;
-	}
-
-    putUnalignedFloat(value,(unsigned char *)dest);
-	return true;
-}
-
-struct CommandItem outpinHoldTimeCommandItem = {
-    "hold",
-    "time to hold level in secs",
-    OUTPIN_HOLD_TIME_OFFSET,
-    floatCommand,
-    validateOutpinHoldTime,
-    setDefaultFloatZero};
+// ************************************* Set pin state
 
 struct CommandItem *setOutPinItems[] =
     {
-        &outpinStatusCommandItem,
-        &outpinHoldTimeCommandItem};
+        &outpinStatusCommandItem
+    };
 
 int doSetOutPinCommand(char * destination, unsigned char * settingBase);
 
@@ -190,19 +166,91 @@ int doSetOutPinCommand(char * destination, unsigned char * settingBase)
         return WORKED_OK;
     }
 
-    float hold = getUnalignedFloat(settingBase+OUTPIN_HOLD_TIME_OFFSET);  
+    setOutPinUsingActiveHigh(newState);
 
-    if(hold != 0)
+    return WORKED_OK;
+}
+
+
+// ************************************* Pulse pin state
+
+boolean validateOutpinPulseLen(void *dest, const char *newValueStr)
+{
+	float value;
+
+	if (!validateFloat(&value, newValueStr))
+	{
+		return false;
+	}
+
+	if (value < 0 || value > OUTPIN_MAX_HOLD_TIME_SECS)
+	{
+		return false;
+	}
+
+    putUnalignedFloat(value,(unsigned char *)dest);
+	return true;
+}
+
+struct CommandItem outpinPulseLenCommandItem = {
+    "pulselen",
+    "length of the pulse in secs",
+    OUTPIN_PULSE_LENGTH_OFFSET,
+    floatCommand,
+    validateOutpinPulseLen,
+    setDefaultFloatZero};
+
+struct CommandItem *pulseOutPinItems[] =
     {
-        outPinHoldMillisStart = millis();
-        outPinHoldTime = hold*1000;
-        // haven't set the pin to the new state yet - record the current state
-        outpinHoldOriginalState = outpinState;
-        outpinHoldActive=true;
+        &outpinStatusCommandItem,
+        &outpinPulseLenCommandItem
+    };
+
+int doPulseOutPinCommand(char * destination, unsigned char * settingBase);
+
+struct Command pulseOutPinCommand
+{
+    "pulseoutpinstate",
+        "Pulse the outpin",
+        pulseOutPinItems,
+        sizeof(pulseOutPinItems) / sizeof(struct CommandItem *),
+        doPulseOutPinCommand
+};
+
+int doPulseOutPinCommand(char * destination, unsigned char * settingBase)
+{
+    if (*destination != 0)
+	{
+		// we have a destination for the command. Build the string
+		char buffer[JSON_BUFFER_SIZE];
+		createJSONfromSettings("outpin", &pulseOutPinCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
+		return publishCommandToRemoteDevice(buffer, destination);
+	}
+
+    if (outPinProcess.status != OUTPIN_OK)
+    {
+        return JSON_MESSAGE_OUTPIN_NOT_AVAILABLE;
     }
-    else {
-        outpinHoldActive=false;
+
+    float stateValue = getUnalignedFloat(settingBase+OUTPIN_STATE_COMMAND_OFFSET); 
+
+    bool newState = outPinStateHigh(stateValue);
+
+    // Have we changed state?
+
+    if(newState == outpinState)
+    {
+        // return if we have - no need to change anything
+        return WORKED_OK;
     }
+
+    float hold = getUnalignedFloat(settingBase+OUTPIN_PULSE_LENGTH_OFFSET);  
+
+    outPinHoldMillisStart = millis();
+    outPinHoldTime = hold*1000;
+    // haven't set the pin to the new state yet - record the current state
+    outpinHoldOriginalState = outpinState;
+    outpinHoldActive=true;
 
     setOutPinUsingActiveHigh(newState);
 
@@ -256,6 +304,7 @@ int doSetOutPinInitialStateCommand(char * destination, unsigned char * settingBa
 
 struct Command *outpinCommandList[] = {
     &setOutPinCommand,
+    &pulseOutPinCommand,
     &setOutPinInitialStateCommand};
 
 struct CommandItemCollection outpinCommands =

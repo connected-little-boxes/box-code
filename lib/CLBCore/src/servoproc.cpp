@@ -118,7 +118,7 @@ boolean validateServoCommandString(void *dest, const char *newValueStr)
 }
 
 #define SERVO_POSITION_COMMAND_OFFSET 0
-#define SERVO_HOLD_TIME_OFFSET COMMAND_OPTION_AREA_START
+#define SERVO_PULSE_LENGTH_OFFSET COMMAND_OPTION_AREA_START
 
 #define SERVO_COMMAND_SIZE = (SERVO_POSITION_COMMAND_OFFSET+sizeof(float))
 
@@ -130,36 +130,12 @@ struct CommandItem servoPositionCommandItem = {
     validateFloat0to1,
     noDefaultAvailable};
 
-bool validateServoHoldTime(void *dest, const char *newValueStr)
-{
-	float value;
-
-	if (!validateFloat(&value, newValueStr))
-	{
-		return false;
-	}
-
-	if (value < 0 || value > SERVO_MAX_HOLD_TIME_SECS)
-	{
-		return false;
-	}
-
-    putUnalignedFloat(value,(unsigned char *)dest);
-	return true;
-}
-
-struct CommandItem servoHoldTimeCommandItem = {
-    "hold",
-    "time to hold level in secs",
-    SERVO_HOLD_TIME_OFFSET,
-    floatCommand,
-    validateServoHoldTime,
-    setDefaultFloatZero};
+// ************************************* Set servo position
 
 struct CommandItem *setServoPositionItems[] =
     {
-        &servoPositionCommandItem,
-        &servoHoldTimeCommandItem};
+        &servoPositionCommandItem
+    };
 
 int doSetServoPositionCommand(char * destination, unsigned char * settingBase);
 
@@ -189,6 +165,78 @@ int doSetServoPositionCommand(char * destination, unsigned char * settingBase)
         return WORKED_OK;
     }
 
+    int result = setServoPosition(newPosition);
+
+    if(result != WORKED_OK){
+        return result;
+    }
+
+    servoHoldActive=false;
+
+    return WORKED_OK;
+}
+
+// ************************************ Pulse servo position
+
+bool validateServoPulseLen(void *dest, const char *newValueStr)
+{
+	float value;
+
+	if (!validateFloat(&value, newValueStr))
+	{
+		return false;
+	}
+
+	if (value < 0 || value > SERVO_MAX_HOLD_TIME_SECS)
+	{
+		return false;
+	}
+
+    putUnalignedFloat(value,(unsigned char *)dest);
+	return true;
+}
+
+struct CommandItem servoPulseLenCommandItem = {
+    "pulselen",
+    "length of the pulse in secs",
+    SERVO_PULSE_LENGTH_OFFSET,
+    floatCommand,
+    validateServoPulseLen,
+    noDefaultAvailable};
+
+struct CommandItem *pulseServoPositionItems[] =
+    {
+        &servoPositionCommandItem,
+        &servoPulseLenCommandItem};
+
+int doPulseServoPositionCommand(char * destination, unsigned char * settingBase);
+
+struct Command pulseServoPositionCommand
+{
+    "pulseservopos",
+        "Pulses the position of the servo",
+        pulseServoPositionItems,
+        sizeof(pulseServoPositionItems) / sizeof(struct CommandItem *),
+        doPulseServoPositionCommand
+};
+
+int doPulseServoPositionCommand(char * destination, unsigned char * settingBase)
+{
+    if (*destination != 0)
+	{
+		// we have a destination for the command. Build the string
+		char buffer[JSON_BUFFER_SIZE];
+		createJSONfromSettings("servo", &pulseServoPositionCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
+		return publishCommandToRemoteDevice(buffer, destination);
+	}
+
+    float newPosition = getUnalignedFloat(settingBase+SERVO_POSITION_COMMAND_OFFSET);  
+
+    if(newPosition == servoPosition)
+    {
+        return WORKED_OK;
+    }
+
     float oldServoPosition = servoPosition;
 
     int result = setServoPosition(newPosition);
@@ -197,18 +245,12 @@ int doSetServoPositionCommand(char * destination, unsigned char * settingBase)
         return result;
     }
 
-    float hold = getUnalignedFloat(settingBase+SERVO_HOLD_TIME_OFFSET);  
+    float hold = getUnalignedFloat(settingBase+SERVO_PULSE_LENGTH_OFFSET); 
 
-    if(hold != 0)
-    {
-        servoHoldMillisStart = millis();
-        servoHoldTime = hold*1000;
-        servoHoldOriginalPosition = oldServoPosition;
-        servoHoldActive=true;
-    }
-    else {
-        servoHoldActive=false;
-    }
+    servoHoldMillisStart = millis();
+    servoHoldTime = hold*1000;
+    servoHoldOriginalPosition = oldServoPosition;
+    servoHoldActive=true;
 
     return WORKED_OK;
 }
@@ -260,6 +302,7 @@ int doSetServoInitialPositionCommand(char * destination, unsigned char * setting
 
 struct Command *servoCommandList[] = {
     &setServoPositionCommand,
+    &pulseServoPositionCommand,
     &setServoInitialPositionCommand};
 
 struct CommandItemCollection servoCommands =
