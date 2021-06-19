@@ -160,6 +160,11 @@ int doSetServoPositionCommand(char * destination, unsigned char * settingBase)
 
     float newPosition = getUnalignedFloat(settingBase+SERVO_POSITION_COMMAND_OFFSET);  
 
+    if (ServoProcess.status != SERVO_OK)
+    {
+        return JSON_MESSAGE_SERVO_NOT_AVAILABLE;
+    }
+
     if(newPosition == servoPosition)
     {
         return WORKED_OK;
@@ -229,6 +234,11 @@ int doPulseServoPositionCommand(char * destination, unsigned char * settingBase)
 		createJSONfromSettings("servo", &pulseServoPositionCommand, destination, settingBase, buffer, JSON_BUFFER_SIZE);
 		return publishCommandToRemoteDevice(buffer, destination);
 	}
+
+    if (ServoProcess.status != SERVO_OK)
+    {
+        return JSON_MESSAGE_SERVO_NOT_AVAILABLE;
+    }
 
     float newPosition = getUnalignedFloat(settingBase+SERVO_POSITION_COMMAND_OFFSET);  
 

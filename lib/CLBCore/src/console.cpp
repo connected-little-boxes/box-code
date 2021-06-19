@@ -421,6 +421,8 @@ void dumpFilesInStores()
 
 void deleteFileInStore(char *deleteName)
 {
+	Serial.printf("Deleting file:%s\n", deleteName);
+
 	File dir = LittleFS.open("/", "r");
 
 	char fullDeleteFileName[STORE_FILENAME_LENGTH];
@@ -443,20 +445,44 @@ void deleteFileInStore(char *deleteName)
 		{
 			const char *storeName = storeDir.name();
 
+			Serial.printf("   Searching store:%s\n", storeName);
+
 			while (fullDeleteFileName[0] == 0)
 			{
 				File storeFile = storeDir.openNextFile();
-
+	
 				if (!storeFile)
 				{
 					break;
 				}
 
 				const char *filename = (const char *)storeFile.name();
+				char compareFileName[STORE_FILENAME_LENGTH];
+			
+			// on the ESP8266 LittleFS the dir name function just delivers the name of the file in the folder(test)
 
-				if (strcasecmp(filename, deleteName) == 0)
+			// on the ESP32 LittleFS it delivers the file path to the file (\start\test)
+
+#if defined(ARDUINO_ARCH_ESP32)
+				buildStoreFilename(compareFileName, STORE_FILENAME_LENGTH, storeName, deleteName);
+#endif
+
+#if defined(ARDUINO_ARCH_ESP8266)
+				strcpy(compareFileName, deleteName);
+#endif
+
+
+				Serial.printf("       Checking:%s for %s\n", filename,compareFileName);
+
+				if (strcasecmp(compareFileName, filename) == 0)
 				{
+#if defined(ARDUINO_ARCH_ESP32)
+					strcpy(fullDeleteFileName,compareFileName);
+#endif
+
+#if defined(ARDUINO_ARCH_ESP8266)
 					buildStoreFilename(fullDeleteFileName, STORE_FILENAME_LENGTH, storeName, filename);
+#endif
 				}
 
 				storeFile.close();
@@ -469,7 +495,12 @@ void deleteFileInStore(char *deleteName)
 	if (fullDeleteFileName[0] != 0)
 	{
 		Serial.printf("\nRemoving:%s", fullDeleteFileName);
-		LittleFS.remove(fullDeleteFileName);
+		if(LittleFS.remove(fullDeleteFileName)){
+			Serial.printf("\n   done\n");
+		}
+		else{
+			Serial.printf("\n   failed\n");
+		};
 	}
 	else
 	{
@@ -479,8 +510,9 @@ void deleteFileInStore(char *deleteName)
 
 void doDumpStores(char *commandLine)
 {
-	Serial.println();
+	Serial.printf("\nStored commands\n");
 	dumpFilesInStores();
+	Serial.printf("\nend of stored commands\n");
 }
 
 void doDeleteCommand(char *commandLine)
