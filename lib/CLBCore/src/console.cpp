@@ -460,7 +460,6 @@ void deleteFileInStore(char *deleteName)
 				char compareFileName[STORE_FILENAME_LENGTH];
 			
 			// on the ESP8266 LittleFS the dir name function just delivers the name of the file in the folder(test)
-
 			// on the ESP32 LittleFS it delivers the file path to the file (\start\test)
 
 #if defined(ARDUINO_ARCH_ESP32)
