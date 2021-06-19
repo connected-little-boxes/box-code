@@ -216,7 +216,15 @@ struct sensorEventBinder BME280SensorListenerFunctions[] = {
 	{"temp5min", BME280SENSOR_SEND_TEMP_ON_FIVE_MINUTE},
 	{"temp30min", BME280SENSOR_SEND_TEMP_ON_HALF_HOUR},
 	{"temphour", BME280SENSOR_SEND_TEMP_ON_HOUR},
-	{"tempchanged", BME280SENSOR_SEND_TEMP_ON_CHANGE}};
+	{"tempchanged", BME280SENSOR_SEND_TEMP_ON_CHANGE},
+	
+	{"allsec", BME280SENSOR_SEND_ALL_ON_SECOND},
+	{"allmin", BME280SENSOR_SEND_ALL_ON_MINUTE},
+	{"all5min", BME280SENSOR_SEND_ALL_ON_FIVE_MINUTE},
+	{"all30min", BME280SENSOR_SEND_ALL_ON_HALF_HOUR},
+	{"allhour", BME280SENSOR_SEND_ALL_ON_HOUR}
+
+	};
 
 Adafruit_BME280 bme;
 
@@ -303,6 +311,23 @@ void sendBME280Press(BME280SensorReading *reading, sensorListener *pos)
 	pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
 }
 
+void sendBME280All(BME280SensorReading *reading, sensorListener *pos)
+{
+	TRACELN("    BME280 all sent");
+
+	unsigned char *optionBuffer = pos->config->optionBuffer;
+	char *messageBuffer = (char *)optionBuffer + MESSAGE_START_POSITION;
+	
+	snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "{\"humid\":%.0f,\"temp\":%.1f,\"press\":%.0f}", 
+	reading->humidityAverage, reading->temperatureAverage, reading->pressureAverage);
+
+	float tempNormalised = normaliseValue(reading->temperatureAverage,
+										  bme280SensorSettings.tempNormMin, bme280SensorSettings.tempNormMax);
+	putUnalignedFloat(tempNormalised, (unsigned char *)optionBuffer);
+
+	pos->receiveMessage(pos->config->destination, pos->config->optionBuffer);
+}
+
 void sendBME280Reading(BME280SensorReading *reading, int sensorNo, sensorListener *pos)
 {
 	TRACE("sendBME280Reading for sensor no:");
@@ -316,6 +341,9 @@ void sendBME280Reading(BME280SensorReading *reading, int sensorNo, sensorListene
 
 	if (sensorNo & BME280_PRESS)
 		sendBME280Press(reading, pos);
+
+	if (sensorNo & BME280_ALL)
+		sendBME280All(reading, pos);
 }
 
 void sendToBME280SensorListeners(int event, int sensorNo)

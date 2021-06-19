@@ -90,7 +90,7 @@ void doDumpSettings(char *commandLine)
 	Serial.println("\nDump complete\n");
 }
 
-#define CONSOLE_MESSAGE_SIZE 500
+#define CONSOLE_MESSAGE_SIZE 800
 
 char consoleMessageBuffer[CONSOLE_MESSAGE_SIZE];
 
@@ -906,7 +906,14 @@ int doShowJSONvalue(char *destination, unsigned char *settingBase)
 
 	char buffer[MAX_MESSAGE_LENGTH];
 
-	snprintf(buffer, MAX_MESSAGE_LENGTH, "{\"%s\":\"%s\"}", attributeName, message);
+	if(message[0]=='{'){
+		// the message is already formatted as JSON, just send it
+		snprintf(buffer, MAX_MESSAGE_LENGTH, "{\"%s\":%s}", attributeName, message);
+	}
+	else{
+		// single value - wrap in quotes
+		snprintf(buffer, MAX_MESSAGE_LENGTH, "{\"%s\":\"%s\"}", attributeName, message);
+	}
 
 	Serial.println(buffer);
 
