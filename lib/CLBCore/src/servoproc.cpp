@@ -77,7 +77,6 @@ struct SettingItemCollection ServoSettingItems = {
     ServoSettingItemPointers,
     sizeof(ServoSettingItemPointers) / sizeof(struct SettingItem *)};
 
-
 int validateServoPosition(float position)
 {
     if (position < 0)
