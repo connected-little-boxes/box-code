@@ -894,7 +894,10 @@ int performCommandsInStore(char *commandStoreName)
 	return WORKED_OK;
 }
 
-unsigned char commandParameterBuffer[OPTION_STORAGE_SIZE];
+
+float commandParameterBufferf[OPTION_STORAGE_SIZE/sizeof(float)];
+
+unsigned char * commandParameterBuffer = (unsigned char *) commandParameterBufferf;
 
 int decodeCommand(const char *rawCommandText, process *process, Command *command,
 				  unsigned char *parameterBuffer, JsonObject &root)

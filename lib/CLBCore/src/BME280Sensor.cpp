@@ -28,7 +28,7 @@ struct SettingItem bme280SensorFittedSetting = {
 	&bme280SensorSettings.bme280SensorFitted,
 	ONOFF_INPUT_LENGTH,
 	yesNo,
-	setTrue,
+	setFalse,
 	validateYesNo};
 
 struct SettingItem envNoOfAveragesSetting = {
@@ -264,7 +264,7 @@ void sendBME280Humidity(BME280SensorReading *reading, sensorListener *pos)
 
 	unsigned char *optionBuffer = pos->config->optionBuffer;
 	char *messageBuffer = (char *)optionBuffer + MESSAGE_START_POSITION;
-	snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%f", reading->humidityAverage);
+	snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%.0f", reading->humidityAverage);
 
 	float humidityNormalised = normaliseValue(reading->humidityAverage,
 										  bme280SensorSettings.humidNormMin, bme280SensorSettings.humidNormMax);
@@ -294,7 +294,7 @@ void sendBME280Press(BME280SensorReading *reading, sensorListener *pos)
 
 	unsigned char *optionBuffer = pos->config->optionBuffer;
 	char *messageBuffer = (char *)optionBuffer + MESSAGE_START_POSITION;
-	snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%f", reading->pressureAverage);
+	snprintf(messageBuffer, MAX_MESSAGE_LENGTH, "%.0f", reading->pressureAverage);
 
 	float pressNormalised = normaliseValue(reading->pressureAverage,
 										  bme280SensorSettings.pressNormMin, bme280SensorSettings.pressNormMax);
