@@ -10,7 +10,7 @@ You can create your own code for sensors and outputs and the framework will mana
 
 While you can write programs to tell the boxes what to do it is possible to create networks of connected devices without writing any code. 
 # Get started using the software
-You can flash the latest version of the software directly into your device by visiting https://www.connectedlittleboxes.com/gettingstarted.html and following the instructions. This site also hosts the https://www.connectedlittleboxes.com/simpleterm.html program that you can use to configure your device. There is no need to download any software onto your computer to do this
+You can flash the latest version of the software directly into your device by visiting https://www.connectedlittleboxes.com/gettingstarted.html and following the instructions. This site also hosts the https://www.connectedlittleboxes.com/simpleterm.html program that you can use to configure your device. There is no need to download any software onto your computer to do this.
 # Get started buiding the software
 The code can run on either an ESP8266 or ESP32. You can select the build target in the platformio.ini file.There are also build options for M5Stack and M5Stick devices. To build and deploy to a device connect it to your computer and perform a deploy from Platform IO. The default device configuration is for the Wemos D1 Mini.
 
