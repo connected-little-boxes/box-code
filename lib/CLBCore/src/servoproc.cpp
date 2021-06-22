@@ -333,7 +333,7 @@ void startServo()
         if (servo == NULL)
         {
             servo = new Servo();
-            servo->attach(servoSettings.ServoOutputPin);
+            servo->attach(servoSettings.ServoOutputPin,SERVO_MIN, SERVO_MAX);
             ServoProcess.status = SERVO_OK;
             setServoPosition(servoSettings.ServoInitialPosition);
         }
