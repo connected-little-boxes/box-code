@@ -1,7 +1,7 @@
-![Configuration host address](images/smallLogo.png)
+![Small Logo](images/smallLogo.png)
 
 # Connected Little Boxes - box-code
-![Configuration host address](images/boxes.png)
+![Some connected little boxes](images/boxes.png)
 This is the repository for all the code that runs inside the connected box. This code provides the interface to the sensors, settings managment, MQTT connection, a configuration web site and terminal connection. 
 
 The box code is common to all the different kinds of boxes. You configure the settings in the code to enable different configurations.

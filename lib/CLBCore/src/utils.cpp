@@ -29,9 +29,8 @@ void localSrand(int seed)
 int localRand(int low, int high)
 {
     int diff = high - low;
-    return random(diff) + low;
+    return localRand(diff) + low;
 }
-
 
 unsigned long ulongDiff(unsigned long end, unsigned long start)
 {

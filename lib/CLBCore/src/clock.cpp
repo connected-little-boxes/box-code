@@ -646,6 +646,8 @@ void getClockReadings()
 	clockSensor.millisAtLastReading = millis();
 }
 
+int lastClockStatus = 0;
+
 void updateClockReading()
 {
 	if (WiFi.status() != WL_CONNECTED)
