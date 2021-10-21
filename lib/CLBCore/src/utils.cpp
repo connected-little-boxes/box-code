@@ -1,19 +1,18 @@
 #include <Arduino.h>
 #include <limits.h>
-
 #include "utils.h"
 
 #define LED_BUILTIN 2
 
-int localRandomSeed;
-int randomA=8121;
-int randomC=28411;
-int randomM=134456;
+int rand_seed=1234;
+int rand_mult=8121;
+int rand_add=28411;
+int rand_modulus=134456;
 
 int localRand()
 {
-  localRandomSeed = (randomA * localRandomSeed + randomA) % randomM;
-  return localRandomSeed;
+  rand_seed = (rand_mult * rand_seed + rand_add) % rand_modulus;
+  return rand_seed;
 }
 
 int localRand(int limit)
@@ -23,7 +22,7 @@ int localRand(int limit)
 
 void localSrand(int seed)
 {    
-    localRandomSeed = seed;
+    rand_seed = seed;
 }
 
 int localRand(int low, int high)
@@ -108,5 +107,3 @@ void putUnalignedDouble(double dval, unsigned char *dest)
     unsigned char *source = (unsigned char *)&dval;
     memcpy(dest, source, sizeof(double));
 }
-
-

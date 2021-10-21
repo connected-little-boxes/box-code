@@ -92,7 +92,13 @@ boolean matchSettingCollectionName(SettingItemCollection* settingCollection, con
 boolean matchSettingName(SettingItem* setting, const char* name);
 processSettingCommandResult processSettingCommand(char * command);
 
-void setupSettings();
+enum SettingsSetupStatus{
+	SETTINGS_SETUP_OK,
+	SETTINGS_RESET_TO_DEFAULTS,
+	SETTINGS_FILE_SYSTEM_FAIL
+};
+
+SettingsSetupStatus setupSettings();
 
 void PrintSystemDetails(char * buffer, int length);
 void dumpHexString(char *dest, uint8_t *pos, int length);

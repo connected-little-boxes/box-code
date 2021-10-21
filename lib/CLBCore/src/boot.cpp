@@ -261,45 +261,36 @@ void initBoot()
 
     Serial.printf("Reset reason: %s\n", bootReasonMessage);
 
-    if (isSoftwareReset())
-    {
-        Serial.printf("Internal reset - selecting boot mode\n");
-        // we have been restarted by a call
-        // Pull out the requested boot code and set the
-        // device for this
-        int storedCode = getInternalBootCode();
-        switch (storedCode)
-        {
-        case DEVICE_BOOT_MODE:
-            Serial.println("  Starting as a warm boot device\n");
-            bootMode = WARM_BOOT_MODE;
-            break;
-        case CONFIG_BOOT_MODE:
-            Serial.println("  Starting in config mode\n");
-            bootMode = CONFIG_BOOT_MODE;
-            break;
-        case CONFIG_BOOT_NO_TIMEOUT_MODE:
-            Serial.println("  Starting in config mode with no timeout\n");
-            bootMode = CONFIG_BOOT_NO_TIMEOUT_MODE;
-            break;
-        default:
-            Serial.printf("  Invalid boot code %d. Starting as a device\n", storedCode);
-            bootMode = DEVICE_BOOT_MODE;
-        }
-    }
-    else
-    {
-        if (wifiConfigurationsEmpty())
-        {
+    if(needWifiConfigBootMode()){
             // start as an access point
             Serial.printf("Starting as configuration AP\n");
             bootMode = CONFIG_BOOT_MODE;
-        }
-        else
-        {
-            // got a configuration - start as a device
-            Serial.printf("Starting as a device\n");
-            bootMode = DEVICE_BOOT_MODE;
+    }
+    else {
+        if (isSoftwareReset()){
+            Serial.printf("Internal reset - selecting boot mode\n");
+            // we have been restarted by a call
+            // Pull out the requested boot code and set the
+            // device for this
+            int storedCode = getInternalBootCode();
+            switch (storedCode)
+            {
+            case DEVICE_BOOT_MODE:
+                Serial.println("  Starting as a warm boot device\n");
+                bootMode = WARM_BOOT_MODE;
+                break;
+            case CONFIG_BOOT_MODE:
+                Serial.println("  Starting in config mode\n");
+                bootMode = CONFIG_BOOT_MODE;
+                break;
+            case CONFIG_BOOT_NO_TIMEOUT_MODE:
+                Serial.println("  Starting in config mode with no timeout\n");
+                bootMode = CONFIG_BOOT_NO_TIMEOUT_MODE;
+                break;
+            default:
+                Serial.printf("  Invalid boot code %d. Starting as a device\n", storedCode);
+                bootMode = DEVICE_BOOT_MODE;
+            }
         }
     }
 }

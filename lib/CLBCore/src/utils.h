@@ -1,4 +1,5 @@
 #pragma once
+
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 
 int localRand();

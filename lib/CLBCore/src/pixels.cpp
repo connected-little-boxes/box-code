@@ -1,3 +1,4 @@
+#include <strings.h>
 
 #include "pixels.h"
 #include "errors.h"
@@ -21,6 +22,19 @@ struct PixelSettings pixelSettings;
 
 Leds *leds;
 Frame *frame;
+
+void setDefaultPixelName(void *dest)
+{
+	strcpy((char *)dest, "");
+}
+
+boolean validatePixelName(void *dest, const char *newValueStr)
+{
+	return (validateString((char *)dest, newValueStr, MAX_PIXEL_NAME_LENGTH));
+}
+
+struct SettingItem pixelNameSetting = {
+	"Name in pixels text", "pixelname", pixelSettings.pixelName, MAX_PIXEL_NAME_LENGTH, text, setDefaultPixelName, validatePixelName};
 
 void setDefaultPixelControlPinNo(void *dest)
 {
@@ -57,7 +71,7 @@ boolean validateNoOfXPixels(void *dest, const char *newValueStr)
 		return false;
 	}
 
-	if(value <0)
+	if (value < 0)
 	{
 		return false;
 	}
@@ -65,7 +79,6 @@ boolean validateNoOfXPixels(void *dest, const char *newValueStr)
 	*(int *)dest = value;
 	return true;
 }
-
 
 boolean validateNoOfYPixels(void *dest, const char *newValueStr)
 {
@@ -76,7 +89,7 @@ boolean validateNoOfYPixels(void *dest, const char *newValueStr)
 		return false;
 	}
 
-	if(value <1)
+	if (value < 1)
 	{
 		return false;
 	}
@@ -84,7 +97,6 @@ boolean validateNoOfYPixels(void *dest, const char *newValueStr)
 	*(int *)dest = value;
 	return true;
 }
-
 
 struct SettingItem pixelNoOfXPixelsSetting = {"Number of X pixels (0 for pixels not fitted)",
 											  "noofxpixels",
@@ -174,7 +186,8 @@ struct SettingItem *pixelSettingItemPointers[] =
 		&pixelNoOfXPixelsSetting,
 		&pixelNoOfYPixelsSetting,
 		&pixelPixelConfig,
-		&pixelBrightnessSetting};
+		&pixelBrightnessSetting,
+		&pixelNameSetting};
 
 struct SettingItemCollection pixelSettingItems = {
 	"pixel",
@@ -693,7 +706,7 @@ int doPixelMapValue(char *destination, unsigned char *settingBase)
 		}
 		else
 		{
-			float colourPos = (maskLength-1) * value;
+			float colourPos = (maskLength - 1) * value;
 			TRACE(" ColourPos");
 			TRACE(colourPos);
 
@@ -707,9 +720,9 @@ int doPixelMapValue(char *destination, unsigned char *settingBase)
 				TRACE(highCol);
 				getColourInbetweenMask(colourMask[lowCol], colourMask[highCol], colourPos - lowCol, &colour);
 			}
-			else 
+			else
 			{
-				int intPos = int (colourPos+0.5);
+				int intPos = int(colourPos + 0.5);
 				TRACE(" IntPos:");
 				TRACE(intPos);
 				colour = findColourByChar(colourMask[intPos])->col;
@@ -787,7 +800,7 @@ void beginStatusDisplay()
 	renderStatusDisplay();
 }
 
-boolean setStatusDisplayPixel(int pixelNumber, boolean statusOK)
+boolean setStatusDisplayPixel(int pixelNumber, PixelStatusLevels status)
 {
 	int noOfPixels = pixelSettings.noOfXPixels * pixelSettings.noOfYPixels;
 
@@ -797,13 +810,20 @@ boolean setStatusDisplayPixel(int pixelNumber, boolean statusOK)
 	if (pixelNumber >= noOfPixels)
 		return false;
 
-	if (statusOK)
+	switch (status)
 	{
-		setPixel(pixelNumber, 0, 0.5, 0);
-	}
-	else
-	{
+	case PIXEL_STATUS_OK:
+		setPixel(pixelNumber, 0, 0.5, 0); // green
+		break;
+	case PIXEL_STATUS_NOTIFICATION:
+		setPixel(pixelNumber, 0, 0, 0.5); // blue
+		break;
+	case PIXEL_STATUS_WARNING:
+		setPixel(pixelNumber, 0.5, 0.5, 0); // yellow
+		break;
+	case PIXEL_STATUS_ERROR:
 		setPixel(pixelNumber, 0.5, 0, 0);
+		break;
 	}
 
 	return true;
@@ -818,7 +838,7 @@ void renderStatusDisplay()
 	delay(200);
 }
 
-void addStatusItem(boolean status)
+void addStatusItem(PixelStatusLevels status)
 {
 	int noOfPixels = pixelSettings.noOfXPixels * pixelSettings.noOfYPixels;
 
@@ -827,6 +847,7 @@ void addStatusItem(boolean status)
 
 	if (statusPixelNo >= noOfPixels)
 		resetStatusDisplay();
+
 	setStatusDisplayPixel(statusPixelNo, status);
 
 	statusPixelNo++;

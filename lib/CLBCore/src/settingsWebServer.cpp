@@ -1,3 +1,4 @@
+#include <strings.h>
 #include "utils.h"
 
 #include "settingsWebServer.h"

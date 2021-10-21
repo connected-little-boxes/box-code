@@ -33,7 +33,6 @@
 #include "otaupdate.h"
 #include "outpin.h"
 
-
 // This function will be different for each build of the device.
 
 void populateProcessList()
@@ -107,13 +106,31 @@ void startDevice()
 
 	populateSensorList();
 
-	setupSettings();
+	PixelStatusLevels settingsStatus;
+
+	switch (setupSettings())
+	{
+	case SETTINGS_SETUP_OK:
+		settingsStatus = PIXEL_STATUS_OK;
+		break;
+	case SETTINGS_RESET_TO_DEFAULTS:
+		settingsStatus = PIXEL_STATUS_NOTIFICATION;
+		break;
+	case SETTINGS_FILE_SYSTEM_FAIL:
+		settingsStatus = PIXEL_STATUS_WARNING;
+		break;
+	default:
+		settingsStatus = PIXEL_STATUS_ERROR;
+	}
 
 	startstatusLedFlash(1000);
 
 	initialiseAllProcesses();
 
 	beginStatusDisplay();
+
+	addStatusItem(settingsStatus);
+	renderStatusDisplay();
 
 	buildActiveProcessListFromMask(BOOT_PROCESS);
 
@@ -122,6 +139,9 @@ void startDevice()
 	bindMessageHandler(displayControlMessage);
 
 	startSensors();
+
+	addStatusItem(PIXEL_STATUS_OK);
+	renderStatusDisplay();
 
 	delay(1000); // show the status for a while
 

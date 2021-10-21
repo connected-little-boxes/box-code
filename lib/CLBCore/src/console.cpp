@@ -1,3 +1,4 @@
+#include <strings.h>
 #include "console.h"
 #include "otaupdate.h"
 #include "mqtt.h"

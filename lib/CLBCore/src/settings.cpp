@@ -1,5 +1,6 @@
 #include <EEPROM.h>
 #include <Arduino.h>
+#include <strings.h>
 
 #if defined(ARDUINO_ARCH_ESP8266)
 #include "LittleFS.h"
@@ -1103,14 +1104,17 @@ void sendSettingItemToJSONString(struct SettingItem *item, char *buffer, int buf
 	}
 }
 
-void setupSettings()
+SettingsSetupStatus setupSettings()
 {
+	SettingsSetupStatus result;
+
 	TRACELN("Setting up settings");
 
 #if defined(ARDUINO_ARCH_ESP8266)
 	if (!LittleFS.begin())
 	{
 		Serial.println("An Error has occurred while mounting SPIFFS");
+		result = SETTINGS_FILE_SYSTEM_FAIL;
 	}
 #endif
 
@@ -1118,6 +1122,7 @@ void setupSettings()
 	if (!LittleFS.begin(true))
 	{
 		Serial.println("An Error has occurred while mounting SPIFFS");
+		result = SETTINGS_FILE_SYSTEM_FAIL;
 	}
 
 #endif
@@ -1127,14 +1132,17 @@ void setupSettings()
 	if (loadSettings())
 	{
 		Serial.println("Settings loaded OK");
+		result = SETTINGS_SETUP_OK;
 	}
 	else
 	{
 		Serial.println("Settings reset to default values");
 		resetSettings();
+		result = SETTINGS_RESET_TO_DEFAULTS;
 	}
 
 	char deviceNameBuffer[DEVICE_NAME_LENGTH];
 	PrintSystemDetails(deviceNameBuffer, DEVICE_NAME_LENGTH);
 	Serial.println(deviceNameBuffer);
+	return result;
 }

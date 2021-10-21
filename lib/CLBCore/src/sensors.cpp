@@ -1,3 +1,5 @@
+#include <strings.h>
+
 #include "debug.h"
 #include "sensors.h"
 #include "pixels.h"
@@ -226,8 +228,6 @@ void startSensors()
 		activeSensorPtr->getStatusMessage(sensorStatusBuffer, SENSOR_STATUS_BUFFER_SIZE);
 		Serial.printf("%s\n", sensorStatusBuffer);
 		activeSensorPtr->beingUpdated = true;
-		addStatusItem(activeSensorPtr->status == SENSOR_OK);
-		renderStatusDisplay();
 		activeSensorPtr = activeSensorPtr->nextAllSensors;
 	}
 }
@@ -308,7 +308,14 @@ void displaySensorStatus()
 
 	while (activeSensorPtr != NULL)
 	{
-		addStatusItem(activeSensorPtr->status == SENSOR_OK);
+		PixelStatusLevels status;
+		if(activeSensorPtr->status == SENSOR_OK){
+			status = PIXEL_STATUS_OK;
+		}
+		else {
+			status = PIXEL_STATUS_ERROR;
+		}
+		addStatusItem(status);
 		activeSensorPtr = activeSensorPtr->nextActiveSensor;
 	}
 }

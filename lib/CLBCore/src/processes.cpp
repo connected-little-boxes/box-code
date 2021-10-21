@@ -1,3 +1,5 @@
+#include <strings.h>
+
 #include "debug.h"
 
 #include "processes.h"
@@ -170,8 +172,6 @@ void startProcesses()
 			continue;
 		}
 		startProcess(procPtr);
-		addStatusItem(procPtr->statusOK());
-		renderStatusDisplay();
 		procPtr = procPtr->nextActiveProcess;
 	}
 }

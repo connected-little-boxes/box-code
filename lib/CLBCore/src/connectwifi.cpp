@@ -1,3 +1,4 @@
+#include <strings.h>
 #include "utils.h"
 #include "settings.h"
 #include "sensors.h"
@@ -93,8 +94,13 @@ struct WiFiSetting wifiSettings[] =
 		{wifiConnectionSettings.wifi4SSID, wifiConnectionSettings.wifi4PWD},
 		{wifiConnectionSettings.wifi5SSID, wifiConnectionSettings.wifi5PWD}};
 
-bool wifiConfigurationsEmpty()
+bool needWifiConfigBootMode()
 {
+	if (!wifiConnectionSettings.wiFiOn)
+	{
+		return false;
+	}
+
 	for (unsigned int i = 0; i < sizeof(wifiSettings) / sizeof(struct WiFiSetting); i++)
 	{
 		if (wifiSettings[i].wifiSsid[0] != 0)
@@ -237,13 +243,21 @@ void checkWiFiScanResult()
 	handleFailedWiFiScan();
 }
 
+void handleConnectTimeout()
+{
+	TRACELN("WiFi connect timeout");
+	WiFi.scanDelete();
+	WiFiProcessDescriptor.status = WIFI_ERROR_CONNECT_TIMEOUT;
+	displayMessage(WIFI_STATUS_CONNECT_FAILED_MESSAGE_NUMBER, ledFlashAlertState, WIFI_STATUS_CONNECT_FAILED_MESSAGE_TEXT);
+}
+
 void checkWiFiConnectResult()
 {
 	if (WiFi.status() != WL_CONNECTED)
 	{
 		if (ulongDiff(millis(), WiFiTimerStart) > WIFI_CONNECT_TIMEOUT_MILLIS)
 		{
-			WiFiProcessDescriptor.status = WIFI_ERROR_CONNECT_TIMEOUT;
+			handleConnectTimeout();
 		}
 		return;
 	}
@@ -265,6 +279,7 @@ void checkWiFiConnectResult()
 		performCommandsInStore(WIFI_CONNECT_COMMAND_STORE);
 		return;
 	}
+
 
 	TRACE("Fail status:");
 	TRACE_HEXLN(wifiError);
@@ -400,6 +415,46 @@ void updateNoMatchingNetworks()
 {
 }
 
+void wifiStatusMessage(char *buffer, int bufferLength)
+{
+	switch (WiFiProcessDescriptor.status)
+	{
+	case WIFI_OK: 
+		snprintf(buffer, bufferLength, "%s: %s", wifiActiveAPName, WiFi.localIP().toString().c_str());
+		break;
+	case WIFI_TURNED_OFF:
+		snprintf(buffer, bufferLength, "Wifi OFF");
+		break;
+	case WIFI_SCANNING:
+		snprintf(buffer, bufferLength, "Scanning for networks");
+		break;
+	case WIFI_ERROR_CONNECT_TIMEOUT:
+		snprintf(buffer, bufferLength, "Connect timeout");
+		break;
+	case WIFI_CONNECTING:
+		snprintf(buffer, bufferLength, "Connecting to %s", wifiActiveAPName);
+		break;
+	case WIFI_ERROR_SCAN_TIMEOUT:
+		snprintf(buffer, bufferLength, "WiFi scan timeout");
+		break;
+	case WIFI_RECONNECT_TIMER:
+		snprintf(buffer, bufferLength, "WiFi waiting to reconnect");
+		break;
+	case WIFI_CONFIG_HOSTING_WEBSITE:
+		snprintf(buffer, bufferLength, "WiFi connection hosting website");
+		break;
+	case WIFI_CONFIG_STARTING_WEBSITE:
+		snprintf(buffer, bufferLength, "WiFi connection starting website");
+		break;
+	case WIFI_CONFIG_STARTING_AP:
+		snprintf(buffer, bufferLength, "WiFi connection starting AP");
+		break;
+	default:
+		snprintf(buffer, bufferLength, "WiFi status invalid %d",WiFiProcessDescriptor.status);
+		break;
+	}
+}
+
 void updateWifi()
 {
 	switch (WiFiProcessDescriptor.status)
@@ -420,6 +475,10 @@ void updateWifi()
 		checkWiFiConnectResult();
 		break;
 
+	case WIFI_ERROR_CONNECT_TIMEOUT:
+		startReconnectTimer();
+		break;
+
 	case WIFI_RECONNECT_TIMER:
 		updateReconnectTimer();
 		break;
@@ -431,46 +490,16 @@ void updateWifi()
 	case WIFI_CONFIG_HOSTING_WEBSITE:
 		updateWifiHostingConfigWebsite();
 		break;
+
+	case WIFI_ERROR_SCAN_TIMEOUT:
+		startReconnectTimer();
+		break;
 	}
 }
 
 bool connectWiFiStatusOK()
 {
 	return WiFiProcessDescriptor.status == WIFI_OK;
-}
-
-void wifiStatusMessage(char *buffer, int bufferLength)
-{
-	switch (WiFiProcessDescriptor.status)
-	{
-	case WIFI_OK:
-		snprintf(buffer, bufferLength, "%s: %s", wifiActiveAPName, WiFi.localIP().toString().c_str());
-		break;
-	case WIFI_TURNED_OFF:
-		snprintf(buffer, bufferLength, "Wifi OFF");
-		break;
-	case WIFI_SCANNING:
-		snprintf(buffer, bufferLength, "Scanning for networks");
-		break;
-	case WIFI_ERROR_NO_NETWORKS_FOUND:
-		snprintf(buffer, bufferLength, "No networks found");
-		break;
-	case WIFI_CONNECTING:
-		snprintf(buffer, bufferLength, "Connecting to %s", wifiActiveAPName);
-		break;
-	case WIFI_RECONNECT_TIMER:
-		snprintf(buffer, bufferLength, "WiFi connection waiting to retry");
-		break;
-	case WIFI_CONFIG_STARTING_AP:
-		snprintf(buffer, bufferLength, "WiFi connection starting AP");
-		break;
-	case WIFI_CONFIG_HOSTING_WEBSITE:
-		snprintf(buffer, bufferLength, "WiFi connection hosting AP");
-		break;
-	default:
-		snprintf(buffer, bufferLength, "WiFi status invalid %d",WiFiProcessDescriptor.status);
-		break;
-	}
 }
 
 struct process WiFiProcessDescriptor = {

@@ -66,14 +66,14 @@ void update_progress(int cur, int total) {
 
 	if (ota_update_init) {
 		beginStatusDisplay();
-		addStatusItem(true);
+		addStatusItem(PIXEL_STATUS_OK);
 		renderStatusDisplay();
 		ota_update_init = false;
 	}
 
 	Serial.printf("CALLBACK:  HTTP update process at %d of %d bytes...\n", cur, total);
 
-	addStatusItem(true);
+	addStatusItem(PIXEL_STATUS_OK);
 
 	renderStatusDisplay();
 }
