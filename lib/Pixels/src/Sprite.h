@@ -161,6 +161,8 @@ public:
     }
 
     void render();
+    
+    void renderColour(Colour col);
 
     void bounce();
 

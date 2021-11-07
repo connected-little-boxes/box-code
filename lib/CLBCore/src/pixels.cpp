@@ -248,6 +248,7 @@ boolean validatePixelCommandString(void *dest, const char *newValueStr)
 #define COLOURNAME_PIXEL_COMMAND_OFFSET (COMMAND_PIXEL_COMMAND_OFFSET + PIXEL_COMMAND_NAME_LENGTH)
 #define COMMAND_PIXEL_OPTION_OFFSET (COLOURNAME_PIXEL_COMMAND_OFFSET + PIXEL_COMMAND_NAME_LENGTH)
 #define COMMAND_PIXEL_PATTERN_OFFSET (COMMAND_PIXEL_OPTION_OFFSET + PIXEL_COMMAND_NAME_LENGTH)
+#define COMMAND_PIXEL_TIMEOUT_OFFSET (COMMAND_PIXEL_PATTERN_OFFSET + sizeof(int))
 
 struct CommandItem redCommandItem = {
 	"red",
@@ -272,6 +273,39 @@ struct CommandItem greenCommandItem = {
 	floatCommand,
 	validateFloat0to1,
 	noDefaultAvailable};
+
+boolean setDefaultPixelTimeout(void *dest)
+{
+	int *destInt = (int *)dest;
+	*destInt = 0;
+	return true;
+}
+
+boolean validatePixelTimeout(void *dest, const char *newValueStr)
+{
+	int value;
+
+	if (!validateInt(&value, newValueStr))
+	{
+		return false;
+	}
+
+	if (value < 0 || value > 300)
+	{
+		return false;
+	}
+
+	*(int *)dest = value;
+	return true;
+}
+
+struct CommandItem pixelTimeoutCommandItem = {
+	"timeout",
+	"command timeout (0-300 minutes)",
+	COMMAND_PIXEL_TIMEOUT_OFFSET,
+	integerCommand,
+	validatePixelTimeout,
+	setDefaultPixelTimeout};
 
 boolean setDefaultPixelChangeSteps(void *dest)
 {
@@ -370,7 +404,8 @@ struct CommandItem *setColourItems[] =
 		&redCommandItem,
 		&blueCommandItem,
 		&greenCommandItem,
-		&pixelChangeStepsCommandItem};
+		&pixelChangeStepsCommandItem,
+		&pixelTimeoutCommandItem};
 
 int doSetPixelColor(char *destination, unsigned char *settingBase);
 
@@ -399,8 +434,16 @@ int doSetPixelColor(char *destination, unsigned char *settingBase)
 	float blue = (float)getUnalignedFloat(settingBase + BLUE_PIXEL_COMMAND_OFFSET);
 	float green = (float)getUnalignedFloat(settingBase + GREEN_PIXEL_COMMAND_OFFSET);
 	int steps = (int)getUnalignedInt(settingBase + SPEED_PIXEL_COMMAND_OFFSET);
+	int time = (int)getUnalignedInt(settingBase + COMMAND_PIXEL_TIMEOUT_OFFSET);
 
-	frame->fadeToColour({red, green, blue}, steps);
+	if(time==0)
+	{
+		frame->fadeToColour({red, green, blue}, steps);
+	}
+	else
+	{
+		frame->overlayColour({red, green, blue},time);
+	}
 
 	return WORKED_OK;
 }
@@ -408,7 +451,8 @@ int doSetPixelColor(char *destination, unsigned char *settingBase)
 struct CommandItem *setNamedPixelColourItems[] =
 	{
 		&colourCommandName,
-		&pixelChangeStepsCommandItem};
+		&pixelChangeStepsCommandItem,
+		&pixelTimeoutCommandItem};
 
 int doSetNamedColour(char *destination, unsigned char *settingBase);
 
@@ -441,7 +485,16 @@ int doSetNamedColour(char *destination, unsigned char *settingBase)
 
 	if (col != NULL)
 	{
-		frame->fadeToColour(col->col, steps);
+		int time = (int)getUnalignedInt(settingBase + COMMAND_PIXEL_TIMEOUT_OFFSET);
+
+		if(time==0)
+		{
+			frame->fadeToColour(col->col, steps);
+		}
+		else
+		{
+			frame->overlayColour(col->col, time);
+		}
 		return WORKED_OK;
 	}
 	else
@@ -517,7 +570,8 @@ int doSetRandomColour(char *destination, unsigned char *settingBase)
 struct CommandItem *setPixelTwinkleItems[] =
 	{
 		&pixelChangeStepsCommandItem,
-		&colourCommandOptionItem};
+		&colourCommandOptionItem
+	};
 
 int doSetTwinkle(char *destination, unsigned char *settingBase);
 

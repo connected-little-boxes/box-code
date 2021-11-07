@@ -15,6 +15,9 @@ public:
 	int height;
 	int noOfPixels;
 	Colour background;
+	Colour overlay;
+	unsigned long overlayEndTicks;
+	bool overlayActive;
 	Leds * leds;
 	float brightness;
 	float brightnessStep;
@@ -25,6 +28,8 @@ public:
 	Frame(Leds* inLeds, Colour inBackground); 
 
 	Sprite * getSprite(int spriteNo);
+
+	void overlayColour(Colour col, int timeMins);
 
 	void render();
 

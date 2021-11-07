@@ -10,6 +10,7 @@ Frame::Frame(Leds *inLeds, Colour inBackground)
 	width = inLeds->ledWidth;
 	height = inLeds->ledHeight;
 	noOfPixels = width * height;
+	overlayActive=false;
 
 	background = inBackground;
 	noOfBrightnessSteps = 0;
@@ -32,15 +33,29 @@ Sprite *Frame::getSprite(int spriteNo)
 	return sprites[spriteNo];
 }
 
+void Frame::overlayColour(Colour col, int timeMins)
+{
+	overlay = col;
+	overlayActive = true;
+	overlayEndTicks = millis() + ((60 * timeMins)*1000);
+}
+
 void Frame::render()
 {
 	leds->clear(background);
 
-	for (int i = 0; i < MAX_NO_OF_SPRITES; i++)
-	{
-		sprites[i]->render();
+	if(overlayActive){
+		for (int i = 0; i < MAX_NO_OF_SPRITES; i++)
+		{
+			sprites[i]->renderColour(overlay);
+		}
 	}
-
+	else {
+		for (int i = 0; i < MAX_NO_OF_SPRITES; i++)
+		{
+			sprites[i]->render();
+		}
+	}
 	leds->display(brightness);
 }
 
@@ -73,6 +88,12 @@ void Frame::update()
 		if (noOfBrightnessSteps == 0)
 		{
 			brightness = targetBrightness;
+		}
+	}
+
+	if(overlayActive){
+		if(millis()>overlayEndTicks){
+			overlayActive = false;
 		}
 	}
 }

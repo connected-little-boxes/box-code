@@ -13,6 +13,14 @@ void Sprite::render()
     frame->leds->renderLight(x, y, colour, brightness, opacity);
 }
 
+void Sprite::renderColour(Colour col)
+{
+    if (!enabled)
+        return;
+
+    frame->leds->renderLight(x, y, col, brightness, 1);
+}
+
 void Sprite::bounce()
 {
     x = x + xSpeed;
