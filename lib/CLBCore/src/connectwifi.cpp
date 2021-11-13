@@ -119,6 +119,8 @@ int findWifiSetting(String ssidName)
 
 	ssidName.toCharArray(ssidBuffer, WIFI_SSID_LENGTH);
 
+	Serial.printf("*        Checking SSID:%s\n",ssidBuffer );
+
 	for (unsigned int i = 0; i < sizeof(wifiSettings) / sizeof(struct WiFiSetting); i++)
 	{
 		if (strcasecmp(wifiSettings[i].wifiSsid, ssidBuffer) == 0)
@@ -220,6 +222,7 @@ void checkWiFiScanResult()
 
 	int settingNumber;
 
+	Serial.printf("*       WiFi scan complete %d networks found.\n", noOfNetworks);
 	// if we get here we have some networks
 	for (int i = 0; i < noOfNetworks; ++i)
 	{
@@ -228,8 +231,7 @@ void checkWiFiScanResult()
 		if (settingNumber != WIFI_SETTING_NOT_FOUND)
 		{
 			snprintf(wifiActiveAPName, WIFI_SSID_LENGTH, "%s", wifiSettings[settingNumber].wifiSsid);
-			TRACE("Connecting to ");
-			TRACELN(wifiActiveAPName);
+			Serial.printf("*       Connecting to %s\n", wifiActiveAPName);
 			WiFi.begin(wifiSettings[settingNumber].wifiSsid,
 					   wifiSettings[settingNumber].wifiPassword);
 			WiFiTimerStart = millis();
@@ -339,16 +341,20 @@ void stopWiFi()
 	delay(500);
 }
 
+
+char wifiAccessPointID [WIFI_HOST_AP_SSID_LENGTH];
+
 void startWiFiConfigAP()
 {
-	Serial.printf("Starting config access point at %s: ", CONFIG_ACCESS_POINT_SSID);
+	snprintf(wifiAccessPointID, WIFI_HOST_AP_SSID_LENGTH, "CLB-%06lx", PROC_ID);	
+	Serial.printf("Starting config access point at %s: ", wifiAccessPointID);
 
 
 	WiFi.mode(WIFI_AP);
 
 	delay(100);
 
-	WiFi.softAP(CONFIG_ACCESS_POINT_SSID);
+	WiFi.softAP(wifiAccessPointID);
 
 	delay(500);
 
@@ -361,7 +367,7 @@ void startWiFiConfigWebsite()
 	{
 		beginStatusDisplay();
 		displayMessage(WIFI_STATUS_HOSTING_AP_MESSAGE_NUMBER, ledFlashConfigState, WIFI_STATUS_HOSTING_AP_MESSAGE_TEXT);
-		Serial.printf("   Hosting at 192.168.4.1 on %s\n", CONFIG_ACCESS_POINT_SSID);
+		Serial.printf("   Hosting at 192.168.4.1 on %s\n", wifiAccessPointID);
 		WiFiProcessDescriptor.status = WIFI_CONFIG_HOSTING_WEBSITE;
 	}
 	else

@@ -9,7 +9,7 @@
 #define OTA_UPDATE_PATH_SIZE 200
 #define OTA_UPDATE_PRODUCT_KEY_SIZE 100
 
-#define Version "1.1.0.2"
+#define Version "2.0.0.1"
 
 void performOTAUpdate();
 

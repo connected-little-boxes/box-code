@@ -6,8 +6,7 @@
 #include "settings.h"
 #include "messages.h"
 
-#define CONFIG_ACCESS_POINT_SSID "CLB"
-
+#define WIFI_HOST_AP_SSID_LENGTH 32
 #define WIFI_CONNECT_COMMAND_STORE "wifion"
 #define WIFI_DISCONNECT_COMMAND_STORE "wifioff"
 
